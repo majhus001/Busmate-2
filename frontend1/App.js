@@ -13,6 +13,7 @@ import Signup from "./components/Authentication/Signup";
 import Login from "./components/Authentication/Login";
 import AdminHome from "./components/Admin/Homepage/AdminHome";
 import AddConductor from "./components/Admin/Conductor/AddConductor";
+import Example from "./components/Admin/BusRoute/Example";
 
 const Stack = createNativeStackNavigator();
 
@@ -20,7 +21,7 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="welcomepage"
+        initialRouteName="AddBuses"
         screenOptions={{ headerShown: false }}
       >
         <Stack.Screen name="AddBuses" component={AdBuses} />
@@ -36,6 +37,7 @@ export default function App() {
         <Stack.Screen name="signup" component={Signup} />
         <Stack.Screen name="AdminHome" component={AdminHome} />
         <Stack.Screen name="AddConductor" component={AddConductor} />
+        <Stack.Screen name="ex" component={Example} />
       </Stack.Navigator>
     </NavigationContainer>
   );

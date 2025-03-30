@@ -9,6 +9,8 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { Picker } from "@react-native-picker/picker";
 import styles from "./AdbusesStyles";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+
 import { API_BASE_URL } from "../../../apiurl";
 import axios from "axios";
 
@@ -69,23 +71,23 @@ const AdBuses = () => {
 
   const handleAddBus = async () => {
     if (
-      busRouteNo === "" || 
-      busNo === "" || 
-      busPassword === "" || 
-      totalShifts === "" || 
-      totalSeats === "" || 
-      busType === "" || 
-      state === "" || 
-      city === "" || 
-      fromStage === "" || 
-      toStage === "" || 
-      Object.keys(prices).length === 0 || 
+      busRouteNo === "" ||
+      busNo === "" ||
+      busPassword === "" ||
+      totalShifts === "" ||
+      totalSeats === "" ||
+      busType === "" ||
+      state === "" ||
+      city === "" ||
+      fromStage === "" ||
+      toStage === "" ||
+      Object.keys(prices).length === 0 ||
       Object.keys(timings).length === 0
     ) {
       alert("Please fill all the fields");
       return;
     }
-  
+
     const busData = {
       busRouteNo,
       busNo,
@@ -100,20 +102,24 @@ const AdBuses = () => {
       prices,
       timings,
     };
-  
+
     console.log("From Stage:", fromStage);
     console.log("To Stage:", toStage);
-  
+
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/Admin/buses/add`, busData, {
-        headers: { "Content-Type": "application/json" },
-      });
-  
+      const response = await axios.post(
+        `${API_BASE_URL}/api/Admin/buses/add`,
+        busData,
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
       console.log("Server Response:", response.data);
-  
+
       if (response.status === 201) {
         alert("Bus added successfully!");
-  
+
         // Reset input fields
         setBusRouteNo("");
         setBusNo("");
@@ -132,10 +138,34 @@ const AdBuses = () => {
       }
     } catch (error) {
       console.error("Error adding bus:", error);
-      alert("Error adding bus: " + (error.response ? error.response.data.message : error.message));
+      alert(
+        "Error adding bus: " +
+          (error.response ? error.response.data.message : error.message)
+      );
     }
   };
-  
+
+  const showTimePicker = (stage) => {
+    setCurrentStage(stage);
+    setTimePickerVisibility(true);
+  };
+
+  const hideTimePicker = () => setTimePickerVisibility(false);
+
+  const handleConfirmTime = (time) => {
+    if (time && currentStage) {
+      const formattedTime = time.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      setTimings((prevTimings) => ({
+        ...prevTimings,
+        [currentStage]: formattedTime,
+      }));
+      console.log(`Selected Time for ${currentStage}:`, formattedTime);
+    }
+    hideTimePicker();
+  };
 
   const filteredStages = () => {
     if (!fromStage || !toStage) return [];
@@ -143,7 +173,6 @@ const AdBuses = () => {
     const toIndex = stages.indexOf(toStage);
     return fromIndex <= toIndex ? stages.slice(fromIndex, toIndex + 1) : [];
   };
-
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Add Bus Details</Text>
@@ -241,14 +270,20 @@ const AdBuses = () => {
           {filteredStages().map((stage) => (
             <View key={stage} style={styles.row}>
               <Text>{stage}:</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Time (HH:MM AM/PM)"
-                value={timings[stage] || ""}
-                onChangeText={(value) => handleTimingChange(stage, value)}
-              />
+              <TouchableOpacity onPress={() => showTimePicker(stage)}>
+                <Text style={styles.timeText}>
+                  {timings[stage] || "Select Time"}
+                </Text>
+              </TouchableOpacity>
             </View>
           ))}
+
+          <DateTimePickerModal
+            isVisible={isTimePickerVisible}
+            mode="time"
+            onConfirm={handleConfirmTime}
+            onCancel={hideTimePicker}
+          />
 
           <Text style={styles.subtitle}>Set Prices for Selected Stages</Text>
           {filteredStages().map((from, i) =>
