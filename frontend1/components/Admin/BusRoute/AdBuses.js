@@ -34,6 +34,9 @@ const AdBuses = () => {
   const [timings, setTimings] = useState({});
   const [fromStage, setFromStage] = useState("");
   const [toStage, setToStage] = useState("");
+  const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
+
+  const [currentStage, setCurrentStage] = useState("");
 
   const busTypes = ["AC", "Non-AC"];
   const states = ["TamilNadu", "Kerala", "Karnataka"];
@@ -60,31 +63,25 @@ const AdBuses = () => {
     setFromStage("");
     setToStage("");
   };
-
   const handlePriceChange = (from, to, value) => {
     setPrices((prevPrices) => ({ ...prevPrices, [`${from}-${to}`]: value }));
   };
 
-  const handleTimingChange = (stage, value) => {
-    setTimings((prevTimings) => ({ ...prevTimings, [stage]: value }));
-  };
-
   const handleAddBus = async () => {
     if (
-      busRouteNo === "" ||
-      busNo === "" ||
-      busPassword === "" ||
-      totalShifts === "" ||
-      totalSeats === "" ||
-      busType === "" ||
-      state === "" ||
-      city === "" ||
-      fromStage === "" ||
-      toStage === "" ||
-      Object.keys(prices).length === 0 ||
-      Object.keys(timings).length === 0
+      !busRouteNo ||
+      !busNo ||
+      !busPassword ||
+      !totalShifts ||
+      !totalSeats ||
+      !busType ||
+      !state ||
+      !city ||
+      !fromStage ||
+      !toStage ||
+      filteredStages().length === 0
     ) {
-      alert("Please fill all the fields");
+      alert("Please fill all the fields correctly.");
       return;
     }
 
@@ -103,10 +100,8 @@ const AdBuses = () => {
       timings,
     };
 
-    console.log("From Stage:", fromStage);
-    console.log("To Stage:", toStage);
-
     try {
+      console.log("hi")
       const response = await axios.post(
         `${API_BASE_URL}/api/Admin/buses/add`,
         busData,
@@ -115,34 +110,33 @@ const AdBuses = () => {
         }
       );
 
-      console.log("Server Response:", response.data);
-
       if (response.status === 201) {
         alert("Bus added successfully!");
-
-        // Reset input fields
-        setBusRouteNo("");
-        setBusNo("");
-        setBusPassword("");
-        setTotalShifts("");
-        setTotalSeats("");
-        setBusType("");
-        setState("");
-        setCity("");
-        setPrices({});
-        setTimings({});
-        setFromStage("");
-        setToStage("");
+        resetForm();
       } else {
         alert("Failed to add bus: " + response.data.message);
       }
     } catch (error) {
       console.error("Error adding bus:", error);
       alert(
-        "Error adding bus: " +
-          (error.response ? error.response.data.message : error.message)
+        "Error adding bus: " + (error.response?.data.message || error.message)
       );
     }
+  };
+
+  const resetForm = () => {
+    setBusRouteNo("");
+    setBusNo("");
+    setBusPassword("");
+    setTotalShifts("");
+    setTotalSeats("");
+    setBusType("");
+    setState("");
+    setCity("");
+    setPrices({});
+    setTimings({});
+    setFromStage("");
+    setToStage("");
   };
 
   const showTimePicker = (stage) => {
@@ -171,8 +165,10 @@ const AdBuses = () => {
     if (!fromStage || !toStage) return [];
     const fromIndex = stages.indexOf(fromStage);
     const toIndex = stages.indexOf(toStage);
+    if (fromIndex === -1 || toIndex === -1) return [];
     return fromIndex <= toIndex ? stages.slice(fromIndex, toIndex + 1) : [];
   };
+
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Add Bus Details</Text>

@@ -77,7 +77,6 @@ const UserHomeScreen = ({ route, navigation }) => {
       return;
     }
     try {
-      console.log(busNo);
       const response = await axios.get(
         `${API_BASE_URL}/api/tickets/seatcount`,
         {
@@ -150,16 +149,22 @@ const UserHomeScreen = ({ route, navigation }) => {
         data={filteredBuses}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => {
-          const formattedTime = item.timings[fromLocation];
+          // Get timing from the selected fromLocation
+          const formattedTime = fromLocation
+            ? item.timings[fromLocation]
+            : "N/A";
           const bookedSeats = seatAvailability[item.busRouteNo] || 0;
           const availableSeats = item.totalSeats - bookedSeats;
+
           return (
             <TouchableOpacity onPress={() => toggleBusDetails(item.busRouteNo)}>
               <View style={styles.busCard}>
                 <View style={styles.row}>
                   <Text style={styles.column}>{item.busRouteNo}</Text>
-                  <Text style={styles.column}>{fromLocation}</Text>
-                  <Text style={styles.column}>{toLocation}</Text>
+                  <Text style={styles.column}>
+                    {fromLocation || "Select From"}
+                  </Text>
+                  <Text style={styles.column}>{toLocation || "Select To"}</Text>
                   <Text style={styles.column}>{formattedTime}</Text>
                 </View>
                 {expandedBus === item.busRouteNo && (

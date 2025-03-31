@@ -45,7 +45,6 @@ router.post("/add", async (req, res) => {
       prices,
       timings,
     });
-
     await newBus.save();
     res.status(201).json({ message: "Bus added successfully!", bus: newBus });
   } catch (error) {
@@ -90,17 +89,16 @@ router.get("/fetchbus", async (req, res) => {
   try {
     const buses = await Bus.find();
 
-    console.log(buses)
-    res.json({data: buses});
+    console.log(buses);
+    res.json({ data: buses });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-
 router.get("/fetchstate", async (req, res) => {
   try {
-    console.log("hi")
+    console.log("hi");
     console.log("Fetching buses for state:", req.query.state);
     const { state } = req.query;
     const buses = await Bus.find({ state });
@@ -121,7 +119,7 @@ router.get("/fetchstate", async (req, res) => {
 router.get("/fetchcities", async (req, res) => {
   try {
     const { city } = req.query;
-    console.log("hi")
+    console.log("hi");
     if (!city) {
       return res.status(400).json({ message: "City is required" });
     }
@@ -131,7 +129,7 @@ router.get("/fetchcities", async (req, res) => {
     // Case-insensitive city match
     const routes = await Bus.find({ city: new RegExp(`^${city}$`, "i") });
 
-    console.log("Routes found:", routes); 
+    console.log("Routes found:", routes);
 
     if (routes.length === 0) {
       return res.status(404).json({ message: "No routes found for this city" });
@@ -155,12 +153,10 @@ router.get("/fetchcities", async (req, res) => {
   }
 });
 
-
-
 router.get("/fetchBy/cities", async (req, res) => {
   try {
     const { city } = req.query;
-    console.log("hi")
+    console.log("hi");
     if (!city) {
       return res.status(400).json({ message: "City is required" });
     }
@@ -172,14 +168,12 @@ router.get("/fetchBy/cities", async (req, res) => {
       return res.status(404).json({ message: "No routes found for this city" });
     }
 
-    res.json({data:routes});
+    res.json({ data: routes });
   } catch (error) {
     console.error("Error fetching locations:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
-
-
 
 router.get("/fetchbusno", async (req, res) => {
   try {
