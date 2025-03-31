@@ -42,7 +42,7 @@ const Login = ({ navigation }) => {
                   });
                   break;
                 case "User":
-                  navigation.navigate("ushomescreen", {
+                  navigation.navigate("usfindbus", {
                     username: response.data.user.username || "Unknown Name",
                     city: response.data.user.city || "Unknown City",
                     state: response.data.user.state || "Unknown State",
