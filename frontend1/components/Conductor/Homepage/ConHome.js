@@ -39,6 +39,13 @@ const ConHome = ({ navigation, route }) => {
       >
         <Text style={styles.buttonText}>🚀 Start Ride</Text>
       </TouchableOpacity>
+      {/* View Complaints Button */}
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => navigation.navigate("complaintform")}
+        >
+        <Text style={styles.buttonText}>📋 Add Complaints</Text>
+        </TouchableOpacity>
     </View>
   );
 };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import axios from "axios";
-import styles from "./BusloginStyles"; // Import your styles
+import styles from "./BusloginStyles"; 
 import { API_BASE_URL } from "../../../apiurl";
 
 const Buslogin = ({ route, navigation }) => {

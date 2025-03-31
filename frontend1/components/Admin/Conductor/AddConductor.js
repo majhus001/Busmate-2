@@ -51,8 +51,7 @@ const AddConductor = ({ navigation, route }) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/api/Admin/Conductor/add`, conductorData);
       Alert.alert("Success", "Conductor added successfully!");
-      navigation.navigate()
-      navigation.goBack();
+      navigation.navigate("AdminHome", { adminId: adminId });
     } catch (error) {
       console.error("Error adding conductor:", error);
       Alert.alert("Error", error.response?.data?.error || "Something went wrong");

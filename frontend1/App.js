@@ -14,6 +14,7 @@ import Login from "./components/Authentication/Login";
 import AdminHome from "./components/Admin/Homepage/AdminHome";
 import AddConductor from "./components/Admin/Conductor/AddConductor";
 import Example from "./components/Admin/BusRoute/Example";
+import ComplaintForm from "./components/Conductor/Complaintform/ComplaintForm";
 
 const Stack = createNativeStackNavigator();
 
@@ -27,6 +28,7 @@ export default function App() {
         <Stack.Screen name="AddBuses" component={AdBuses} />
         <Stack.Screen name="conhomepage" component={ConHome} />
         <Stack.Screen name="conbusselect" component={BusSelection} />
+        <Stack.Screen name="complaintform" component={ComplaintForm} />
         <Stack.Screen name="buslogin" component={Buslogin} />
         <Stack.Screen name="taketicket" component={EtmTicket} />
         <Stack.Screen name="adroutes" component={AdRoutes} />
