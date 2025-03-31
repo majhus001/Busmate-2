@@ -63,11 +63,21 @@ const UserHomeScreen = ({ route, navigation }) => {
 
   const filterBuses = () => {
     setFilteredBuses(
-      buses.filter(
-        (bus) =>
-          (!fromLocation || bus.fromStage === fromLocation) &&
+      buses.filter((bus) => {
+        const stages = Object.keys(bus.timings);
+
+        const fromIndex = stages.indexOf(fromLocation);
+        const toIndex = stages.indexOf(toLocation);
+
+        // Check if fromLocation and toLocation exist and fromLocation comes before toLocation
+        const isValidRoute =
+          fromIndex !== -1 && toIndex !== -1 && fromIndex < toIndex;
+
+        return (
+          (!fromLocation || bus.fromStage === fromLocation || isValidRoute) &&
           (!toLocation || bus.toStage === toLocation)
-      )
+        );
+      })
     );
   };
 
@@ -149,9 +159,9 @@ const UserHomeScreen = ({ route, navigation }) => {
         data={filteredBuses}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => {
-          // Get timing from the selected fromLocation
+          // Get timing based on selected 'fromLocation'
           const formattedTime = fromLocation
-            ? item.timings[fromLocation]
+            ? item.timings?.[fromLocation] || "N/A"
             : "N/A";
           const bookedSeats = seatAvailability[item.busRouteNo] || 0;
           const availableSeats = item.totalSeats - bookedSeats;

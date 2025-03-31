@@ -39,8 +39,10 @@ const AdminHome = ({ navigation, route }) => {
     const fetchData = async () => {
       try {
         const [busResponse, conductorResponse] = await Promise.all([
-          axios.get(`${API_BASE_URL}/api/Admin/buses/fetchbus`),
-          axios.get(`${API_BASE_URL}/api/Admin/conductor/fetchconductor`),
+          axios.get(`${API_BASE_URL}/api/Admin/buses/fetchbus/${adminId}`),
+          axios.get(
+            `${API_BASE_URL}/api/Admin/conductor/fetchconductor/${adminId}`
+          ),
         ]);
 
         setBuses(
@@ -226,14 +228,39 @@ const AdminHome = ({ navigation, route }) => {
                     <Text style={styles.dropdownText}>
                       Shifts: {item.totalShifts}
                     </Text>
-                    <Text style={styles.dropdownText}>
-                      Timings: {item.timings?.morning || "N/A"} |{" "}
-                      {item.timings?.evening || "N/A"}
-                    </Text>
-                    <Text style={styles.dropdownText}>
-                      Prices: Adult - ₹{item.prices?.adult || "N/A"}, Child - ₹
-                      {item.prices?.child || "N/A"}
-                    </Text>
+
+                    {/* Display Timings with Line Breaks */}
+                    <Text style={styles.dropdownText}>Timings:</Text>
+                    <View style={styles.bustimingcont}>
+                      {item.timings ? (
+                        Object.entries(item.timings).map(
+                          ([stage, time], index) => (
+                            <Text key={index} style={styles.dropdowntimingText}>
+                              {stage}: {time}
+                            </Text>
+                          )
+                        )
+                      ) : (
+                        <Text style={styles.dropdownText}>N/A</Text>
+                      )}
+                    </View>
+
+                    {/* Display Prices with Line Breaks */}
+                    <Text style={styles.dropdownText}>Prices:</Text>
+                    <View style={styles.bustimingcont}>
+                    {item.prices ? (
+                      Object.entries(item.prices).map(
+                        ([route, price], index) => (
+                          <Text key={index} style={styles.dropdowntimingText}>
+                            {route}: ₹{price}
+                          </Text>
+                        )
+                      )
+                    ) : (
+                      <Text style={styles.dropdownText}>N/A</Text>
+                    )}
+                    </View>
+
                     <Text style={styles.dropdownText}>
                       Bus Password: {item.busPassword || "Not Set"}
                     </Text>

@@ -14,6 +14,7 @@ const busSchema = new mongoose.Schema(
     toStage: String,
     prices: Object,
     timings: Object,
+    adminId: String,
   },
   { timestamps: true }
 );

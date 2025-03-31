@@ -14,9 +14,8 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { API_BASE_URL } from "../../../apiurl";
 import axios from "axios";
 
-const AdBuses = () => {
-  const navigation = useNavigation();
-
+const AdBuses = ({ navigation, route }) => {
+  const { adminId = "NA" } = route.params || {};
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
@@ -98,10 +97,11 @@ const AdBuses = () => {
       toStage,
       prices,
       timings,
+      adminId: adminId,
     };
 
     try {
-      console.log("hi")
+      console.log("hi");
       const response = await axios.post(
         `${API_BASE_URL}/api/Admin/buses/add`,
         busData,

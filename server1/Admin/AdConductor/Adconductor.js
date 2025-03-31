@@ -60,9 +60,10 @@ router.post("/add", async (req, res) => {
   }
 });
 
-router.get("/fetchconductor", async (req, res) => {
+router.get("/fetchconductor/:adminId", async (req, res) => {
+  const { adminId } = req.params;
   try {
-    const conductors = await Conductor.find();
+    const conductors = await Conductor.find({adminId});
     console.log({data:conductors})
     res.json({data:conductors});
   } catch (error) {

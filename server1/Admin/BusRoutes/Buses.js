@@ -19,6 +19,7 @@ router.post("/add", async (req, res) => {
       toStage,
       prices,
       timings,
+      adminId,
     } = req.body;
 
     if (!fromStage || !toStage) {
@@ -44,6 +45,7 @@ router.post("/add", async (req, res) => {
       toStage,
       prices,
       timings,
+      adminId,
     });
     await newBus.save();
     res.status(201).json({ message: "Bus added successfully!", bus: newBus });
@@ -85,9 +87,12 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.get("/fetchbus", async (req, res) => {
+router.get("/fetchbus/:adminId", async (req, res) => {
+  const { adminId } = req.params;
+  console.log("busess")
+  console.log(adminId)
   try {
-    const buses = await Bus.find();
+    const buses = await Bus.find({adminId});
 
     console.log(buses);
     res.json({ data: buses });

@@ -215,6 +215,14 @@ searchInput: {
     color: "#dc3545",
   },
 
+  bustimingcont: {
+    backgroundColor: "#007bff",
+    padding: 10,
+    borderRadius: 10
+  },
+  dropdowntimingText: {
+    color: "#fff"
+  },
   /* Pagination Section */
   paginationContainer: {
     flexDirection: "row",
