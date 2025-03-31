@@ -46,6 +46,7 @@ router.post("/add", async (req, res) => {
       prices,
       timings,
       adminId,
+      LoggedIn:false,
     });
     await newBus.save();
     res.status(201).json({ message: "Bus added successfully!", bus: newBus });

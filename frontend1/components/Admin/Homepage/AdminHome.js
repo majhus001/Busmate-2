@@ -201,12 +201,10 @@ const AdminHome = ({ navigation, route }) => {
                   <Text
                     style={[
                       styles.status,
-                      item.status === "Available"
-                        ? styles.available
-                        : styles.onService,
+                      item.LoggedIn ? styles.available : styles.onService,
                     ]}
                   >
-                    {item.status || "Unknown Status"}
+                    {item.LoggedIn ? "Active" : "Inactive"}
                   </Text>
                 </TouchableOpacity>
 
@@ -248,17 +246,17 @@ const AdminHome = ({ navigation, route }) => {
                     {/* Display Prices with Line Breaks */}
                     <Text style={styles.dropdownText}>Prices:</Text>
                     <View style={styles.bustimingcont}>
-                    {item.prices ? (
-                      Object.entries(item.prices).map(
-                        ([route, price], index) => (
-                          <Text key={index} style={styles.dropdowntimingText}>
-                            {route}: ₹{price}
-                          </Text>
+                      {item.prices ? (
+                        Object.entries(item.prices).map(
+                          ([route, price], index) => (
+                            <Text key={index} style={styles.dropdowntimingText}>
+                              {route}: ₹{price}
+                            </Text>
+                          )
                         )
-                      )
-                    ) : (
-                      <Text style={styles.dropdownText}>N/A</Text>
-                    )}
+                      ) : (
+                        <Text style={styles.dropdownText}>N/A</Text>
+                      )}
                     </View>
 
                     <Text style={styles.dropdownText}>

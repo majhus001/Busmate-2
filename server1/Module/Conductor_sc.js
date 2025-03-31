@@ -7,9 +7,13 @@ const ConductorSchema = new mongoose.Schema({
   age: { type: Number },
   gender: { type: String, enum: ["Male", "Female", "Other"] },
   password: { type: String, required: true },
-  adminId:{ type: String, required: true },
+  adminId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",
+    required: true,
+  },
 });
 
 const Conductor = mongoose.model("Conductor", ConductorSchema);
 
-module.exports = Conductor;  // Ensure this is exporting the model
+module.exports = Conductor; // Ensure this is exporting the model
