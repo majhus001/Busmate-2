@@ -15,6 +15,11 @@ console.log(role)
       case "Conductor":
         Model = Conductor;
         user = await Model.findOne({ Username: Username, password }); 
+
+        if(user){
+          user.LoggedIn = true;
+          await user.save();
+        }
         break;
       case "Admin":
       case "User":
@@ -32,17 +37,10 @@ console.log(role)
     if (!user) {
       return res.status(400).json({ error: "Invalid credentials or role" });
     }
-    console.log(user._id)
 
     const userResponse = {
       message: "Login successful!",
-      user: {
-        username: user.Username, 
-        adminId: user._id,
-        role: user.role,
-        city: user.city,
-        state: user.state
-      }
+      user
     };
 
     res.json(userResponse);

@@ -8,16 +8,17 @@ import {
   TextInput,
 } from "react-native";
 import axios from "axios";
+import { Card, ActivityIndicator } from "react-native-paper";
 import { API_BASE_URL } from "../../../apiurl";
 import styles from "./AdminHomeStyles";
 
 const AdminHome = ({ navigation, route }) => {
-  const {
-    username = "Admin",
-    adminId = "NA",
-    city = "Unknown City",
-    state = "Unknown State",
-  } = route.params || {};
+  const { adminData } = route.params || {};
+  console.log(adminData);
+  const adminId = adminData._id;
+  const username = adminData.Username;
+  const city = adminData.city;
+  const state = adminData.state;
 
   const [buses, setBuses] = useState([]);
   const [conductors, setConductors] = useState([]);
@@ -26,6 +27,12 @@ const AdminHome = ({ navigation, route }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedTab, setSelectedTab] = useState("Buses");
   const busesPerPage = 5;
+
+  if (!buses || !conductors) {
+    return (
+      <ActivityIndicator animating={true} size="large" style={styles.loader} />
+    );
+  }
 
   const toggleDropdown = (id) => {
     setBuses((prevBuses) =>
@@ -37,7 +44,10 @@ const AdminHome = ({ navigation, route }) => {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true); // Start Loading
       try {
+        console.log("Admin ID:", adminId);
+
         const [busResponse, conductorResponse] = await Promise.all([
           axios.get(`${API_BASE_URL}/api/Admin/buses/fetchbus/${adminId}`),
           axios.get(
@@ -52,12 +62,20 @@ const AdminHome = ({ navigation, route }) => {
       } catch (err) {
         console.error("Error fetching data:", err);
       } finally {
-        setLoading(false);
+        setLoading(false); // Stop Loading
       }
     };
 
-    fetchData();
-  }, []);
+    if (adminId) {
+      fetchData();
+    }
+  }, [adminId]);
+
+  if (loading) {
+    return (
+      <ActivityIndicator size="large" color="#007bff" style={styles.loader} />
+    );
+  }
 
   const handleNextPage = () => {
     if ((currentPage + 1) * busesPerPage < buses.length) {
@@ -77,6 +95,7 @@ const AdminHome = ({ navigation, route }) => {
 
     return (
       bus.busNo?.toString().toLowerCase().startsWith(searchLower) ||
+      bus.busRouteNo?.toString().toLowerCase().startsWith(searchLower) ||
       bus.fromStage?.toString().toLowerCase().startsWith(searchLower) ||
       bus.toStage?.toString().toLowerCase().startsWith(searchLower)
     );
@@ -94,37 +113,41 @@ const AdminHome = ({ navigation, route }) => {
   return (
     <ScrollView style={styles.Admincontainer}>
       {/* Header Section */}
-      <View style={styles.leftSection}>
-        <Image
-          source={{
-            uri: "https://th.bing.com/th/id/OIP.aKiTvd6drTIayNy2hddhiQHaHa?w=1024&h=1024&rs=1&pid=ImgDetMain",
-          }}
-          style={styles.profileImage}
-        />
-        <Text style={styles.profileName}>{username}</Text>
-        <Text style={styles.profileRole}>Administrator</Text>
-        <Text style={styles.profileDetail}>
-          📍 {city}, {state}
-        </Text>
-        <View style={styles.busconinfo}>
-          <Text style={styles.busconbtn}>Total buses : {buses.length}</Text>
-          <Text style={styles.busconbtn}>
-            Total conductors: {conductors.length}
+      <TouchableOpacity
+        onPress={() => navigation.navigate("addash", { adminData, buses, conductors })}
+      >
+        <View style={styles.leftSection}>
+          <Image
+            source={{
+              uri: "https://th.bing.com/th/id/OIP.aKiTvd6drTIayNy2hddhiQHaHa?w=1024&h=1024&rs=1&pid=ImgDetMain",
+            }}
+            style={styles.profileImage}
+          />
+          <Text style={styles.profileName}>{username}</Text>
+          <Text style={styles.profileRole}>Administrator</Text>
+          <Text style={styles.profileDetail}>
+            📍 {city}, {state}
           </Text>
+          <View style={styles.busconinfo}>
+            <Text style={styles.busconbtn}>Total buses : {buses.length}</Text>
+            <Text style={styles.busconbtn}>
+              Total conductors: {conductors.length}
+            </Text>
+          </View>
         </View>
-      </View>
+      </TouchableOpacity>
 
       {/* Action Buttons */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.addButton}
-          onPress={() => navigation.navigate("AddConductor", { adminId })}
+          onPress={() => navigation.navigate("AddConductor", { adminData })}
         >
           <Text style={styles.addButtonText}>+ Add Conductor</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.addButton}
-          onPress={() => navigation.navigate("AddBuses", { adminId })}
+          onPress={() => navigation.navigate("AddBuses", { adminData })}
         >
           <Text style={styles.addButtonText}>+ Add Bus</Text>
         </TouchableOpacity>
@@ -175,14 +198,20 @@ const AdminHome = ({ navigation, route }) => {
       <TextInput
         style={styles.searchInput}
         placeholder={`Search ${
-          selectedTab === "Buses" ? "Buses by Bus No" : "Conductors by Name"
+          selectedTab === "Buses"
+            ? "by Bus Route, Place, plate no"
+            : "Conductors by Name"
         }`}
         onChangeText={setSearchQuery}
         value={searchQuery}
       />
 
       {/* Conditional Rendering */}
-      {selectedTab === "Buses" ? (
+
+      {loading ? (
+        // Show Loading Indicator
+        <ActivityIndicator size="large" color="#007bff" style={styles.loader} />
+      ) : selectedTab === "Buses" ? (
         <>
           <Text style={styles.sectionTitle}>Available Buses</Text>
           {paginatedBuses.length > 0 ? (

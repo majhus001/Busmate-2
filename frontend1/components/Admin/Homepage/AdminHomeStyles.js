@@ -229,6 +229,10 @@ searchInput: {
     justifyContent: "space-between",
     marginVertical: 20,
   },
+  loader: {
+    flex: 1,
+    justifyContent: "center",
+  },
   paginationButton: {
     backgroundColor: "#007bff",
     paddingVertical: 12,

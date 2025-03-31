@@ -4,7 +4,11 @@ import styles from "./ConHomeStyles"; // Importing styles
 
 const ConHome = ({ navigation, route }) => {
   // Extracting data from route.params
-  const { username, city, state } = route.params || {};
+  const { conData } = route.params || {};
+
+  const username = conData.Username || "N/A"
+  const city = conData.city || "N/A"
+  const state = conData.state || "N/A"
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });

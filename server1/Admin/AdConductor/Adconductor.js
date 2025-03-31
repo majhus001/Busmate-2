@@ -48,6 +48,7 @@ router.post("/add", async (req, res) => {
       gender,
       password,
       adminId,
+      LoggedIn: false,
     });
 
     await newConductor.save();

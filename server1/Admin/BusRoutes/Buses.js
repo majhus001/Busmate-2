@@ -55,10 +55,12 @@ router.post("/add", async (req, res) => {
     res.status(500).json({ message: "Error adding bus", error: error.message });
   }
 });
+
 router.post("/login", async (req, res) => {
   try {
     const { busplateNo, password } = req.body;
 
+    // Check if busplateNo and password are provided in the request body
     if (!busplateNo || !password) {
       return res.status(400).json({
         success: false,
@@ -66,32 +68,39 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    // Find bus by plate number
-    const bus = await Bus.findOne({ busNo: busplateNo }); // Use findOne instead of find
+    // Find the bus by its plate number (busNo)
+    const bus = await Bus.findOne({ busNo: busplateNo });
 
+    // If no bus is found with the provided bus plate number
     if (!bus) {
       return res.status(404).json({ success: false, message: "Bus not found" });
     }
 
-    // Directly compare password (Not recommended for production)
+    // Check if the provided password matches the bus's stored password
     if (password !== bus.busPassword) {
-      console.log("invalid pwd");
+      console.log("Invalid Password");
       return res
         .status(401)
         .json({ success: false, message: "Invalid Password" });
     }
 
+    // Update the bus to mark it as logged in
+    bus.LoggedIn = true;
+    await bus.save();
+
+    // Respond with a success message and bus details
     res.json({ success: true, message: "Login successful", busDetails: bus });
   } catch (error) {
+    // Handle any errors and return a server error
     console.error("Login Error:", error);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 });
 
+
 router.get("/fetchbus/:adminId", async (req, res) => {
   const { adminId } = req.params;
-  console.log("busess")
-  console.log(adminId)
+ 
   try {
     const buses = await Bus.find({adminId});
 

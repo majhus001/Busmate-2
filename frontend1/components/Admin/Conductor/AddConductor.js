@@ -6,7 +6,7 @@ import { API_BASE_URL } from "../../../apiurl";
 import styles from "./AddConductorStyles"; // Importing the styles
 
 const AddConductor = ({ navigation, route }) => {
-  const { adminId = "NA" } = route.params || {};
+  const { adminData } = route.params || {};
 
   const [Username, setUsername] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -51,7 +51,7 @@ const AddConductor = ({ navigation, route }) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/api/Admin/Conductor/add`, conductorData);
       Alert.alert("Success", "Conductor added successfully!");
-      navigation.navigate("AdminHome", { adminId: adminId });
+      navigation.navigate("AdminHome", { adminData});
     } catch (error) {
       console.error("Error adding conductor:", error);
       Alert.alert("Error", error.response?.data?.error || "Something went wrong");

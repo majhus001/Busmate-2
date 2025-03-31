@@ -12,6 +12,7 @@ const ConductorSchema = new mongoose.Schema({
     ref: "Admin",
     required: true,
   },
+  LoggedIn: { type: Boolean, default: false },
 });
 
 const Conductor = mongoose.model("Conductor", ConductorSchema);

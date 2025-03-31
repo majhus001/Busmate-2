@@ -15,6 +15,7 @@ import AdminHome from "./components/Admin/Homepage/AdminHome";
 import AddConductor from "./components/Admin/Conductor/AddConductor";
 import Example from "./components/Admin/BusRoute/Example";
 import ComplaintForm from "./components/Conductor/Complaintform/ComplaintForm";
+import AdDash from "./components/Admin/Dashboard/AdDash";
 
 const Stack = createNativeStackNavigator();
 
@@ -40,6 +41,7 @@ export default function App() {
         <Stack.Screen name="AdminHome" component={AdminHome} />
         <Stack.Screen name="AddConductor" component={AddConductor} />
         <Stack.Screen name="ex" component={Example} />
+        <Stack.Screen name="addash" component={AdDash} />
       </Stack.Navigator>
     </NavigationContainer>
   );

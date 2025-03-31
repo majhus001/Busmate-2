@@ -27,27 +27,20 @@ const Login = ({ navigation }) => {
         `${API_BASE_URL}/api/auth/login`,
         loginData
       );
-      const data = response.data;
-      if (response.data && response.data.user) {
+
+      if ( response.data.user) {
         Alert.alert("Success", "Login successful!", [
           {
             text: "OK",
             onPress: () => {
               switch (role) {
                 case "Conductor":
-                  navigation.navigate("conhomepage", {
-                    username: response.data.user.username || "Unknown Name",
-                    city: response.data.user.city || "Unknown City",
-                    state: response.data.user.state || "Unknown State",
-                  });
+                  const conData = response.data.user
+                  navigation.navigate("conhomepage", { conData });
                   break;
                 case "Admin":
-                  navigation.navigate("AdminHome", {
-                    username: response.data.user.username || "Unknown Name",
-                    adminId: response.data.user.adminId || "Unknown Id",
-                    city: response.data.user.city || "Unknown City",
-                    state: response.data.user.state || "Unknown State",
-                  });
+                  const adminData = response.data.user;
+                  navigation.navigate("AdminHome", { adminData });
                   break;
               }
             },
