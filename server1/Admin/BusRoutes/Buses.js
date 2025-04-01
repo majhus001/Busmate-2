@@ -219,7 +219,7 @@ router.get("/fetchbusno", async (req, res) => {
     const busplateNo = [...new Set(buses.map((bus) => bus.busNo))];
 
     console.log("Available Bus Numbers:", busNumbers);
-    res.json({ busNumbers, busplateNo });
+    res.json({ busNumbers, busplateNo, buses });
   } catch (error) {
     console.error("Error fetching bus numbers:", error);
     res.status(500).json({ message: "Server error" });

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import RNPickerSelect from "react-native-picker-select";
 import axios from "axios";
@@ -17,7 +17,6 @@ const BusSelection = ({ navigation }) => {
   const [selectedFrom, setSelectedFrom] = useState(null);
   const [selectedTo, setSelectedTo] = useState(null);
 
-  // New state for bus numbers
   const [busNumbers, setBusNumbers] = useState([]);
   const [selectedBusNo, setSelectedBusNo] = useState(null);
   const [busplateNo, setBusplateNo] = useState("");
@@ -28,13 +27,9 @@ const BusSelection = ({ navigation }) => {
   const fetchBusesByState = async (state) => {
     setLoading(true);
     try {
-      console.log("cooo");
-      const response = await axios.get(
-        `${API_BASE_URL}/api/Admin/buses/fetchstate`,
-        {
-          params: { state },
-        }
-      );
+      const response = await axios.get(`${API_BASE_URL}/api/Admin/buses/fetchstate`, {
+        params: { state },
+      });
       setBusData(response.data);
     } catch (error) {
       console.error("Error fetching buses:", error);
@@ -47,15 +42,12 @@ const BusSelection = ({ navigation }) => {
   const fetchStagesByCity = async (city) => {
     setLoading(true);
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/api/Admin/buses/fetchcities`,
-        {
-          params: { city },
-        }
-      );
+      const response = await axios.get(`${API_BASE_URL}/api/Admin/buses/fetchcities`, {
+        params: { city },
+      });
 
-      setFromLocations(response.data.fromStages);
-      setToLocations(response.data.toStages);
+      setFromLocations(response.data.fromStages || []);
+      setToLocations(response.data.toStages || []);
     } catch (error) {
       console.error("Error fetching stages:", error);
       setFromLocations([]);
@@ -71,11 +63,9 @@ const BusSelection = ({ navigation }) => {
       const response = await axios.get(`${API_BASE_URL}/api/Admin/buses/fetchbusno`, {
         params: { from, to },
       });
-  
-      setBusNumbers(response.data.busNumbers);
-  
-      // Ensure we only store the first bus's plate number initially (or empty if none found)
-      setBusplateNo(response.data.busplateNo.length > 0 ? response.data.busplateNo[0] : "");
+
+      setBusNumbers(response.data.busNumbers || []);
+      setBusplateNo(""); // Reset bus plate number initially
     } catch (error) {
       console.error("Error fetching bus numbers:", error);
       setBusNumbers([]);
@@ -83,7 +73,14 @@ const BusSelection = ({ navigation }) => {
     }
     setLoading(false);
   };
-  
+
+  // Update bus plate number when selected bus number changes
+  useEffect(() => {
+    if (selectedBusNo) {
+      const foundBus = busData.find((bus) => bus.busRouteNo === selectedBusNo);
+      setBusplateNo(foundBus ? foundBus.busNo : "");
+    }
+  }, [selectedBusNo, busData]);
 
   return (
     <View style={styles.container}>
@@ -101,8 +98,8 @@ const BusSelection = ({ navigation }) => {
           setBusNumbers([]);
           fetchBusesByState(value);
         }}
-        items={states.map((state) => ({ label: state, value: state }))}
-        style={styles.picker}
+        items={states.map((state, index) => ({ label: state, value: state, key: index.toString() }))}
+        style={{ ...styles.picker }}
         placeholder={{ label: "Select State...", value: null }}
       />
 
@@ -120,11 +117,12 @@ const BusSelection = ({ navigation }) => {
               setBusNumbers([]);
               fetchStagesByCity(value);
             }}
-            items={[...new Set(busData.map((bus) => bus.city))].map((city) => ({
+            items={[...new Set(busData.map((bus) => bus.city))].map((city, index) => ({
               label: city,
               value: city,
+              key: index.toString(),
             }))}
-            style={styles.picker}
+            style={{ ...styles.picker }}
             placeholder={{ label: "Select City...", value: null }}
           />
         </>
@@ -143,9 +141,9 @@ const BusSelection = ({ navigation }) => {
             items={fromLocations.map((stage, index) => ({
               label: stage,
               value: stage,
-              key: index,
+              key: index.toString(),
             }))}
-            style={styles.picker}
+            style={{ ...styles.picker }}
             placeholder={{ label: "Select Departure Location...", value: null }}
           />
         </>
@@ -163,9 +161,9 @@ const BusSelection = ({ navigation }) => {
             items={toLocations.map((stage, index) => ({
               label: stage,
               value: stage,
-              key: index,
+              key: index.toString(),
             }))}
-            style={styles.picker}
+            style={{ ...styles.picker }}
             placeholder={{ label: "Select Destination...", value: null }}
           />
         </>
@@ -180,9 +178,9 @@ const BusSelection = ({ navigation }) => {
             items={busNumbers.map((bus, index) => ({
               label: `Bus No: ${bus}`,
               value: bus,
-              key: index,
+              key: index.toString(),
             }))}
-            style={styles.picker}
+            style={{ ...styles.picker }}
             placeholder={{ label: "Select Bus Number...", value: null }}
           />
         </>
