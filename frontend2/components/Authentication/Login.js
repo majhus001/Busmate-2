@@ -33,30 +33,8 @@ const Login = ({ navigation }) => {
           {
             text: "OK",
             onPress: () => {
-              switch (role) {
-                case "Conductor":
-                  navigation.navigate("conhomepage", {
-                    username: response.data.user.username || "Unknown Name",
-                    city: response.data.user.city || "Unknown City",
-                    state: response.data.user.state || "Unknown State",
-                  });
-                  break;
-                case "User":
-                  navigation.navigate("usfindbus", {
-                    username: response.data.user.username || "Unknown Name",
-                    city: response.data.user.city || "Unknown City",
-                    state: response.data.user.state || "Unknown State",
-                  });
-                  break;
-                case "Admin":
-                  navigation.navigate("AdminHome", {
-                    username: response.data.user.username || "Unknown Name",
-                    adminId: response.data.user.adminId || "Unknown Id",
-                    city: response.data.user.city || "Unknown City",
-                    state: response.data.user.state || "Unknown State",
-                  });
-                  break;
-              }
+              const userData = response.data.user;
+              navigation.navigate("usfindbus", {userData})
             },
           },
         ]);

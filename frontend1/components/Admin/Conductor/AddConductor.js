@@ -45,7 +45,7 @@ const AddConductor = ({ navigation, route }) => {
       age: parseInt(age, 10) || null,
       gender: gender,
       password: password,
-      adminId: adminId,
+      adminId: adminData._id,
     };
 
     try {

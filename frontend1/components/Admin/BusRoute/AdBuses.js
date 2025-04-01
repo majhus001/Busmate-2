@@ -97,11 +97,10 @@ const AdBuses = ({ navigation, route }) => {
       toStage,
       prices,
       timings,
-      adminId: adminId,
+      adminId: adminData._id,
     };
 
     try {
-      console.log("hi");
       const response = await axios.post(
         `${API_BASE_URL}/api/Admin/buses/add`,
         busData,

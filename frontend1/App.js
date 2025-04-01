@@ -16,6 +16,8 @@ import AddConductor from "./components/Admin/Conductor/AddConductor";
 import Example from "./components/Admin/BusRoute/Example";
 import ComplaintForm from "./components/Conductor/Complaintform/ComplaintForm";
 import AdDash from "./components/Admin/Dashboard/AdDash";
+import UpiQrGenerator from "./components/Conductor/Ticket/Upiqr";
+import Upiqr from "./components/Conductor/Ticket/Upiqr";
 import ViewComplaintForm from "./components/Conductor/Complaintform/ViewComplaintForm";
 
 const Stack = createNativeStackNavigator();
@@ -44,6 +46,7 @@ export default function App() {
         <Stack.Screen name="AddConductor" component={AddConductor} />
         <Stack.Screen name="ex" component={Example} />
         <Stack.Screen name="addash" component={AdDash} />
+        <Stack.Screen name="Upiqr" component={Upiqr}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

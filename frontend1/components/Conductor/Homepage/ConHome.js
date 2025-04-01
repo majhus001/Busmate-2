@@ -1,14 +1,11 @@
 import React, { useLayoutEffect,useEffect } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import styles from "./ConHomeStyles";
+import ConductorMap from "./Conductormap";
 
 const ConHome = ({ navigation, route }) => {
 
-  const { conData } = route.params || {};
-
-  const username = conData.Username || "N/A"
-  const city = conData.city || "N/A"
-  const state = conData.state || "N/A"
+  const { username, city, state } = route.params || {};
 
   useEffect(() => {
     console.log("conData received in ConHome:", conData);
@@ -48,7 +45,6 @@ const ConHome = ({ navigation, route }) => {
       >
         <Text style={styles.buttonText}>🚀 Start Ride</Text>
       </TouchableOpacity>
-      {/* Add Complaints Button */}
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
@@ -76,6 +72,11 @@ const ConHome = ({ navigation, route }) => {
 >
   <Text style={styles.buttonText}>👀 View Complaints</Text>
 </TouchableOpacity>
+
+      {/* Enlarged Map */}
+      <View style={styles.mapContainer}>
+        <ConductorMap />
+      </View>
     </View>
   );
 };

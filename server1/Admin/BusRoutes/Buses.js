@@ -168,21 +168,21 @@ router.get("/fetchcities", async (req, res) => {
   }
 });
 
-router.get("/fetchBy/cities", async (req, res) => {
+router.get("/fetchBy/cities/:selectedCity", async (req, res) => {
   try {
-    const { city } = req.query;
-    console.log("hi");
-    if (!city) {
+    const { selectedCity } = req.params;
+    console.log(selectedCity)
+    if (!selectedCity) {
       return res.status(400).json({ message: "City is required" });
     }
 
     // Case-insensitive city match
-    const routes = await Bus.find({ city: new RegExp(`^${city}$`, "i") });
+    const routes = await Bus.find({ city: new RegExp(`^${selectedCity}$`, "i") });
 
     if (routes.length === 0) {
       return res.status(404).json({ message: "No routes found for this city" });
     }
-
+    
     res.json({ data: routes });
   } catch (error) {
     console.error("Error fetching locations:", error);
@@ -219,7 +219,7 @@ router.get("/fetchbusno", async (req, res) => {
     const busplateNo = [...new Set(buses.map((bus) => bus.busNo))];
 
     console.log("Available Bus Numbers:", busNumbers);
-    res.json({ busNumbers, busplateNo });
+    res.json({ busNumbers, busplateNo, buses });
   } catch (error) {
     console.error("Error fetching bus numbers:", error);
     res.status(500).json({ message: "Server error" });
