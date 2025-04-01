@@ -1,20 +1,29 @@
-import React, { useLayoutEffect,useEffect } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import React, { useLayoutEffect, useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, Alert } from "react-native";
 import styles from "./ConHomeStyles";
 import ConductorMap from "./Conductormap";
 
 const ConHome = ({ navigation, route }) => {
-
-  const { username, city, state } = route.params || {};
+  const { username, city, state, conData } = route.params || {}; // Assuming conData is passed from previous screen
 
   useEffect(() => {
-    console.log("conData received in ConHome:", conData);
+    if (conData) {
+      console.log("conData received in ConHome:", conData);
+    }
   }, [conData]);
-  
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
+
+  const handleNavigate = (screen) => {
+    if (!conData || !conData._id) {
+      Alert.alert("Error", "Conductor ID is missing. Please log in again.");
+      return;
+    }
+    console.log("Navigating with conductorId:", conData._id);
+    navigation.navigate(screen, { conductorId: conData._id });
+  };
 
   return (
     <View style={styles.container}>
@@ -45,33 +54,22 @@ const ConHome = ({ navigation, route }) => {
       >
         <Text style={styles.buttonText}>🚀 Start Ride</Text>
       </TouchableOpacity>
+
+      {/* Add Complaints Button */}
       <TouchableOpacity
         style={styles.button}
-        onPress={() => {
-          if (!conData || !conData._id) {
-              Alert.alert("Error", "Conductor ID is missing. Please log in again.");
-              return;
-          }
-        console.log("Navigating with conductorId:", conData._id);
-        navigation.navigate("complaintform", { conductorId: conData._id });
-       }}>
+        onPress={() => handleNavigate("complaintform")}
+      >
         <Text style={styles.buttonText}>📋 Add Complaints</Text>
       </TouchableOpacity>
 
       {/* View Complaints Button */}
       <TouchableOpacity
-  style={styles.button}
-  onPress={() => {
-    if (!conData || !conData._id) {
-      Alert.alert("Error", "Conductor ID is missing. Please log in again.");
-      return;
-    }
-    console.log("Navigating with conductorId:", conData._id);
-    navigation.navigate("viewcomplaintform", { conductorId: conData._id });
-  }}
->
-  <Text style={styles.buttonText}>👀 View Complaints</Text>
-</TouchableOpacity>
+        style={styles.button}
+        onPress={() => handleNavigate("viewcomplaintform")}
+      >
+        <Text style={styles.buttonText}>👀 View Complaints</Text>
+      </TouchableOpacity>
 
       {/* Enlarged Map */}
       <View style={styles.mapContainer}>
