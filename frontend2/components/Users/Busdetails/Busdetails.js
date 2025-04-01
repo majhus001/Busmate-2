@@ -98,6 +98,14 @@ const Busdetails = ({ route, navigation }) => {
         <Text style={styles.trackButtonText}>Live Track Bus</Text>
       </TouchableOpacity>
 
+      {/* Pay Now Button */}
+      <TouchableOpacity
+        style={styles.payButton}
+        onPress={() => navigation.navigate("payment")}
+      >
+        <Text style={styles.payButtonText}>💳 Pay Now</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.goBack()}

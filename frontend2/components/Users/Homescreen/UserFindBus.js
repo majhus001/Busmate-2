@@ -1,21 +1,34 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, FlatList, Alert } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import styles from "./UserFindBusStyles";
 import axios from "axios";
+import styles from "./UserFindBusStyles";
 import { API_BASE_URL } from "../../../apiurl";
 
-const UserHomeScreen = ({ route, navigation }) => {
-  const { userstate = "TamilNadu", usercity = "Coimbatore" } = route.params || {};
+const UserFindBus = ({ route, navigation }) => {
+  const { userData } = route.params || {};
+  const defaultState = userData?.state || "TamilNadu"; // Ensure a default value
+  const defaultCity = userData?.city || "Coimbatore";
+console.log(defaultState)
+  const [state, setState] = useState(defaultState);
+  const [city, setCity] = useState(defaultCity);
 
-  const [state, setState] = useState(userstate);
-  const [city, setCity] = useState(usercity);
+  useEffect(() => {
+    if (userData?.state) setState(userData.state);
+    if (userData?.city) setCity(userData.city);
+  }, [userData]);
+
+  useEffect(() => {
+    if (city) fetchBuses(city);
+  }, [city]); // Fetch buses only when city changes
+
   const [buses, setBuses] = useState([]);
   const [filteredBuses, setFilteredBuses] = useState([]);
   const [fromLocation, setFromLocation] = useState("");
   const [toLocation, setToLocation] = useState("");
   const [allStages, setAllStages] = useState([]);
 
+  // State & City Mapping
   const states = ["Maharashtra", "Karnataka", "TamilNadu", "Delhi"];
   const cities = {
     Maharashtra: ["Mumbai", "Pune", "Nagpur"],
@@ -24,24 +37,28 @@ const UserHomeScreen = ({ route, navigation }) => {
     Delhi: ["New Delhi"],
   };
 
-  // Fetch Buses
+  // Fetch Buses API
   const fetchBuses = async (selectedCity) => {
+    if (!selectedCity) return;
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/api/Admin/buses/fetchBy/cities`,
-        { params: { city: selectedCity } }
+        `${API_BASE_URL}/api/Admin/buses/fetchBy/cities/${selectedCity}`
       );
-      const data = response.data.data;
+
+      const data = response.data?.data || [];
 
       if (data.length > 0) {
         setBuses(data);
         setFilteredBuses(data);
+
+        // Extract all unique stages from bus timings
         const allStagesSet = new Set();
         data.forEach((bus) => {
           Object.keys(bus.timings || {}).forEach((stage) =>
             allStagesSet.add(stage)
           );
         });
+
         setAllStages([...allStagesSet]);
       } else {
         resetData();
@@ -53,7 +70,12 @@ const UserHomeScreen = ({ route, navigation }) => {
     }
   };
 
-  // Reset State if No Data
+  // Fetch buses when the city changes
+  useEffect(() => {
+    if (city) fetchBuses(city);
+  }, [city]);
+
+  // Reset Bus Data
   const resetData = () => {
     setBuses([]);
     setFilteredBuses([]);
@@ -62,14 +84,7 @@ const UserHomeScreen = ({ route, navigation }) => {
     setToLocation("");
   };
 
-  // On City Change
-  useEffect(() => {
-    if (city) {
-      fetchBuses(city);
-    }
-  }, [city]);
-
-  // Filter Buses
+  // Bus Filtering Logic
   const filterBuses = () => {
     if (!fromLocation || !toLocation) {
       Alert.alert("Error", "Please select both From and To locations.");
@@ -77,7 +92,7 @@ const UserHomeScreen = ({ route, navigation }) => {
     }
 
     const filtered = buses.filter((bus) => {
-      if (!bus.LoggedIn) return false;
+      if (!bus.LoggedIn) return false; // Ensure the bus is logged in
 
       const stages = Object.keys(bus.timings);
       const fromIndex = stages.indexOf(fromLocation);
@@ -85,7 +100,6 @@ const UserHomeScreen = ({ route, navigation }) => {
 
       const isIntermediateRoute =
         fromIndex !== -1 && toIndex !== -1 && fromIndex < toIndex;
-
       const isDirectRoute =
         bus.fromStage === fromLocation && bus.toStage === toLocation;
 
@@ -98,7 +112,7 @@ const UserHomeScreen = ({ route, navigation }) => {
     setFilteredBuses(filtered);
   };
 
-  // Navigate to Bus Details
+  // Navigate to Bus Details Screen
   const navigateToBusDetails = (bus) => {
     if (!fromLocation || !toLocation) {
       Alert.alert("Error", "Please select both From and To locations.");
@@ -111,12 +125,13 @@ const UserHomeScreen = ({ route, navigation }) => {
     <View style={styles.container}>
       <Text style={styles.title}>Search Buses</Text>
 
-      {/* State Selection */}
+      {/* State Picker */}
       <Picker
         selectedValue={state}
         onValueChange={(value) => {
           setState(value);
-          setCity("");
+          setCity(""); // Reset city when state changes
+          resetData(); // Clear previous buses and locations
         }}
         style={styles.picker}
       >
@@ -126,10 +141,12 @@ const UserHomeScreen = ({ route, navigation }) => {
         ))}
       </Picker>
 
-      {/* City Selection */}
+      {/* City Picker */}
       <Picker
         selectedValue={city}
-        onValueChange={(value) => setCity(value)}
+        onValueChange={(value) => {
+          setCity(value);
+        }}
         style={styles.picker}
         enabled={!!state}
       >
@@ -139,7 +156,7 @@ const UserHomeScreen = ({ route, navigation }) => {
         ))}
       </Picker>
 
-      {/* From and To Location Selection */}
+      {/* From & To Location Pickers */}
       <Picker
         selectedValue={fromLocation}
         onValueChange={setFromLocation}
@@ -175,10 +192,7 @@ const UserHomeScreen = ({ route, navigation }) => {
           data={filteredBuses}
           keyExtractor={(item) => item._id}
           renderItem={({ item }) => {
-            const formattedTime = fromLocation
-              ? item.timings?.[fromLocation] || "N/A"
-              : "N/A";
-
+            const formattedTime = item.timings?.[fromLocation] || "N/A";
             return (
               <TouchableOpacity onPress={() => navigateToBusDetails(item)}>
                 <View style={styles.busCard}>
@@ -203,4 +217,4 @@ const UserHomeScreen = ({ route, navigation }) => {
   );
 };
 
-export default UserHomeScreen;
+export default UserFindBus;

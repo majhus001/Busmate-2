@@ -6,6 +6,7 @@ import WelcomeScreen from "./components/WelcomeScreen";
 import Signup from "./components/Authentication/Signup";
 import Login from "./components/Authentication/Login";
 import Busdetails from "./components/Users/Busdetails/Busdetails";
+import Payment from "./components/Users/Busdetails/Payment";
 
 const Stack = createNativeStackNavigator();
 
@@ -22,7 +23,7 @@ export default function App() {
         <Stack.Screen name="login" component={Login} />
         <Stack.Screen name="signup" component={Signup} />
         <Stack.Screen name="Busdetails" component={Busdetails} />
-        
+        <Stack.Screen name="payment" component={Payment} />
       </Stack.Navigator>
     </NavigationContainer>
   );

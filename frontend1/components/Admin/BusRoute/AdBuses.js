@@ -97,7 +97,7 @@ const AdBuses = ({ navigation, route }) => {
       toStage,
       prices,
       timings,
-      adminId: adminId,
+      adminId: adminData._id,
     };
 
     try {

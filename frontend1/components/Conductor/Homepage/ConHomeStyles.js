@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0f8ff", 
+    backgroundColor: "#f0f8ff", // Light blue background
     alignItems: "center",
     paddingTop: 40,
   },
@@ -26,6 +26,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
   },
+  mapContainer: {
+    flex: 1, 
+    width: "100%",
+    height: 400, // Adjust height as needed
+    marginTop: 10,
+  },
+  
   panelName: {
     fontSize: 18,
     color: "#f8f9fa",
