@@ -34,7 +34,7 @@ app.use("/api/Conductor/", ComplaintRoute);
 
 const connectDB = async () => {
   try {
-    await mongoose.connect("mongodb+srv://thamilprakasam2005:appichithamil@cluster0.qqwny.mongodb.net/Bus_Mate");
+    await mongoose.connect(process.env.MONGO_URI);
     console.log("MongoDB Connected Successfully");
   } catch (error) {
     console.error("MongoDB Connection Failed:", error);

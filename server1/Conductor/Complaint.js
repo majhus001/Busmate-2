@@ -7,18 +7,17 @@ const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const Complaint = require("../Module/Complaint");
 require("dotenv").config();
 
-const app = express();
-app.use(express.json());
-app.use(cors());
+router.use(cors());
+router.use(express.json());
 
-// Cloudinary configuration
+// Cloudinary Configuration
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Image storage in Cloudinary
+// Image Storage in Cloudinary
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
@@ -29,11 +28,8 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage });
 
 // **Submit Complaint**
-router.post("/complaints", upload.single("image"), async (req, res) => {
+router.post("/add", upload.single("image"), async (req, res) => {
   try {
-    console.log("Received Complaint Request:", req.body);
-    console.log("File Uploaded:", req.file ? req.file.path : "No Image");
-
     const { conductorId, adminId, issueType, complaint, complaintTime } = req.body;
 
     if (!conductorId || !adminId || !issueType || !complaint || !complaintTime) {
@@ -50,84 +46,118 @@ router.post("/complaints", upload.single("image"), async (req, res) => {
       complaintTime,
       timestamp: new Date(),
       image: imageUrl,
+      status: "Pending", // Default status
     });
 
     await newComplaint.save();
-    res.status(201).json({ message: "Complaint submitted successfully", complaint: newComplaint });
+    res.status(201).json({ message: "Complaint submitted successfully!", complaint: newComplaint });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server Error" });
+    res.status(500).json({ error: "Internal Server Error", details: err.message });
   }
 });
 
-// **View Complaints for a Specific Conductor**
-router.get("/complaints/conductor/:conductorId", async (req, res) => {
+// **Fetch Complaints for a Specific Conductor**
+router.get("/conductor/:conductorId", async (req, res) => {
   try {
-    const complaints = await Complaint.find({ conductorId: req.params.conductorId });
-    res.json(complaints);
+    const complaints = await Complaint.find({ conductorId: req.params.conductorId }).sort({ timestamp: -1 });
+
+    if (!complaints.length) {
+      return res.status(404).json({ message: "No complaints found for this conductor." });
+    }
+
+    res.json({ data: complaints });
   } catch (err) {
-    console.error("Error:", err);
-    res.status(500).json({ error: "Server Error" });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-// **View Complaints for Admin (Only Their Conductors)**
-router.get("/complaints/admin/:adminId", async (req, res) => {
+// **Fetch Complaints for a Specific Admin**
+router.get("/admin/:adminId", async (req, res) => {
   try {
-    const complaints = await Complaint.find({ adminId: req.params.adminId });
-    res.json(complaints);
+    const complaints = await Complaint.find({ adminId: req.params.adminId }).sort({ timestamp: -1 });
+
+    if (!complaints.length) {
+      return res.status(404).json({ message: "No complaints found for this admin." });
+    }
+
+    res.json({ data: complaints });
   } catch (err) {
-    console.error("Error:", err);
-    res.status(500).json({ error: "Server Error" });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-// **Edit Complaint (Only by the Respective Conductor)**
-router.put("/complaints/:id", async (req, res) => {
+// **Update Complaint (Conductor Only)**
+router.put("/update/:id", async (req, res) => {
   try {
-    const { conductorId } = req.body;
-    
+    const { conductorId, complaint, issueType } = req.body;
+
     const existingComplaint = await Complaint.findById(req.params.id);
     if (!existingComplaint) {
-      return res.status(404).json({ error: "Complaint not found" });
+      return res.status(404).json({ error: "Complaint not found." });
     }
 
     if (existingComplaint.conductorId.toString() !== conductorId) {
-      return res.status(403).json({ error: "Unauthorized: You can only edit your own complaints" });
+      return res.status(403).json({ error: "Unauthorized: You can only edit your own complaints." });
     }
 
     const updatedComplaint = await Complaint.findByIdAndUpdate(
       req.params.id,
-      { $set: req.body },
+      { $set: { complaint, issueType } },
       { new: true, runValidators: true }
     );
 
-    res.json({ message: "Complaint updated", complaint: updatedComplaint });
+    res.json({ message: "Complaint updated successfully!", complaint: updatedComplaint });
   } catch (err) {
-    console.error("Error updating complaint:", err);
-    res.status(500).json({ error: "Server Error", details: err.message });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-// **Delete Complaint (Only by the Respective Conductor)**
-router.delete("/complaints/:id", async (req, res) => {
+// **Update Complaint Status (Admin Only)**
+router.put("/status/:id", async (req, res) => {
+  try {
+    const { status, adminId } = req.body;
+    const validStatuses = ["Pending", "In Progress", "Resolved"];
+
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: "Invalid status value!" });
+    }
+
+    const complaint = await Complaint.findById(req.params.id);
+    if (!complaint) {
+      return res.status(404).json({ error: "Complaint not found." });
+    }
+
+    if (complaint.adminId.toString() !== adminId) {
+      return res.status(403).json({ error: "Unauthorized: Only the assigned admin can update the status." });
+    }
+
+    complaint.status = status;
+    await complaint.save();
+
+    res.json({ message: "Complaint status updated successfully!", complaint });
+  } catch (err) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// **Delete Complaint (Conductor Only)**
+router.delete("/delete/:id", async (req, res) => {
   try {
     const { conductorId } = req.body;
 
     const existingComplaint = await Complaint.findById(req.params.id);
     if (!existingComplaint) {
-      return res.status(404).json({ error: "Complaint not found" });
+      return res.status(404).json({ error: "Complaint not found." });
     }
 
     if (existingComplaint.conductorId.toString() !== conductorId) {
-      return res.status(403).json({ error: "Unauthorized: You can only delete your own complaints" });
+      return res.status(403).json({ error: "Unauthorized: You can only delete your own complaints." });
     }
 
     await Complaint.findByIdAndDelete(req.params.id);
-    res.json({ message: "Complaint deleted successfully" });
+    res.json({ message: "Complaint deleted successfully!" });
   } catch (err) {
-    console.error("Error deleting complaint:", err);
-    res.status(500).json({ error: "Server Error" });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
