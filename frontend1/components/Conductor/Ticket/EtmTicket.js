@@ -18,6 +18,7 @@ const EtmTicket = ({ route, navigation }) => {
     selectedFrom,
     selectedTo,
     selectedBusNo,
+    busplateNo,
     selectedCity,
     selectedState,
   } = route.params;
@@ -32,7 +33,7 @@ const EtmTicket = ({ route, navigation }) => {
   const [paymentMethod, setPaymentMethod] = useState("");
 
   const handlePaymentSelection = (method) => {
-    setPaymentMethod(method); 
+    setPaymentMethod(method);
     // navigation.navigate("payment", { totalprice: ticketPrice * ticketCount });
   };
 
@@ -145,15 +146,18 @@ const EtmTicket = ({ route, navigation }) => {
       Alert.alert("Payment Method Required", "Please select a payment method.");
       return;
     }
-const BusNo = selectedBusNo;
+    const BusNo = selectedBusNo;
     const ticketData = {
       routeName: RouteName,
       BusNo,
+      busplateNo,
       boarding,
       destination,
       ticketCount,
       ticketPrice: ticketPrice * ticketCount,
-      paymentMethod
+      paymentMethod,
+      selectedCity,
+      selectedState,
     };
 
     try {
@@ -163,7 +167,7 @@ const BusNo = selectedBusNo;
       );
 
       if (response.data.success) {
-        // Alert.alert("Success", "Ticket issued successfully!");
+      
         navigation.navigate("ticsuccess");
       } else {
         Alert.alert("Failed", "Could not issue ticket. Try again.");

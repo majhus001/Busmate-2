@@ -101,7 +101,6 @@ const AdBuses = ({ navigation, route }) => {
     };
 
     try {
-      console.log("hi");
       const response = await axios.post(
         `${API_BASE_URL}/api/Admin/buses/add`,
         busData,

@@ -6,6 +6,7 @@ import { API_BASE_URL } from "../../../apiurl";
 
 const Buslogin = ({ route, navigation }) => {
   const { busplateNo, selectedFrom, selectedTo, selectedBusNo, selectedCity, selectedState } = route.params; 
+  
   const [password, setPassword] = useState("");
 
   console.log(busplateNo, selectedFrom, selectedTo, selectedBusNo);
@@ -17,7 +18,6 @@ const Buslogin = ({ route, navigation }) => {
     }
 
     try {
-        console.log(busplateNo, password);
       const response = await axios.post(`${API_BASE_URL}/api/Admin/buses/login`, {
         busplateNo,
         password,
@@ -25,7 +25,7 @@ const Buslogin = ({ route, navigation }) => {
 
       if (response.data.success) {
         Alert.alert("Success", "Login Successful");
-        navigation.navigate("taketicket", { selectedFrom, selectedTo, selectedBusNo, selectedCity, selectedState }); 
+        navigation.navigate("taketicket", { selectedFrom, selectedTo, selectedBusNo,busplateNo, selectedCity, selectedState }); 
       } else {
         Alert.alert("Error", response.data.message || "Invalid Credentials");
       }

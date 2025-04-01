@@ -7,6 +7,7 @@ const busSchema = new mongoose.Schema(
     busPassword: { type: String, required: true },
     totalShifts: { type: Number, required: true },
     totalSeats: { type: Number, required: true },
+    availableSeats: { type: Number, required: true },
     busType: { type: String, required: true },
     state: { type: String, required: true },
     city: { type: String, required: true },
