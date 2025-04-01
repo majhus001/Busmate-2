@@ -3,10 +3,10 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path");
-require("dotenv").config();
+const fs = require("fs");
+require("dotenv").config(); // Load environment variables
 
-// Import Routes
-const buses = require("./Admin/BusRoutes/Buses"); 
+const buses = require("./Admin/BusRoutes/Buses");
 const Etm = require("./Conductor/Ticketbook");
 const busroutes = require("./Conductor/BusRoutes");
 const loginRoutes = require("./Authentication/LoginRoute");
@@ -22,7 +22,6 @@ app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-
 // Routes
 app.use("/api/Admin/buses", buses);
 app.use("/api/Admin/conductor", Adconductor);
@@ -30,7 +29,7 @@ app.use("/api/tickets", Etm);
 app.use("/api/busroutes", busroutes);
 app.use("/api/auth", loginRoutes);
 app.use("/api/authSign", SignupRoute);
-app.use("/api/Conductor/", ComplaintRoute);
+app.use("/api/Conductor", ComplaintRoute);
 
 const connectDB = async () => {
   try {

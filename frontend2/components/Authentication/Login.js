@@ -16,7 +16,7 @@ const Login = ({ navigation }) => {
 
     try {
       const loginData = {
-        Username: userName, // Always send as Username
+        Username: userName, 
         password: password,
         role: role,
       };

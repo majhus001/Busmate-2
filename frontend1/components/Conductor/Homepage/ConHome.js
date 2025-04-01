@@ -1,14 +1,19 @@
-import React, { useLayoutEffect } from "react";
+import React, { useLayoutEffect,useEffect } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import styles from "./ConHomeStyles"; // Importing styles
+import styles from "./ConHomeStyles";
 
 const ConHome = ({ navigation, route }) => {
-  // Extracting data from route.params
+
   const { conData } = route.params || {};
 
   const username = conData.Username || "N/A"
   const city = conData.city || "N/A"
   const state = conData.state || "N/A"
+
+  useEffect(() => {
+    console.log("conData received in ConHome:", conData);
+  }, [conData]);
+  
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -43,13 +48,34 @@ const ConHome = ({ navigation, route }) => {
       >
         <Text style={styles.buttonText}>🚀 Start Ride</Text>
       </TouchableOpacity>
-      {/* View Complaints Button */}
+      {/* Add Complaints Button */}
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate("complaintform")}
-        >
+        onPress={() => {
+          if (!conData || !conData._id) {
+              Alert.alert("Error", "Conductor ID is missing. Please log in again.");
+              return;
+          }
+        console.log("Navigating with conductorId:", conData._id);
+        navigation.navigate("complaintform", { conductorId: conData._id });
+       }}>
         <Text style={styles.buttonText}>📋 Add Complaints</Text>
-        </TouchableOpacity>
+      </TouchableOpacity>
+
+      {/* View Complaints Button */}
+      <TouchableOpacity
+  style={styles.button}
+  onPress={() => {
+    if (!conData || !conData._id) {
+      Alert.alert("Error", "Conductor ID is missing. Please log in again.");
+      return;
+    }
+    console.log("Navigating with conductorId:", conData._id);
+    navigation.navigate("viewcomplaintform", { conductorId: conData._id });
+  }}
+>
+  <Text style={styles.buttonText}>👀 View Complaints</Text>
+</TouchableOpacity>
     </View>
   );
 };

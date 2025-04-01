@@ -16,6 +16,7 @@ import AddConductor from "./components/Admin/Conductor/AddConductor";
 import Example from "./components/Admin/BusRoute/Example";
 import ComplaintForm from "./components/Conductor/Complaintform/ComplaintForm";
 import AdDash from "./components/Admin/Dashboard/AdDash";
+import ViewComplaintForm from "./components/Conductor/Complaintform/ViewComplaintForm";
 
 const Stack = createNativeStackNavigator();
 
@@ -30,6 +31,7 @@ export default function App() {
         <Stack.Screen name="conhomepage" component={ConHome} />
         <Stack.Screen name="conbusselect" component={BusSelection} />
         <Stack.Screen name="complaintform" component={ComplaintForm} />
+        <Stack.Screen name="viewcomplaintform" component={ViewComplaintForm} />
         <Stack.Screen name="buslogin" component={Buslogin} />
         <Stack.Screen name="taketicket" component={EtmTicket} />
         <Stack.Screen name="adroutes" component={AdRoutes} />
