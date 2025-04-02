@@ -9,6 +9,7 @@ const ConductorSchema = new mongoose.Schema(
     gender: { type: String, enum: ["Male", "Female", "Other"] },
     password: { type: String, required: true },
     address: { type: String, required: true },
+    image: { type: String, required: false },
     adminId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "users",

@@ -1,29 +1,58 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, ScrollView, Image, TouchableOpacity, Alert } from "react-native";
+import styles from "./ConProfileStyles"; // Importing styles
 
-const UserProfile = () => {
+const ConProfile = ({ route, navigation }) => {
   // Example user data
-  const conData = {
-    Username: "John Doe",
-    age: 25,
-    phonenumber: "+1234567890",
-    gender: "Male",
-    password: "hidden",
-    dob: "1999-05-12",
-    loggedin: true,
-    address: "123 Main Street, New York, USA",
+  const { conData } = route.params || {};
+  console.log(conData);
+
+  const handleNavigate = (screen) => {
+    if (!conData || !conData._id) {
+      Alert.alert("Error", "Conductor ID is missing. Please log in again.");
+      return;
+    }
+    console.log("Navigating with conductorId:", conData._id);
+    navigation.navigate(screen, { conductorId: conData._id });
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>User Profile</Text>
+      <Text style={styles.title}>Conductor Profile</Text>
+      {/* Display the image at the top */}
+      <Image 
+        source={{ uri: conData.image || "https://th.bing.com/th/id/OIP.aKiTvd6drTIayNy2hddhiQHaHa?w=1024&h=1024&rs=1&pid=ImgDetMain" }} 
+        style={styles.profileImage} 
+        onError={(e) => console.log("Image Load Error", e.nativeEvent.error)}
+      />
+
       <View style={styles.infoContainer}>
         <ProfileItem label="Username" value={conData.Username} />
         <ProfileItem label="Age" value={conData.age} />
-        <ProfileItem label="Phone Number" value={conData.phonenumber} />
+        <ProfileItem label="Phone Number" value={conData.phoneNumber} />
         <ProfileItem label="Gender" value={conData.gender} />
-        <ProfileItem label="Date of Birth" value={conData.dob} />
+        <ProfileItem
+          label="Date of Birth"
+          value={new Date(conData.dob).toISOString().split("T")[0]}
+        />
         <ProfileItem label="Address" value={conData.address} />
+        <ProfileItem label="LoggedIn" value={conData.LoggedIn ? "Active" : "Inactive"} />
+      </View>
+      <View style={styles.combtn}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => handleNavigate("complaintform")}
+        >
+          <Text style={styles.buttonText}> Add Complaints</Text>
+        </TouchableOpacity>
+
+        {/* View Complaints Button */}
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => handleNavigate("viewcomplaintform")}
+        >
+          <Text style={styles.buttonText}> View Complaints</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -37,42 +66,4 @@ const ProfileItem = ({ label, value }) => (
   </View>
 );
 
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    padding: 20,
-    backgroundColor: "#f8f9fa",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  infoContainer: {
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  item: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  value: {
-    fontSize: 16,
-    color: "#555",
-  },
-});
-
-export default UserProfile;
+export default ConProfile;

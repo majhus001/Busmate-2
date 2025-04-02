@@ -1,27 +1,35 @@
-import React, { useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import {
-  View, Text, TextInput, TouchableOpacity, Alert, Image, ScrollView
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  Image,
+  ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
-import styles from "./ComplaintFormStyles"; 
-import { API_BASE_URL } from "../../../apiurl"; 
+import styles from "./ComplaintFormStyles";
+import { API_BASE_URL } from "../../../apiurl";
 
 const ComplaintForm = ({ route }) => {
-  const { conductorId } = route.params || {}; 
+  const { conductorId } = route.params || {};
 
   const [complaint, setComplaint] = useState("");
   const [issueType, setIssueType] = useState("Potholes");
   const [otherIssue, setOtherIssue] = useState("");
   const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!conductorId) {
       Alert.alert("Error", "Conductor ID is missing. Please log in again.");
     }
   }, [conductorId]);
-  
+
   // Open camera
   const takePhoto = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -72,6 +80,8 @@ const ComplaintForm = ({ route }) => {
       return;
     }
 
+    setLoading(true);
+
     const complaintData = new FormData();
     complaintData.append("conductorId", conductorId);
     complaintData.append("complaint", complaint);
@@ -81,7 +91,7 @@ const ComplaintForm = ({ route }) => {
     if (image) {
       complaintData.append("image", {
         uri: image,
-        name: `complaint_${Date.now()}.jpg`, 
+        name: `complaint_${Date.now()}.jpg`,
         type: "image/jpeg",
       });
     }
@@ -110,6 +120,8 @@ const ComplaintForm = ({ route }) => {
     } catch (error) {
       console.error("Upload Error:", error.response?.data || error.message);
       Alert.alert("Error", "Network error, check server logs.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -164,9 +176,13 @@ const ComplaintForm = ({ route }) => {
       {/* Display selected image */}
       {image && <Image source={{ uri: image }} style={styles.imagePreview} />}
 
-      {/* Submit Button */}
-      <TouchableOpacity onPress={handleSubmit} style={styles.submitButton}>
-        <Text style={styles.submitButtonText}>Submit Complaint</Text>
+      {/* Submit Button with Loading Indicator */}
+      <TouchableOpacity onPress={handleSubmit} style={styles.submitButton} disabled={loading}>
+        {loading ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={styles.submitButtonText}>Submit Complaint</Text>
+        )}
       </TouchableOpacity>
     </ScrollView>
   );

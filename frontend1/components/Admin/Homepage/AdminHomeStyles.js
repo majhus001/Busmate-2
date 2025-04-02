@@ -9,7 +9,6 @@ const styles = StyleSheet.create({
     paddingBottom:50,
   },
 
-  /* Profile Section */
   leftSection: {
     alignItems: "center",
     marginBottom: 20,

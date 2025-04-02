@@ -45,7 +45,7 @@ const AdDash = ({ navigation, route }) => {
         >
           <Image
             source={{
-              uri: "https://th.bing.com/th/id/OIP.aKiTvd6drTIayNy2hddhiQHaHa?w=1024&h=1024&rs=1&pid=ImgDetMain",
+              uri: adminData.image || "https://th.bing.com/th/id/OIP.aKiTvd6drTIayNy2hddhiQHaHa?w=1024&h=1024&rs=1&pid=ImgDetMain",
             }}
             style={styles.profileImage}
           />

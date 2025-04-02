@@ -16,18 +16,11 @@ const ConHome = ({ navigation, route }) => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
-  const handleNavigate = (screen) => {
-    if (!conData || !conData._id) {
-      Alert.alert("Error", "Conductor ID is missing. Please log in again.");
-      return;
-    }
-    console.log("Navigating with conductorId:", conData._id);
-    navigation.navigate(screen, { conductorId: conData._id });
-  };
+  
 
-  const handleprofile = () =>{
-    navigation.navigate("conprofile", conData);
-  }
+  const handleprofile = () => {
+    navigation.navigate("conprofile", {conData});
+  };
 
   return (
     <View style={styles.container}>
@@ -38,8 +31,8 @@ const ConHome = ({ navigation, route }) => {
       </View>
 
       {/* Conductor Details */}
-      <View style={styles.detailsContainer}>
-        <TouchableOpacity onPress={handleprofile}>
+        <View style={styles.detailsContainer}>
+      <TouchableOpacity onPress={handleprofile} style={styles.condetails}>
           <Text style={styles.detailsTitle}>👤 Conductor Details</Text>
           <Text style={styles.detailText}>
             <Text style={styles.bold}>Name:</Text> {conData.Username}
@@ -50,8 +43,8 @@ const ConHome = ({ navigation, route }) => {
           <Text style={styles.detailText}>
             <Text style={styles.bold}>Age:</Text> {conData.age}
           </Text>
-        </TouchableOpacity>
-      </View>
+      </TouchableOpacity>
+        </View>
 
       {/* Start Ride Button */}
       <TouchableOpacity
@@ -62,20 +55,7 @@ const ConHome = ({ navigation, route }) => {
       </TouchableOpacity>
 
       {/* Add Complaints Button */}
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => handleNavigate("complaintform")}
-      >
-        <Text style={styles.buttonText}>📋 Add Complaints</Text>
-      </TouchableOpacity>
-
-      {/* View Complaints Button */}
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => handleNavigate("viewcomplaintform")}
-      >
-        <Text style={styles.buttonText}>👀 View Complaints</Text>
-      </TouchableOpacity>
+      
 
       {/* Enlarged Map */}
       <View style={styles.mapContainer}>

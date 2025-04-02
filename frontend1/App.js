@@ -19,6 +19,7 @@ import ViewComplaintForm from "./components/Conductor/Complaintform/ViewComplain
 import AdDash from "./components/Admin/Dashboard/AdDash";
 import Upiqr from "./components/Conductor/Ticket/Upiqr";
 import AdminProfile from "./components/Admin/Profile/AdminProfile";
+import ConProfile from "./components/Conductor/Profile/ConProfile";
 
 const Stack = createNativeStackNavigator();
 
@@ -47,6 +48,7 @@ export default function App() {
         <Stack.Screen name="addash" component={AdDash} />
         <Stack.Screen name="Upiqr" component={Upiqr}/>
         <Stack.Screen name="adprofile" component={AdminProfile}/>
+        <Stack.Screen name="conprofile" component={ConProfile}/>
       </Stack.Navigator>
     </NavigationContainer>
   );
