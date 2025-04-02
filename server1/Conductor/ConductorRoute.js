@@ -4,6 +4,7 @@ const multer = require("multer");
 const { v2: cloudinary } = require("cloudinary");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const Complaint = require("../Module/Complaint");
+const Conductor = require("../Module/Conductor_sc");
 require("dotenv").config();
 
 // Configure Cloudinary
@@ -80,6 +81,30 @@ router.get("/complaints/:conductorId", async (req, res) => {
   }
 });
 
+
+router.put("/logout/:conId", async (req, res) => {
+  const { conId } = req.params; // Get conId from URL parameters
+
+  if (!conId) {
+    return res.status(400).json({ success: false, message: "Conductor ID is required." });
+  }
+
+  try {
+    const conductor = await Conductor.findById(conId);
+
+    if (!conductor) {
+      return res.status(404).json({ success: false, message: "Conductor not found." });
+    }
+
+    conductor.LoggedIn = false; 
+    await conductor.save();
+
+    res.json({ success: true, message: "Logout successful." });
+  } catch (error) {
+    console.error("Error during logout:", error);
+    res.status(500).json({ success: false, message: "Internal server error." });
+  }
+});
 
 
 

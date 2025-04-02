@@ -23,31 +23,62 @@ router.post("/add", async (req, res) => {
   }
 });
 
-router.post("/get_stages", async (req, res) => {
-  const { selectedCity, selectedState } = req.body;
-
-  console.log("Fetching stages for:", selectedCity, selectedState);
-
+router.get("/getcities/:selectedState", async (req, res) => {
+  const {  selectedState } = req.params;
+console.log(selectedState)
   try {
     const routes = await BusRoute.find({
-    //   state: new RegExp(`^${selectedState}$`, "i"),
-      city: new RegExp(`^${selectedCity}$`, "i"),
+      state: new RegExp(`^${selectedState}$`, "i"),
     });
+    
 
-    console.log("Found Routes:", routes);
 
     if (!routes || routes.length === 0) {
       return res.json({ success: false, message: "No stages found." });
     }
 
     // Extract stages from all matching routes
-    const allStages = routes.flatMap((route) => route.stages || []);
+    const cities = [...new Set(routes.map((route) => route.city))];
 
-    res.json({ success: true, stages: allStages });
+
+    res.json({ success: true, cities: cities });
   } catch (error) {
     console.error("Error fetching stages:", error);
     res.status(500).json({ success: false, message: "Server error." });
   }
 });
+
+
+
+router.post("/getstages", async (req, res) => {
+  const { selectedCity, state } = req.body;
+  console.log(state, selectedCity)
+  if (!selectedCity || !state) {
+    console.log("jjjjj")
+    return res.status(400).json({ success: false, message: "City and state are required." });
+  }
+
+  try {
+    const routes = await BusRoute.find({
+      state: new RegExp(`^${state}$`, "i"), 
+      city: new RegExp(`^${selectedCity}$`, "i"),
+    });
+
+    console.log("Found Routes:", routes);
+
+    if (!routes.length) {
+      return res.json({ success: false, message: "No stages found." });
+    }
+
+    // Extract and filter unique stages
+    const allStages = [...new Set(routes.flatMap(route => route.stages || []))];
+
+    res.json({ success: true, stages: allStages });
+  } catch (error) {
+    console.error("Error fetching stages:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error." });
+  }
+});
+
 
 module.exports = router;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  ActivityIndicator,
 } from "react-native";
 import RNPickerSelect from "react-native-picker-select";
 import axios from "axios";
@@ -30,7 +31,7 @@ const AddConductor = ({ navigation, route }) => {
   const [password, setPassword] = useState("");
   const [address, setAddress] = useState("");
   const [imageUri, setImageUri] = useState(null); // State for the profile image
-
+  const [loading, setLoading] = useState(false);
   // State to handle visibility of DateTimePickerModal
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
 
@@ -53,28 +54,28 @@ const AddConductor = ({ navigation, route }) => {
   const requestPermission = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission required", "We need permission to access your photos.");
+      Alert.alert(
+        "Permission required",
+        "We need permission to access your photos."
+      );
     }
   };
-  
+
   useEffect(() => {
     requestPermission();
   }, []);
-  
 
   // Handle image picker
   const handleImagePick = async () => {
-    // Launch image picker
     const result = await ImagePicker.launchImageLibraryAsync({
       allowsEditing: true,
-      aspect: [4, 3],
+      aspect: [4, 4],
       quality: 1,
     });
 
-    if (!result.cancelled) {
-      setImageUri(result.uri);
-      console.log("hiii")
-      console.log(result.uri); // Check the URI
+    if (!result.canceled && result.assets?.length > 0) {
+      setImageUri(result.assets[0].uri); // Correct way to get URI
+      console.log("Selected Image URI:", result.assets[0].uri);
     }
   };
 
@@ -89,7 +90,8 @@ const AddConductor = ({ navigation, route }) => {
       return;
     }
 
-    // Validate and format DOB
+    setLoading(true);
+
     let formattedDOB = "";
     if (dob) {
       const parsedDate = new Date(dob);
@@ -104,23 +106,39 @@ const AddConductor = ({ navigation, route }) => {
       }
     }
 
-    const conductorData = {
-      Username: Username.trim(),
-      phoneNumber: phoneNumber.trim(),
-      dob: formattedDOB,
-      age: parseInt(age, 10) || null,
-      gender: gender,
-      password: password,
-      address: address,
-      adminId: adminData._id,
-      image: imageUri, // Send image URI in the data
-    };
+    const formData = new FormData();
+    formData.append("Username", Username.trim());
+    formData.append("phoneNumber", phoneNumber.trim());
+    formData.append("dob", formattedDOB);
+    formData.append("age", parseInt(age, 10) || null);
+    formData.append("gender", gender);
+    formData.append("password", password);
+    formData.append("address", address);
+    formData.append("adminId", adminData._id);
+
+    // Append image if selected
+    if (imageUri) {
+      const uriParts = imageUri.split(".");
+      const fileType = uriParts[uriParts.length - 1];
+
+      formData.append("image", {
+        uri: imageUri,
+        name: `conductor.${fileType}`,
+        type: `image/${fileType}`,
+      });
+    }
 
     try {
       const response = await axios.post(
         `${API_BASE_URL}/api/Admin/Conductor/add`,
-        conductorData
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
+
       Alert.alert("Success", "Conductor added successfully!");
       navigation.navigate("AdminHome", { adminData });
     } catch (error) {
@@ -129,6 +147,8 @@ const AddConductor = ({ navigation, route }) => {
         "Error",
         error.response?.data?.error || "Something went wrong"
       );
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -140,21 +160,24 @@ const AddConductor = ({ navigation, route }) => {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView contentContainerStyle={styles.container}>
           <Text style={styles.header}>Add Conductor</Text>
-
-          {/* Image Picker Button */}
-          <Text style={styles.label}>Profile Image</Text>
-          {imageUri && (
-            <Image source={{ uri: imageUri }} style={styles.imagePreview} />
-          )}
-          <TouchableOpacity
-            onPress={handleImagePick}
-            style={styles.imagePickerButton}
-          >
-            <Text style={styles.imagePickerButtonText}>
-              {imageUri ? "Change Image" : "Pick Image"}
-            </Text>
+          <TouchableOpacity onPress={handleImagePick}>
+            <Image
+              source={{
+                uri:
+                  imageUri ||
+                  "https://th.bing.com/th/id/OIP.aKiTvd6drTIayNy2hddhiQHaHa?w=1024&h=1024&rs=1&pid=ImgDetMain",
+              }}
+              style={styles.profileImage}
+              onError={(e) =>
+                console.log("Image Load Error", e.nativeEvent.error)
+              }
+            />
+            <TouchableOpacity>
+              <Text style={styles.imagePickerButtonText}>
+                {imageUri ? "Change Image" : "Pick Image"}
+              </Text>
+            </TouchableOpacity>
           </TouchableOpacity>
-
           {/* Username */}
           <Text style={styles.label}>Full Name *</Text>
           <TextInput
@@ -163,7 +186,6 @@ const AddConductor = ({ navigation, route }) => {
             value={Username}
             onChangeText={setUsername}
           />
-
           {/* Phone Number */}
           <Text style={styles.label}>Phone Number *</Text>
           <TextInput
@@ -173,13 +195,11 @@ const AddConductor = ({ navigation, route }) => {
             value={phoneNumber}
             onChangeText={setPhoneNumber}
           />
-
           {/* DOB */}
           <Text style={styles.label}>Date of Birth</Text>
           <TouchableOpacity onPress={showDatePicker} style={styles.input}>
             <Text>{dob ? dob : "Select Date of Birth"}</Text>
           </TouchableOpacity>
-
           {/* Age */}
           <Text style={styles.label}>Age</Text>
           <TextInput
@@ -189,7 +209,6 @@ const AddConductor = ({ navigation, route }) => {
             value={age}
             onChangeText={setAge}
           />
-
           {/* Gender */}
           <Text style={styles.label}>Gender</Text>
           <View style={styles.pickerContainer}>
@@ -204,7 +223,6 @@ const AddConductor = ({ navigation, route }) => {
               placeholder={{ label: "Select Gender", value: null }}
             />
           </View>
-
           {/* Password */}
           <Text style={styles.label}>Conductor Password *</Text>
           <TextInput
@@ -214,7 +232,6 @@ const AddConductor = ({ navigation, route }) => {
             value={password}
             onChangeText={setPassword}
           />
-
           {/* Address */}
           <Text style={styles.label}>Address</Text>
           <TextInput
@@ -223,12 +240,18 @@ const AddConductor = ({ navigation, route }) => {
             value={address}
             onChangeText={setAddress}
           />
-
           {/* Submit Button */}
-          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>Add Conductor</Text>
+          <TouchableOpacity
+            style={[styles.submitButton, loading && styles.buttonLoading]}
+            onPress={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.submitButtonText}>Add Conductor</Text>
+            )}
           </TouchableOpacity>
-
           {/* DateTimePickerModal */}
           <DateTimePickerModal
             isVisible={isDatePickerVisible}

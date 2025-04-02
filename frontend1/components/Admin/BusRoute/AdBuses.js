@@ -1,10 +1,11 @@
-import React, { useState, useLayoutEffect } from "react";
+import React, { useState, useLayoutEffect, useEffect } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Picker } from "@react-native-picker/picker";
@@ -29,22 +30,19 @@ const AdBuses = ({ navigation, route }) => {
   const [busType, setBusType] = useState("");
   const [state, setState] = useState("");
   const [city, setCity] = useState("");
+  const [cities, setCities] = useState([]);
   const [stages, setStages] = useState([]);
   const [prices, setPrices] = useState({});
   const [timings, setTimings] = useState({});
   const [fromStage, setFromStage] = useState("");
   const [toStage, setToStage] = useState("");
   const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
-
+  const [loading, setLoading] = useState(false);
   const [currentStage, setCurrentStage] = useState("");
 
   const busTypes = ["AC", "Non-AC"];
-  const states = ["TamilNadu", "Kerala", "Karnataka"];
-  const cities = {
-    TamilNadu: ["Coimbatore", "Chennai", "Madurai"],
-    Kerala: ["Kochi", "Palakkad"],
-    Karnataka: ["Bangalore", "Mysore"],
-  };
+  const states = ["Tamilnadu", "Kerala", "Karnataka"];
+
   const allStages = {
     Coimbatore: ["Ukkadam", "Kurichi", "Kinathukadavu", "Pollachi"],
     Chennai: ["Koyambedu", "T Nagar", "Guindy"],
@@ -55,14 +53,58 @@ const AdBuses = ({ navigation, route }) => {
     Mysore: ["City Bus Stand", "Chamundi Hill", "Vijayanagar"],
   };
 
-  const handleCityChange = (selectedCity) => {
+  const handleStateChange = async (selectedState) => {
+    setState(selectedState);
+    setCity(""); // Reset city selection
+    setCities([]); // Clear old cities
+    setLoading(true);
+
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/api/busroutes/getcities/${selectedState}`
+      );
+      if (response.data.success) {
+        setCities(response.data.cities); // ✅ Update city dropdown
+      } else {
+        Alert.alert("No Cities Found", response.data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching cities:", error);
+      Alert.alert("Error", "Failed to load cities. Please try again.");
+    } finally {
+      setLoading(false); // Hide loader
+    }
+  };
+
+  const handleCityChange = async (selectedCity) => {
     setCity(selectedCity);
-    setStages(allStages[selectedCity] || []);
+    setStages([]); // Reset stages
     setPrices({});
     setTimings({});
     setFromStage("");
     setToStage("");
+    setLoading(true); // Show loading indicator
+
+    try {
+      console.log(state);
+      const response = await axios.post(
+        `${API_BASE_URL}/api/busroutes/getstages`,
+        { selectedCity, state }
+      );
+
+      if (response.data.success) {
+        setStages(response.data.stages); // ✅ Update stages dropdown
+      } else {
+        Alert.alert("No Stages Found", response.data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching stages:", error);
+      Alert.alert("Error", "Failed to load stages. Please try again.");
+    } finally {
+      setLoading(false); // Hide loader
+    }
   };
+
   const handlePriceChange = (from, to, value) => {
     setPrices((prevPrices) => ({ ...prevPrices, [`${from}-${to}`]: value }));
   };
@@ -229,7 +271,7 @@ const AdBuses = ({ navigation, route }) => {
 
       <Picker
         selectedValue={state}
-        onValueChange={setState}
+        onValueChange={handleStateChange}
         style={styles.picker}
       >
         {states.map((s, index) => (
@@ -237,13 +279,15 @@ const AdBuses = ({ navigation, route }) => {
         ))}
       </Picker>
 
-      {state && (
+      {loading && <ActivityIndicator size="large" color="#007bff" />}
+
+      {state && cities.length > 0 && (
         <Picker
           selectedValue={city}
           onValueChange={handleCityChange}
           style={styles.picker}
         >
-          {cities[state].map((c, index) => (
+          {cities.map((c, index) => (
             <Picker.Item key={index} label={c} value={c} />
           ))}
         </Picker>
@@ -313,7 +357,11 @@ const AdBuses = ({ navigation, route }) => {
       )}
 
       <TouchableOpacity style={styles.button} onPress={handleAddBus}>
-        <Text style={styles.buttonText}>Add Bus</Text>
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Add Bus</Text>
+        )}
       </TouchableOpacity>
     </ScrollView>
   );

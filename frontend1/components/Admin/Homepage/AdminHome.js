@@ -95,7 +95,7 @@ const AdminHome = ({ navigation, route }) => {
       bus.busNo?.toString().toLowerCase().startsWith(searchLower) ||
       bus.busRouteNo?.toString().toLowerCase().startsWith(searchLower) ||
       bus.fromStage?.toString().toLowerCase().startsWith(searchLower) ||
-      bus.toStage?.toString().toLowerCase().startsWith(searchLower)||
+      bus.toStage?.toString().toLowerCase().startsWith(searchLower) ||
       bus.busNo?.toString().toLowerCase().includes(searchLower) ||
       bus.busRouteNo?.toString().toLowerCase().includes(searchLower) ||
       bus.fromStage?.toString().toLowerCase().includes(searchLower) ||
@@ -123,7 +123,9 @@ const AdminHome = ({ navigation, route }) => {
         <View style={styles.leftSection}>
           <Image
             source={{
-              uri: adminData.image || "https://th.bing.com/th/id/OIP.aKiTvd6drTIayNy2hddhiQHaHa?w=1024&h=1024&rs=1&pid=ImgDetMain",
+              uri:
+                adminData.image ||
+                "https://th.bing.com/th/id/OIP.aKiTvd6drTIayNy2hddhiQHaHa?w=1024&h=1024&rs=1&pid=ImgDetMain",
             }}
             style={styles.profileImage}
           />
@@ -147,13 +149,19 @@ const AdminHome = ({ navigation, route }) => {
           style={styles.addButton}
           onPress={() => navigation.navigate("AddConductor", { adminData })}
         >
-          <Text style={styles.addButtonText}>+ Add Conductor</Text>
+          <Text style={styles.addButtonText}>Add Conductor</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate("adroutes", { adminData })}
+        >
+          <Text style={styles.addButtonText}>Add Routes</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => navigation.navigate("AddBuses", { adminData })}
         >
-          <Text style={styles.addButtonText}>+ Add Bus</Text>
+          <Text style={styles.addButtonText}>Add Bus</Text>
         </TouchableOpacity>
       </View>
 
@@ -218,118 +226,126 @@ const AdminHome = ({ navigation, route }) => {
       ) : selectedTab === "Buses" ? (
         <>
           <Text style={styles.sectionTitle}>Available Buses</Text>
-          {paginatedBuses.length > 0 ? (
-            paginatedBuses.map((item) => (
-              <View key={item._id} style={styles.busCard}>
-                <TouchableOpacity
-                  onPress={() => toggleDropdown(item._id)}
-                  style={styles.busHeader}
-                >
-                  <Text style={styles.busText}>
-                    Route No: {item.busRouteNo}
-                  </Text>
-                  <Text style={styles.busText}>
-                    From: {item.fromStage} ➡️ To: {item.toStage}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.status,
-                      item.LoggedIn ? styles.available : styles.onService,
-                    ]}
+          <ScrollView>
+            {paginatedBuses.length > 0 ? (
+              paginatedBuses.map((item) => (
+                <View key={item._id} style={styles.busCard}>
+                  <TouchableOpacity
+                    onPress={() => toggleDropdown(item._id)}
+                    style={styles.busHeader}
                   >
-                    {item.LoggedIn ? "Active" : "Inactive"}
-                  </Text>
-                </TouchableOpacity>
+                    <Text style={styles.busText}>
+                      Route No: {item.busRouteNo}
+                    </Text>
+                    <Text style={styles.busText}>
+                      From: {item.fromStage} ➡️ To: {item.toStage}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.status,
+                        item.LoggedIn ? styles.available : styles.onService,
+                      ]}
+                    >
+                      {item.LoggedIn ? "Active" : "Inactive"}
+                    </Text>
+                  </TouchableOpacity>
 
-                {/* Expandable Section */}
-                {item.expanded && (
-                  <View style={styles.dropdown}>
-                    <Text style={styles.dropdownText}>
-                      Bus No: {item.busNo}
-                    </Text>
-                    <Text style={styles.dropdownText}>
-                      Bus Type: {item.busType}
-                    </Text>
-                    <Text style={styles.dropdownText}>
-                      Total Seats: {item.totalSeats}
-                    </Text>
-                    <Text style={styles.dropdownText}>
-                      State: {item.state}, City: {item.city}
-                    </Text>
-                    <Text style={styles.dropdownText}>
-                      Shifts: {item.totalShifts}
-                    </Text>
+                  {/* Expandable Section */}
+                  {item.expanded && (
+                    <View style={styles.dropdown}>
+                      <Text style={styles.dropdownText}>
+                        Bus No: {item.busNo}
+                      </Text>
+                      <Text style={styles.dropdownText}>
+                        Bus Type: {item.busType}
+                      </Text>
+                      <Text style={styles.dropdownText}>
+                        Total Seats: {item.totalSeats}
+                      </Text>
+                      <Text style={styles.dropdownText}>
+                        State: {item.state}, City: {item.city}
+                      </Text>
+                      <Text style={styles.dropdownText}>
+                        Shifts: {item.totalShifts}
+                      </Text>
 
-                    {/* Display Timings with Line Breaks */}
-                    <Text style={styles.dropdownText}>Timings:</Text>
-                    <View style={styles.bustimingcont}>
-                      {item.timings ? (
-                        Object.entries(item.timings).map(
-                          ([stage, time], index) => (
-                            <Text key={index} style={styles.dropdowntimingText}>
-                              {stage}: {time}
-                            </Text>
+                      {/* Display Timings with Line Breaks */}
+                      <Text style={styles.dropdownText}>Timings:</Text>
+                      <View style={styles.bustimingcont}>
+                        {item.timings ? (
+                          Object.entries(item.timings).map(
+                            ([stage, time], index) => (
+                              <Text
+                                key={index}
+                                style={styles.dropdowntimingText}
+                              >
+                                {stage}: {time}
+                              </Text>
+                            )
                           )
-                        )
-                      ) : (
-                        <Text style={styles.dropdownText}>N/A</Text>
-                      )}
-                    </View>
+                        ) : (
+                          <Text style={styles.dropdownText}>N/A</Text>
+                        )}
+                      </View>
 
-                    {/* Display Prices with Line Breaks */}
-                    <Text style={styles.dropdownText}>Prices:</Text>
-                    <View style={styles.bustimingcont}>
-                      {item.prices ? (
-                        Object.entries(item.prices).map(
-                          ([route, price], index) => (
-                            <Text key={index} style={styles.dropdowntimingText}>
-                              {route}: ₹{price}
-                            </Text>
+                      {/* Display Prices with Line Breaks */}
+                      <Text style={styles.dropdownText}>Prices:</Text>
+                      <View style={styles.bustimingcont}>
+                        {item.prices ? (
+                          Object.entries(item.prices).map(
+                            ([route, price], index) => (
+                              <Text
+                                key={index}
+                                style={styles.dropdowntimingText}
+                              >
+                                {route}: ₹{price}
+                              </Text>
+                            )
                           )
-                        )
-                      ) : (
-                        <Text style={styles.dropdownText}>N/A</Text>
-                      )}
+                        ) : (
+                          <Text style={styles.dropdownText}>N/A</Text>
+                        )}
+                      </View>
+
+                      <Text style={styles.dropdownText}>
+                        Bus Password: {item.busPassword || "Not Set"}
+                      </Text>
                     </View>
+                  )}
+                </View>
+              ))
+            ) : (
+              <Text style={styles.noDataText}>No Buses Found</Text>
+            )}
 
-                    <Text style={styles.dropdownText}>
-                      Bus Password: {item.busPassword || "Not Set"}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            ))
-          ) : (
-            <Text style={styles.noDataText}>No Buses Found</Text>
-          )}
+            {/* Pagination */}
+            <View style={styles.paginationContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.paginationButton,
+                  currentPage === 0 && styles.disabledButton,
+                ]}
+                onPress={handlePrevPage}
+                disabled={currentPage === 0}
+              >
+                <Text style={styles.paginationButtonText}>Previous</Text>
+              </TouchableOpacity>
 
-          {/* Pagination */}
-          <View style={styles.paginationContainer}>
-            <TouchableOpacity
-              style={[
-                styles.paginationButton,
-                currentPage === 0 && styles.disabledButton,
-              ]}
-              onPress={handlePrevPage}
-              disabled={currentPage === 0}
-            >
-              <Text style={styles.paginationButtonText}>Previous</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.paginationButton,
-                (currentPage + 1) * busesPerPage >= filteredBuses.length &&
-                  styles.disabledButton,
-              ]}
-              onPress={handleNextPage}
-              disabled={
-                (currentPage + 1) * busesPerPage >= filteredBuses.length
-              }
-            >
-              <Text style={styles.paginationButtonText}>Next</Text>
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity
+                style={[
+                  styles.paginationButton,
+                  (currentPage + 1) * busesPerPage >= filteredBuses.length &&
+                    styles.disabledButton,
+                ]}
+                onPress={handleNextPage}
+                disabled={
+                  (currentPage + 1) * busesPerPage >= filteredBuses.length
+                }
+              >
+                <Text style={styles.paginationButtonText}>Next</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
         </>
       ) : (
         <View style={styles.rightSection}>
@@ -337,14 +353,25 @@ const AdminHome = ({ navigation, route }) => {
           {filteredConductors.length > 0 ? (
             filteredConductors.map((conductor) => (
               <View key={conductor._id} style={styles.conductorCard}>
-                <Text style={styles.conductorName}>
-                  👤 {conductor.Username}
-                </Text>
-                <Text style={styles.conductorContact}>
-                  📞 {conductor.phoneNumber}
-                </Text>
-                <Text style={styles.conductorContact}>
-                  ⚧ Gender: {conductor.gender || "Not Specified"}
+                <View>
+                  <Text style={styles.conductorName}>
+                    👤 {conductor.Username}
+                  </Text>
+                  <Text style={styles.conductorContact}>
+                    📞 {conductor.phoneNumber}
+                  </Text>
+                  <Text style={styles.conductorContact}>
+                    ⚧ Gender: {conductor.gender || "Not Specified"}
+                  </Text>
+                </View>
+                <Text
+                  style={
+                    conductor.LoggedIn
+                      ? styles.activeStatus
+                      : styles.inactiveStatus
+                  }
+                >
+                  {conductor.LoggedIn ? "Active" : "Inactive"}
                 </Text>
               </View>
             ))

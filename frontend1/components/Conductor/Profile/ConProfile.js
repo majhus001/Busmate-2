@@ -1,11 +1,23 @@
-import React from "react";
-import { View, Text, ScrollView, Image, TouchableOpacity, Alert } from "react-native";
+import React, { useState, useLayoutEffect, useEffect } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
+import axios from "axios";
 import styles from "./ConProfileStyles"; // Importing styles
+import { Button } from "react-native-paper";
+import { API_BASE_URL } from "../../../apiurl";
 
 const ConProfile = ({ route, navigation }) => {
   // Example user data
   const { conData } = route.params || {};
-  console.log(conData);
+
+  const [loading, setLoading] = useState(false);
 
   const handleNavigate = (screen) => {
     if (!conData || !conData._id) {
@@ -16,13 +28,33 @@ const ConProfile = ({ route, navigation }) => {
     navigation.navigate(screen, { conductorId: conData._id });
   };
 
+  const handleLogout = async () => {
+    setLoading(true);
+    const conId = conData._id;
+    try {
+      const response = await axios.put(
+        `${API_BASE_URL}/api/Conductor/logout/${conId}`
+      );
+      console.log("Logout successful:", response.data);
+      navigation.navigate("login");
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Conductor Profile</Text>
       {/* Display the image at the top */}
-      <Image 
-        source={{ uri: conData.image || "https://th.bing.com/th/id/OIP.aKiTvd6drTIayNy2hddhiQHaHa?w=1024&h=1024&rs=1&pid=ImgDetMain" }} 
-        style={styles.profileImage} 
+      <Image
+        source={{
+          uri:
+            conData.image ||
+            "https://th.bing.com/th/id/OIP.aKiTvd6drTIayNy2hddhiQHaHa?w=1024&h=1024&rs=1&pid=ImgDetMain",
+        }}
+        style={styles.profileImage}
         onError={(e) => console.log("Image Load Error", e.nativeEvent.error)}
       />
 
@@ -36,7 +68,17 @@ const ConProfile = ({ route, navigation }) => {
           value={new Date(conData.dob).toISOString().split("T")[0]}
         />
         <ProfileItem label="Address" value={conData.address} />
-        <ProfileItem label="LoggedIn" value={conData.LoggedIn ? "Active" : "Inactive"} />
+        <ProfileItem
+          label="LoggedIn"
+          value={conData.LoggedIn ? "Active" : "Inactive"}
+        />
+        <TouchableOpacity onPress={handleLogout} style={styles.lgbutton}>
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.lgbuttonText}>Logout</Text>
+          )}
+        </TouchableOpacity>
       </View>
       <View style={styles.combtn}>
         <TouchableOpacity

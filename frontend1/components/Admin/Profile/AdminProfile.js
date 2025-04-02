@@ -103,7 +103,6 @@ const AdminProfile = ({ route, navigation }) => {
       }
       const adminId = adminData._id;
 
-      console.log("uppppp")
       const response = await axios.put(
         `${API_BASE_URL}/api/userdata/admin/profileupdate/${adminId}`,
         formData,

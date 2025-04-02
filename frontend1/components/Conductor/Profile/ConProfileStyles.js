@@ -51,6 +51,24 @@ const styles = StyleSheet.create({
     color: "#7f8c8d",
     fontWeight: "500",
   },
+  lgbutton: {
+    backgroundColor: "red",
+    paddingVertical: 10,
+    paddingLeft: 120,
+    borderRadius: 10,
+    marginTop: 30,
+    shadowColor: "#007bff",
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  lgbuttonText:{
+    fontSize: 17,
+    color: "#fff",
+    fontWeight: "bold",
+  },
+
   button: {
     backgroundColor: "#007bff",
     paddingVertical: 10,
@@ -68,9 +86,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
   },
-  combtn:{
-    display:"flex",
-    flexDirection:"row",
+  combtn: {
+    display: "flex",
+    flexDirection: "row",
     gap: 10,
   },
 });

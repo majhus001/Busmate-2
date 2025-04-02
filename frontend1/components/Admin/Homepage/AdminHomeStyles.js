@@ -11,7 +11,8 @@ const styles = StyleSheet.create({
 
   leftSection: {
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 10,
+    marginTop: 20,
     backgroundColor: "#007bff",
     padding: 20,
     borderRadius: 20,
@@ -47,43 +48,50 @@ const styles = StyleSheet.create({
   /* Buttons Section */
   buttonContainer: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 20,
+    justifyContent: "space-between",
+    marginBottom: 10,
   },
   addButton: {
-    backgroundColor: "#28a745",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 30,
+    backgroundColor: "#007bff",
+    paddingVertical: 10,
+    borderRightWidth:2,
+    borderColor:"#fff",
+    width: 110, 
+    alignItems: "center",
+    justifyContent: "center",
     shadowColor: "#28a745",
     shadowOpacity: 0.4,
     shadowRadius: 10,
     elevation: 5,
   },
+
   addButtonText: {
     color: "#fff",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 14,
   },
   busconinfo: {
     display: "flex",
     flexDirection: "row",
-    gap: 70,
+    gap: 30,
     marginTop: 10,
-    
+    alignItems: "center", 
   },
   busconbtn: {
     backgroundColor: "#fff",
     padding: 7,
-    borderRadius: 5,
-    // color: "#fff",
+    borderRadius: 15,
+    color: "#007bff",
+    width: 150,
+    textAlign: "center", 
+    fontWeight: "bold", 
   },
+  
 
   /* Toggle Buttons Section */
   toggleContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
-    marginBottom: 20,
   },
   toggleButton: {
     paddingVertical: 12,
@@ -138,7 +146,8 @@ searchInput: {
   busCard: {
     backgroundColor: "#fff",
     borderRadius: 20,
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 10,
     marginBottom: 10,
     shadowColor: "#007bff",
     shadowOpacity: 0.1,
@@ -184,14 +193,21 @@ searchInput: {
   /* Conductor Card */
   conductorCard: {
     backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 15,
-    marginBottom: 10,
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 12,
     shadowColor: "#6c757d",
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 6,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
   },
+
   conductorName: {
     fontSize: 18,
     fontWeight: "bold",
@@ -207,13 +223,17 @@ searchInput: {
     fontWeight: "bold",
     textAlign: "right",
   },
-  active: {
-    color: "#28a745",
-  },
-  onLeave: {
-    color: "#dc3545",
+  activeStatus: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "green",
   },
 
+  inactiveStatus: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "red",
+  },
   bustimingcont: {
     backgroundColor: "#007bff",
     padding: 10,

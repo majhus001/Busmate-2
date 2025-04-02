@@ -14,7 +14,7 @@ const busroutes = require("./Conductor/BusRoutes");
 const loginRoutes = require("./Authentication/LoginRoute");
 const SignupRoute = require("./Authentication/SignupRoute");
 const Adconductor = require("./Admin/AdConductor/Adconductor");
-const ComplaintRoute = require("./Conductor/Complaint");
+const ConductorRoute = require("./Conductor/ConductorRoute");
 const paymentRoutes = require("./Conductor/paymentRoutes");
 const userdata = require("./Authentication/UserData");
 
@@ -38,7 +38,7 @@ app.use("/api/tickets", Etm);
 app.use("/api/busroutes", busroutes);
 app.use("/api/auth", loginRoutes);
 app.use("/api/authSign", SignupRoute);
-app.use("/api/Conductor", ComplaintRoute);
+app.use("/api/Conductor", ConductorRoute);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/userdata", userdata);
 // MongoDB Connection

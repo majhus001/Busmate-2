@@ -11,22 +11,24 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     backgroundColor: "#007bff", // Deep blue for a professional touch
     paddingVertical: 15,
-    borderRadius: 10,
-    elevation: 5,
+    borderRadius: 12,
+    elevation: 6,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
   },
   appTitle: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: "bold",
     color: "#fff",
+    textTransform: "uppercase",
   },
   panelName: {
     fontSize: 18,
     color: "#d1d5db",
     marginTop: 5,
+    fontStyle: "italic",
   },
   detailsContainer: {
     backgroundColor: "#fff",
@@ -39,14 +41,31 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 6,
   },
-  condetails: {
-    padding: 15,
+  conDetails: {
+    // padding: 10,
+    flexDirection: "column",
   },
   detailsTitle: {
     fontSize: 22,
     fontWeight: "bold",
     color: "#374151",
-    marginBottom: 10,
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  profileSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 25,
+  },
+  profileImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: "#007bff",
+  },
+  textDetails: {
+    flex: 1,
   },
   detailText: {
     fontSize: 16,
@@ -74,6 +93,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     letterSpacing: 1,
+    textTransform: "uppercase",
   },
   mapContainer: {
     flex: 1,
