@@ -5,7 +5,7 @@ const Conductor = require("../../Module/Conductor_sc");
 // Add Conductor API
 router.post("/add", async (req, res) => {
   try {
-    let { Username, phoneNumber, dob, age, gender, password, adminId } = req.body;
+    let { Username, phoneNumber, dob, age, gender, password, address, adminId } = req.body;
 
     // Validate required fields
     if (!Username || !phoneNumber || !password) {
@@ -47,6 +47,7 @@ router.post("/add", async (req, res) => {
       age,
       gender,
       password,
+      address,
       adminId,
       LoggedIn: false,
     });

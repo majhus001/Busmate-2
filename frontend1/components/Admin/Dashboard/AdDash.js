@@ -10,13 +10,26 @@ const AdDash = ({ navigation, route }) => {
   // Calculate Active and Inactive Buses
   const activeBusesCount = buses.filter((bus) => bus.LoggedIn).length;
   const inactiveBusesCount = buses.length - activeBusesCount;
+  const loggedOutConductors = conductors.filter(
+    (conductor) => !conductor.LoggedIn
+  ).length;
+  const loggedInConductors = conductors.length - loggedOutConductors;
 
   // Show loading indicator
   if (loading) {
-    return (
-      <ActivityIndicator animating={true} size="large" style={styles.loader} />
-    );
+    return <ActivityIndicator animating size="large" style={styles.loader} />;
   }
+
+  const handleProfile = () => {
+    console.log("Admin Data before navigating:", adminData); // Debugging
+
+    if (!adminData) {
+      console.error("adminData is undefined! Navigation aborted.");
+      return;
+    }
+
+    navigation.navigate("adprofile", { adminData: adminData, role: "Admin" });
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -25,58 +38,45 @@ const AdDash = ({ navigation, route }) => {
 
       {/* Profile Section */}
       <View style={styles.profileContainer}>
-        <Image
-          source={{
-            uri: "https://th.bing.com/th/id/OIP.aKiTvd6drTIayNy2hddhiQHaHa?w=1024&h=1024&rs=1&pid=ImgDetMain",
-          }}
-          style={styles.profileImage}
-        />
-        {adminData?.Username && (
-          <Text style={styles.welcomeText}>Welcome, {adminData.Username}!</Text>
-        )}
+        <TouchableOpacity
+          onPress={handleProfile}
+          style={styles.dashheader}
+          activeOpacity={0.7}
+        >
+          <Image
+            source={{
+              uri: "https://th.bing.com/th/id/OIP.aKiTvd6drTIayNy2hddhiQHaHa?w=1024&h=1024&rs=1&pid=ImgDetMain",
+            }}
+            style={styles.profileImage}
+          />
+          {adminData && (
+            <View>
+              <Text style={styles.welcomeText}>{adminData.Username}</Text>
+              <Text style={styles.welcomeText}>
+                {adminData.state},{adminData.city}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
 
       {/* Dashboard Cards */}
       <View style={styles.gridContainer}>
-        <TouchableOpacity style={styles.card}>
-          <Text style={styles.cardTitle}>Total Buses</Text>
-          <Text style={styles.cardValue}>{buses.length}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.card}>
-          <Text style={styles.cardTitle}>Total Conductors</Text>
-          <Text style={styles.cardValue}>{conductors.length}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.card}>
-          <Text style={styles.cardTitle}>Active Buses</Text>
-          <Text style={styles.cardValue}>{activeBusesCount}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.card}>
-          <Text style={styles.cardTitle}>Inactive Buses</Text>
-          <Text style={styles.cardValue}>{inactiveBusesCount}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.card}>
-          <Text style={styles.cardTitle}>Conductors Logged Out</Text>
-          <Text style={styles.cardValue}> {conductors.filter(conductor => !conductor.LoggedIn).length} </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.card}>
-          <Text style={styles.cardTitle}>Conductors Logged In</Text>
-          <Text style={styles.cardValue}> {conductors.filter(conductor => conductor.LoggedIn).length} </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.card}>
-          <Text style={styles.cardTitle}>Reports</Text>
-          <Text style={styles.cardValue}>10</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.card}>
-          <Text style={styles.cardTitle}>Alerts</Text>
-          <Text style={styles.cardValue}>20</Text>
-        </TouchableOpacity>
+        {[
+          { title: "Total Buses", value: buses.length },
+          { title: "Total Conductors", value: conductors.length },
+          { title: "Active Buses", value: activeBusesCount },
+          { title: "Inactive Buses", value: inactiveBusesCount },
+          { title: "Conductors Logged In", value: loggedInConductors },
+          { title: "Conductors Logged Out", value: loggedOutConductors },
+          { title: "Reports", value: 10 },
+          { title: "Alerts", value: 20 },
+        ].map((item, index) => (
+          <TouchableOpacity key={index} style={styles.card} activeOpacity={0.7}>
+            <Text style={styles.cardTitle}>{item.title}</Text>
+            <Text style={styles.cardValue}>{item.value}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
     </ScrollView>
   );

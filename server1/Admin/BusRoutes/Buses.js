@@ -4,14 +4,13 @@ const Bus = require("../../Module/BusSchema");
 
 router.post("/add", async (req, res) => {
   try {
-    console.log("Received Bus Data:", req.body); // Debugging log
-
     const {
       busRouteNo,
       busNo,
       busPassword,
       totalShifts,
       totalSeats,
+      availableSeats,
       busType,
       state,
       city,
@@ -38,6 +37,7 @@ router.post("/add", async (req, res) => {
       busPassword,
       totalShifts,
       totalSeats,
+      availableSeats,
       busType,
       state,
       city,

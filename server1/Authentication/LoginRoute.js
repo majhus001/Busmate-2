@@ -5,7 +5,7 @@ const Conductor = require("../Module/Conductor_sc");
 
 router.post("/login", async (req, res) => {
   const { Username, password, role } = req.body;  // Changed from userName to Username
-console.log(role)
+
   try {
     let user;
     let Model;
@@ -14,7 +14,7 @@ console.log(role)
     switch (role) {
       case "Conductor":
         Model = Conductor;
-        user = await Model.findOne({ Username: Username, password }); 
+        user = await Model.findOne({ Username, password }); 
 
         if(user){
           user.LoggedIn = true;
@@ -29,7 +29,6 @@ console.log(role)
           password,
           role
         });
-        console.log("hiiii")
         break;
       default:
         return res.status(400).json({ error: "Invalid role" });

@@ -15,6 +15,9 @@ const SignupRoute = require("./Authentication/SignupRoute");
 const Adconductor = require("./Admin/AdConductor/Adconductor");
 const ComplaintRoute = require("./Conductor/Complaint");
 const paymentRoutes = require("./Conductor/paymentRoutes");
+const userdata = require("./Authentication/UserData");
+
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -35,8 +38,9 @@ app.use("/api/tickets", Etm);
 app.use("/api/busroutes", busroutes);
 app.use("/api/auth", loginRoutes);
 app.use("/api/authSign", SignupRoute);
-app.use("/api/Conductor/", ComplaintRoute);
+app.use("/api/complaints", ComplaintRoute);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/userdata", userdata);
 // MongoDB Connection
 const connectDB = async () => {
   try {

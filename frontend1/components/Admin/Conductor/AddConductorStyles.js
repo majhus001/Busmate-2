@@ -13,6 +13,28 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: "center",
   },
+  imagePreview: {
+    width: 150, 
+    height: 150, 
+    borderRadius: 75,
+    marginVertical: 10, 
+    resizeMode: "cover",
+    alignSelf: "center", 
+  },
+  imagePickerButton: {
+    backgroundColor: "#007bff", // Button color (same as the submit button)
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: "center", // Centering text inside the button
+    marginVertical: 10, // Adding margin above and below the button
+    alignSelf: "center", // Center align the button on the screen
+  },
+  imagePickerButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600", // Bold text for better visibility
+  },
   label: {
     fontSize: 16,
     color: "#333",

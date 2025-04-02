@@ -14,7 +14,7 @@ import styles from "./AdminHomeStyles";
 
 const AdminHome = ({ navigation, route }) => {
   const { adminData } = route.params || {};
-  console.log(adminData);
+
   const adminId = adminData._id;
   const username = adminData.Username;
   const city = adminData.city;
@@ -46,8 +46,6 @@ const AdminHome = ({ navigation, route }) => {
     const fetchData = async () => {
       setLoading(true); // Start Loading
       try {
-        console.log("Admin ID:", adminId);
-
         const [busResponse, conductorResponse] = await Promise.all([
           axios.get(`${API_BASE_URL}/api/Admin/buses/fetchbus/${adminId}`),
           axios.get(
@@ -114,7 +112,9 @@ const AdminHome = ({ navigation, route }) => {
     <ScrollView style={styles.Admincontainer}>
       {/* Header Section */}
       <TouchableOpacity
-        onPress={() => navigation.navigate("addash", { adminData, buses, conductors })}
+        onPress={() =>
+          navigation.navigate("addash", { adminData, buses, conductors })
+        }
       >
         <View style={styles.leftSection}>
           <Image

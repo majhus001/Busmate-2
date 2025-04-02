@@ -54,7 +54,7 @@ const ComplaintForm = ({ conductorId, adminId }) => {
     }
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/complaints/add`, complaintData, {
+      const response = await axios.post(`${API_BASE_URL}/api/complaints/add`, complaintData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

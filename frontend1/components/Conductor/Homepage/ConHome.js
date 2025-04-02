@@ -3,13 +3,23 @@ import { View, Text, TouchableOpacity } from "react-native";
 import styles from "./ConHomeStyles"; // Importing styles
 import ConductorMap from "./Conductormap";
 
-const ConHome = ({ navigation, route }) => {
+const ConHome = ({ route, navigation }) => {
   // Extracting data from route.params
-  const { username, city, state } = route.params || {};
+  const { conData } = route.params || {};
+
+  // Extracting username, city, and state from conData
+  const username = conData?.Username || "N/A";
+  const gender = conData?.gender || "Unknown";
+  const age = conData?.age || "Unknown";
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
+
+  const handleprofile = () => {
+    navigation.navigate("conprofile", { conData });
+  };
+
 
   return (
     <View style={styles.container}>
@@ -21,16 +31,18 @@ const ConHome = ({ navigation, route }) => {
 
       {/* Conductor Details */}
       <View style={styles.detailsContainer}>
-        <Text style={styles.detailsTitle}>👤 Conductor Details</Text>
-        <Text style={styles.detailText}>
-          <Text style={styles.bold}>Name:</Text> {username || "N/A"}
-        </Text>
-        <Text style={styles.detailText}>
-          <Text style={styles.bold}>City:</Text> {city || "Unknown"}
-        </Text>
-        <Text style={styles.detailText}>
-          <Text style={styles.bold}>State:</Text> {state || "Unknown"}
-        </Text>
+        <TouchableOpacity onPress={handleprofile}>
+          <Text style={styles.detailsTitle}>👤 Conductor Details</Text>
+          <Text style={styles.detailText}>
+            <Text style={styles.bold}>Name:</Text> {username}
+          </Text>
+          <Text style={styles.detailText}>
+            <Text style={styles.bold}>Gender:</Text> {gender}
+          </Text>
+          <Text style={styles.detailText}>
+            <Text style={styles.bold}>Age:</Text> {age}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Start Ride Button */}
@@ -43,9 +55,9 @@ const ConHome = ({ navigation, route }) => {
       <TouchableOpacity
         style={styles.button}
         onPress={() => navigation.navigate("complaintform")}
-        >
+      >
         <Text style={styles.buttonText}>📋 Add Complaints</Text>
-        </TouchableOpacity>
+      </TouchableOpacity>
 
       {/* Enlarged Map */}
       <View style={styles.mapContainer}>

@@ -4,13 +4,13 @@ export default StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 20,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#f4f6f8",
   },
 
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: "bold",
-    color: "#0056b3",
+    color: "#003366",
     marginBottom: 20,
     textAlign: "center",
   },
@@ -20,18 +20,35 @@ export default StyleSheet.create({
     marginBottom: 20,
   },
 
+  dashheader: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 10,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    width:"100%",
+    height:150,
+    marginVertical: 25,
+    gap:10,
+  },
+
   profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    marginBottom: 10,
-    borderColor: "#007bff",
-    borderWidth: 3,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderColor: "#0056b3",
+    borderWidth: 2,
+    marginRight: 12,
   },
 
   welcomeText: {
-    fontSize: 18,
-    fontWeight: "500",
+    fontSize: 16,
+    fontWeight: "bold",
     color: "#333",
   },
 
@@ -43,7 +60,7 @@ export default StyleSheet.create({
 
   card: {
     width: "48%",
-    backgroundColor: "#fff",
+    backgroundColor: "#007bff",
     padding: 20,
     borderRadius: 12,
     marginBottom: 15,
@@ -57,15 +74,17 @@ export default StyleSheet.create({
 
   cardTitle: {
     fontSize: 16,
-    color: "#555",
+    color: "#fff",
     marginBottom: 8,
     fontWeight: "bold",
+    textAlign: "center",
   },
 
   cardValue: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#007bff",
+    color: "#fff",
+    textAlign: "center",
   },
 
   loader: {

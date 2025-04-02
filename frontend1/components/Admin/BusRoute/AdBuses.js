@@ -15,7 +15,7 @@ import { API_BASE_URL } from "../../../apiurl";
 import axios from "axios";
 
 const AdBuses = ({ navigation, route }) => {
-  const { adminId = "NA" } = route.params || {};
+  const { adminData } = route.params || {};
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
@@ -25,6 +25,7 @@ const AdBuses = ({ navigation, route }) => {
   const [busPassword, setBusPassword] = useState("");
   const [totalShifts, setTotalShifts] = useState("");
   const [totalSeats, setTotalSeats] = useState("");
+  const [availableSeats, setAvailableSeats] = useState("");
   const [busType, setBusType] = useState("");
   const [state, setState] = useState("");
   const [city, setCity] = useState("");
@@ -73,6 +74,7 @@ const AdBuses = ({ navigation, route }) => {
       !busPassword ||
       !totalShifts ||
       !totalSeats ||
+      !availableSeats ||
       !busType ||
       !state ||
       !city ||
@@ -90,6 +92,7 @@ const AdBuses = ({ navigation, route }) => {
       busPassword,
       totalShifts,
       totalSeats,
+      availableSeats,
       busType,
       state,
       city,
@@ -204,6 +207,13 @@ const AdBuses = ({ navigation, route }) => {
         placeholder="Total Seats"
         value={totalSeats}
         onChangeText={setTotalSeats}
+        keyboardType="numeric"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Available Seats"
+        value={availableSeats}
+        onChangeText={setAvailableSeats}
         keyboardType="numeric"
       />
 

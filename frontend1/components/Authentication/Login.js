@@ -35,7 +35,7 @@ const Login = ({ navigation }) => {
             onPress: () => {
               switch (role) {
                 case "Conductor":
-                  const conData = response.data.user
+                  const conData = response.data.user;
                   navigation.navigate("conhomepage", { conData });
                   break;
                 case "Admin":
