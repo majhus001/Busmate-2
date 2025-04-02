@@ -33,6 +33,7 @@ export default function App() {
         <Stack.Screen name="conhomepage" component={ConHome} />
         <Stack.Screen name="conbusselect" component={BusSelection} />
         <Stack.Screen name="complaintform" component={ComplaintForm} />
+        <Stack.Screen name="viewcomplaintform" component={ViewComplaintForm} />
         <Stack.Screen name="buslogin" component={Buslogin} />
         <Stack.Screen name="taketicket" component={EtmTicket} />
         <Stack.Screen name="adroutes" component={AdRoutes} />

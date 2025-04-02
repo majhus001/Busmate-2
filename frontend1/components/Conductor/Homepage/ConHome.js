@@ -1,25 +1,29 @@
-import React, { useLayoutEffect } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
-import styles from "./ConHomeStyles"; // Importing styles
+import React, { useLayoutEffect, useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, Alert } from "react-native";
+import styles from "./ConHomeStyles";
 import ConductorMap from "./Conductormap";
 
-const ConHome = ({ route, navigation }) => {
-  // Extracting data from route.params
-  const { conData } = route.params || {};
+const ConHome = ({ navigation, route }) => {
+  const { username, city, state, conData } = route.params || {}; // Assuming conData is passed from previous screen
 
-  // Extracting username, city, and state from conData
-  const username = conData?.Username || "N/A";
-  const gender = conData?.gender || "Unknown";
-  const age = conData?.age || "Unknown";
+  useEffect(() => {
+    if (conData) {
+      console.log("conData received in ConHome:", conData);
+    }
+  }, [conData]);
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
-  const handleprofile = () => {
-    navigation.navigate("conprofile", { conData });
+  const handleNavigate = (screen) => {
+    if (!conData || !conData._id) {
+      Alert.alert("Error", "Conductor ID is missing. Please log in again.");
+      return;
+    }
+    console.log("Navigating with conductorId:", conData._id);
+    navigation.navigate(screen, { conductorId: conData._id });
   };
-
 
   return (
     <View style={styles.container}>
@@ -52,11 +56,21 @@ const ConHome = ({ route, navigation }) => {
       >
         <Text style={styles.buttonText}>🚀 Start Ride</Text>
       </TouchableOpacity>
+
+      {/* Add Complaints Button */}
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate("complaintform")}
+        onPress={() => handleNavigate("complaintform")}
       >
         <Text style={styles.buttonText}>📋 Add Complaints</Text>
+      </TouchableOpacity>
+
+      {/* View Complaints Button */}
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => handleNavigate("viewcomplaintform")}
+      >
+        <Text style={styles.buttonText}>👀 View Complaints</Text>
       </TouchableOpacity>
 
       {/* Enlarged Map */}
