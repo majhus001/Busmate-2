@@ -38,7 +38,7 @@ app.use("/api/tickets", Etm);
 app.use("/api/busroutes", busroutes);
 app.use("/api/auth", loginRoutes);
 app.use("/api/authSign", SignupRoute);
-app.use("/api/complaints", ComplaintRoute);
+app.use("/api/Conductor", ComplaintRoute);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/userdata", userdata);
 // MongoDB Connection

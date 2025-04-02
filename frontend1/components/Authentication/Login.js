@@ -22,7 +22,7 @@ const Login = ({ navigation }) => {
       };
 
       console.log("Login attempt with:", loginData);
-
+      
       const response = await axios.post(
         `${API_BASE_URL}/api/auth/login`,
         loginData

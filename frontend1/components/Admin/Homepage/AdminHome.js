@@ -95,7 +95,11 @@ const AdminHome = ({ navigation, route }) => {
       bus.busNo?.toString().toLowerCase().startsWith(searchLower) ||
       bus.busRouteNo?.toString().toLowerCase().startsWith(searchLower) ||
       bus.fromStage?.toString().toLowerCase().startsWith(searchLower) ||
-      bus.toStage?.toString().toLowerCase().startsWith(searchLower)
+      bus.toStage?.toString().toLowerCase().startsWith(searchLower)||
+      bus.busNo?.toString().toLowerCase().includes(searchLower) ||
+      bus.busRouteNo?.toString().toLowerCase().includes(searchLower) ||
+      bus.fromStage?.toString().toLowerCase().includes(searchLower) ||
+      bus.toStage?.toString().toLowerCase().includes(searchLower)
     );
   });
 

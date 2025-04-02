@@ -157,7 +157,7 @@ const ComplaintForm = ({ route }) => {
           <Text style={styles.buttonText}>📷 Take Photo</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={pickImage} style={styles.button}>
-          <Text style={styles.buttonText}>🖼️ Upload Image</Text>
+          <Text style={styles.buttonText}>🖼 Upload Image</Text>
         </TouchableOpacity>
       </View>
 

@@ -4,7 +4,7 @@ import styles from "./ConHomeStyles";
 import ConductorMap from "./Conductormap";
 
 const ConHome = ({ navigation, route }) => {
-  const { username, city, state, conData } = route.params || {}; // Assuming conData is passed from previous screen
+  const { conData } = route.params || {}; // Assuming conData is passed from previous screen
 
   useEffect(() => {
     if (conData) {
@@ -25,6 +25,10 @@ const ConHome = ({ navigation, route }) => {
     navigation.navigate(screen, { conductorId: conData._id });
   };
 
+  const handleprofile = () =>{
+    navigation.navigate("conprofile", conData);
+  }
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -38,13 +42,13 @@ const ConHome = ({ navigation, route }) => {
         <TouchableOpacity onPress={handleprofile}>
           <Text style={styles.detailsTitle}>👤 Conductor Details</Text>
           <Text style={styles.detailText}>
-            <Text style={styles.bold}>Name:</Text> {username}
+            <Text style={styles.bold}>Name:</Text> {conData.Username}
           </Text>
           <Text style={styles.detailText}>
-            <Text style={styles.bold}>Gender:</Text> {gender}
+            <Text style={styles.bold}>Gender:</Text> {conData.gender}
           </Text>
           <Text style={styles.detailText}>
-            <Text style={styles.bold}>Age:</Text> {age}
+            <Text style={styles.bold}>Age:</Text> {conData.age}
           </Text>
         </TouchableOpacity>
       </View>
