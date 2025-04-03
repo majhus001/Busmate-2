@@ -17,7 +17,7 @@ const Adconductor = require("./Admin/AdConductor/Adconductor");
 const ConductorRoute = require("./Conductor/ConductorRoute");
 const paymentRoutes = require("./Conductor/paymentRoutes");
 const userdata = require("./Authentication/UserData");
-
+const favoriteBusesRoutes = require("./User/favorites");
 
 const app = express();
 const server = http.createServer(app);
@@ -41,6 +41,7 @@ app.use("/api/authSign", SignupRoute);
 app.use("/api/Conductor", ConductorRoute);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/userdata", userdata);
+app.use("/api/favorites", favoriteBusesRoutes);
 // MongoDB Connection
 const connectDB = async () => {
   try {

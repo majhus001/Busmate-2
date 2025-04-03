@@ -2,60 +2,68 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const Footer = () => {
+const Footer = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('home');
   const [scaleAnims] = useState({
     home: new Animated.Value(1),
     ticket: new Animated.Value(1),
     place: new Animated.Value(1),
-    profile: new Animated.Value(1)
+    profile: new Animated.Value(1),
   });
-  
+
   const [translateYAnims] = useState({
     home: new Animated.Value(0),
     ticket: new Animated.Value(0),
     place: new Animated.Value(0),
-    profile: new Animated.Value(0)
+    profile: new Animated.Value(0),
   });
 
   const handleTabPress = (tabName) => {
-    // Reset all animations
     Object.keys(scaleAnims).forEach((key) => {
       Animated.timing(scaleAnims[key], {
         toValue: 1,
         duration: 200,
-        useNativeDriver: true
+        useNativeDriver: true,
       }).start();
-      
+
       Animated.timing(translateYAnims[key], {
         toValue: 0,
         duration: 200,
-        useNativeDriver: true
+        useNativeDriver: true,
       }).start();
     });
-    
-    // Animate the selected tab
+
     Animated.sequence([
       Animated.timing(scaleAnims[tabName], {
         toValue: 1.2,
         duration: 150,
-        useNativeDriver: true
+        useNativeDriver: true,
       }),
       Animated.timing(scaleAnims[tabName], {
         toValue: 1,
         duration: 150,
-        useNativeDriver: true
-      })
+        useNativeDriver: true,
+      }),
     ]).start();
-    
-    // Move selected tab slightly up
+
     Animated.timing(translateYAnims[tabName], {
       toValue: -5,
       duration: 200,
-      useNativeDriver: true
+      useNativeDriver: true,
     }).start();
-    
+
     setActiveTab(tabName);
+
+    // Navigate when tab is pressed
+    if (tabName === 'ticket') {
+      navigation.navigate('TicketHistory');
+    }
+    if (tabName === 'place') {
+      navigation.navigate('FavouriteBuses');
+    }
+    if (tabName === 'profile') {
+      navigation.navigate('UserProfile');
+    }
   };
 
   const renderTabItem = (tabName, iconName, activeIconName) => {
@@ -63,26 +71,20 @@ const Footer = () => {
     const iconToUse = isActive ? activeIconName : iconName;
     const colorToUse = isActive ? '#00468b' : '#aaa';
     const textStyle = isActive ? styles.footerText : styles.footerTextInactive;
-    
+
     return (
-      <TouchableOpacity 
-        onPress={() => handleTabPress(tabName)}
-        activeOpacity={0.7}
-      >
-        <Animated.View 
+      <TouchableOpacity onPress={() => handleTabPress(tabName)} activeOpacity={0.7}>
+        <Animated.View
           style={[
             styles.footerItem,
             {
-              transform: [
-                { scale: scaleAnims[tabName] },
-                { translateY: translateYAnims[tabName] }
-              ]
-            }
+              transform: [{ scale: scaleAnims[tabName] }, { translateY: translateYAnims[tabName] }],
+            },
           ]}
         >
           <Ionicons name={iconToUse} size={22} color={colorToUse} />
           <Text style={textStyle}>{tabName.charAt(0).toUpperCase() + tabName.slice(1)}</Text>
-          
+
           {isActive && <View style={styles.activeDot} />}
         </Animated.View>
       </TouchableOpacity>

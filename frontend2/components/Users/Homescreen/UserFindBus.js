@@ -244,7 +244,7 @@ const UserFindBus = ({ navigation }) => {
               <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
               <View style={styles.buttonContent}>
-                <Text style={styles.startText}>Start</Text>
+                <Text style={styles.startText}>Search</Text>
                 <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
               </View>
             )}

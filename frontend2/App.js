@@ -8,6 +8,9 @@ import Login from "./components/Authentication/Login";
 import Busdetails from "./components/Users/Busdetails/Busdetails";
 import Payment from "./components/Users/Busdetails/Payment";
 import UserHomeApp from "./components/Users/Homescreen/UserHome";
+import TicketHistory from "./components/Users/Homescreen/Tickethistory";
+import FavouriteBuses from "./components/Users/Homescreen/FavouriteBuses";
+import UserProfile from "./components/Users/Profile/UserProfile";
 
 const Stack = createNativeStackNavigator();
 
@@ -15,7 +18,7 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="login"
+        initialRouteName="welcomepage"
         screenOptions={{ headerShown: false }}
       >
         <Stack.Screen name="usfindbus" component={UserFindBus} />
@@ -26,6 +29,9 @@ export default function App() {
         <Stack.Screen name="Busdetails" component={Busdetails} />
         <Stack.Screen name="payment" component={Payment} />
         <Stack.Screen name="UserHome" component={UserHomeApp} />
+        <Stack.Screen name="TicketHistory" component={TicketHistory} />
+        <Stack.Screen name="FavouriteBuses" component={FavouriteBuses} />
+        <Stack.Screen name="UserProfile" component={UserProfile} />
       </Stack.Navigator>
     </NavigationContainer>
   );
