@@ -7,6 +7,7 @@ import Signup from "./components/Authentication/Signup";
 import Login from "./components/Authentication/Login";
 import Busdetails from "./components/Users/Busdetails/Busdetails";
 import Payment from "./components/Users/Busdetails/Payment";
+import UserHomeApp from "./components/Users/Homescreen/UserHome";
 
 const Stack = createNativeStackNavigator();
 
@@ -14,7 +15,7 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="welcomepage"
+        initialRouteName="login"
         screenOptions={{ headerShown: false }}
       >
         <Stack.Screen name="usfindbus" component={UserFindBus} />
@@ -24,6 +25,7 @@ export default function App() {
         <Stack.Screen name="signup" component={Signup} />
         <Stack.Screen name="Busdetails" component={Busdetails} />
         <Stack.Screen name="payment" component={Payment} />
+        <Stack.Screen name="UserHome" component={UserHomeApp} />
       </Stack.Navigator>
     </NavigationContainer>
   );

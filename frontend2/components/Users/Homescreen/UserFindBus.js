@@ -1,57 +1,42 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, FlatList, Alert } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  Alert,
+  TextInput,
+  SafeAreaView,
+  ActivityIndicator,
+  Image,
+} from "react-native";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
 import styles from "./UserFindBusStyles";
 import { API_BASE_URL } from "../../../apiurl";
 
-const UserFindBus = ({ route, navigation }) => {
-  const { userData } = route.params || {};
-  const defaultState = userData?.state || "TamilNadu"; // Ensure a default value
-  const defaultCity = userData?.city || "Coimbatore";
-console.log(defaultState)
-  const [state, setState] = useState(defaultState);
-  const [city, setCity] = useState(defaultCity);
-
-  useEffect(() => {
-    if (userData?.state) setState(userData.state);
-    if (userData?.city) setCity(userData.city);
-  }, [userData]);
-
-  useEffect(() => {
-    if (city) fetchBuses(city);
-  }, [city]); // Fetch buses only when city changes
-
+const UserFindBus = ({ navigation }) => {
   const [buses, setBuses] = useState([]);
   const [filteredBuses, setFilteredBuses] = useState([]);
   const [fromLocation, setFromLocation] = useState("");
   const [toLocation, setToLocation] = useState("");
   const [allStages, setAllStages] = useState([]);
+  const [filteredFromStages, setFilteredFromStages] = useState([]);
+  const [filteredToStages, setFilteredToStages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchPerformed, setSearchPerformed] = useState(false);
 
-  // State & City Mapping
-  const states = ["Maharashtra", "Karnataka", "TamilNadu", "Delhi"];
-  const cities = {
-    Maharashtra: ["Mumbai", "Pune", "Nagpur"],
-    Karnataka: ["Bangalore", "Mysore"],
-    TamilNadu: ["Chennai", "Coimbatore", "Madurai"],
-    Delhi: ["New Delhi"],
-  };
-
-  // Fetch Buses API
-  const fetchBuses = async (selectedCity) => {
-    if (!selectedCity) return;
+  // Fetch All Buses API
+  const fetchBuses = async () => {
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/api/Admin/buses/fetchBy/cities/${selectedCity}`
-      );
-
-      const data = response.data?.data || [];
+      setIsLoading(true);
+      const response = await axios.get(`${API_BASE_URL}/api/Admin/buses/fetchAllBuses`);
+      const data = response.data || [];
 
       if (data.length > 0) {
         setBuses(data);
-        setFilteredBuses(data);
 
-        // Extract all unique stages from bus timings
+        // Extract all unique stages
         const allStagesSet = new Set();
         data.forEach((bus) => {
           Object.keys(bus.timings || {}).forEach((stage) =>
@@ -61,159 +46,298 @@ console.log(defaultState)
 
         setAllStages([...allStagesSet]);
       } else {
-        resetData();
-        Alert.alert("No buses found for this city.");
+        Alert.alert("No buses available.");
       }
+      setIsLoading(false);
     } catch (error) {
       console.error("Error fetching buses:", error);
       Alert.alert("Error", "Failed to fetch bus data.");
+      setIsLoading(false);
     }
   };
 
-  // Fetch buses when the city changes
   useEffect(() => {
-    if (city) fetchBuses(city);
-  }, [city]);
+    fetchBuses();
+  }, []);
 
-  // Reset Bus Data
-  const resetData = () => {
-    setBuses([]);
-    setFilteredBuses([]);
-    setAllStages([]);
-    setFromLocation("");
-    setToLocation("");
+  // Filter Suggestions based on User Input
+  const handleFromSearch = (text) => {
+    setFromLocation(text);
+    setFilteredFromStages(
+      text.length > 0
+        ? allStages.filter((stage) => stage.toLowerCase().includes(text.toLowerCase()))
+        : []
+    );
   };
 
-  // Bus Filtering Logic
+  const handleToSearch = (text) => {
+    setToLocation(text);
+    setFilteredToStages(
+      text.length > 0
+        ? allStages.filter((stage) => stage.toLowerCase().includes(text.toLowerCase()))
+        : []
+    );
+  };
+
+  // Swap locations
+  const swapLocations = () => {
+    setFromLocation(toLocation);
+    setToLocation(fromLocation);
+  };
+
+  // Filter Buses
   const filterBuses = () => {
     if (!fromLocation || !toLocation) {
-      Alert.alert("Error", "Please select both From and To locations.");
+      Alert.alert("Error", "Please enter both From and To locations.");
       return;
     }
 
-    const filtered = buses.filter((bus) => {
-      if (!bus.LoggedIn) return false; // Ensure the bus is logged in
+    setIsLoading(true);
+    setTimeout(() => {
+      const filtered = buses.filter((bus) => {
+        if (!bus.LoggedIn) return false;
 
-      const stages = Object.keys(bus.timings);
-      const fromIndex = stages.indexOf(fromLocation);
-      const toIndex = stages.indexOf(toLocation);
+        const stages = Object.keys(bus.timings);
+        const fromIndex = stages.indexOf(fromLocation);
+        const toIndex = stages.indexOf(toLocation);
 
-      const isIntermediateRoute =
-        fromIndex !== -1 && toIndex !== -1 && fromIndex < toIndex;
-      const isDirectRoute =
-        bus.fromStage === fromLocation && bus.toStage === toLocation;
+        const isIntermediateRoute =
+          fromIndex !== -1 && toIndex !== -1 && fromIndex < toIndex;
+        const isDirectRoute =
+          bus.fromStage === fromLocation && bus.toStage === toLocation;
 
-      return isDirectRoute || isIntermediateRoute;
-    });
+        return isDirectRoute || isIntermediateRoute;
+      });
 
-    if (filtered.length === 0) {
-      Alert.alert("No buses available for the selected route.");
-    }
-    setFilteredBuses(filtered);
+      if (filtered.length === 0) {
+        Alert.alert("No buses available for the selected route.");
+      }
+      setFilteredBuses(filtered);
+      setSearchPerformed(true);
+      setIsLoading(false);
+    }, 600); // Adding slight delay for better UX
   };
 
-  // Navigate to Bus Details Screen
   const navigateToBusDetails = (bus) => {
     if (!fromLocation || !toLocation) {
-      Alert.alert("Error", "Please select both From and To locations.");
+      Alert.alert("Error", "Please enter both From and To locations.");
       return;
     }
     navigation.navigate("Busdetails", { bus, fromLocation, toLocation });
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Search Buses</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Track your bus</Text>
 
-      {/* State Picker */}
-      <Picker
-        selectedValue={state}
-        onValueChange={(value) => {
-          setState(value);
-          setCity(""); // Reset city when state changes
-          resetData(); // Clear previous buses and locations
-        }}
-        style={styles.picker}
-      >
-        <Picker.Item label="Select State" value="" />
-        {states.map((st) => (
-          <Picker.Item key={st} label={st} value={st} />
-        ))}
-      </Picker>
+        <View style={styles.searchSection}>
+          {/* Origin Location */}
+          <View style={styles.locationContainer}>
+            <View style={styles.markerIconContainer}>
+              <View style={styles.originMarker}>
+                <Ionicons name="location" size={20} color="#4CAF50" />
+              </View>
+            </View>
+            
+            <View style={styles.dotLine} />
+            
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Your Location"
+                value={fromLocation}
+                onChangeText={handleFromSearch}
+                placeholderTextColor="#9E9E9E"
+              />
+              {fromLocation.length > 0 && (
+                <TouchableOpacity 
+                  style={styles.clearButton}
+                  onPress={() => setFromLocation("")}
+                >
+                  <Ionicons name="close-circle" size={20} color="#9E9E9E" />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
 
-      {/* City Picker */}
-      <Picker
-        selectedValue={city}
-        onValueChange={(value) => {
-          setCity(value);
-        }}
-        style={styles.picker}
-        enabled={!!state}
-      >
-        <Picker.Item label="Select City" value="" />
-        {cities[state]?.map((ct) => (
-          <Picker.Item key={ct} label={ct} value={ct} />
-        ))}
-      </Picker>
+          {filteredFromStages.length > 0 && (
+            <View style={styles.suggestionsContainer}>
+              <FlatList
+                data={filteredFromStages.slice(0, 4)}
+                keyExtractor={(item) => `from-${item}`}
+                renderItem={({ item }) => (
+                  <TouchableOpacity 
+                    style={styles.suggestionItem} 
+                    onPress={() => {
+                      setFromLocation(item);
+                      setFilteredFromStages([]);
+                    }}
+                  >
+                    <Ionicons name="location-outline" size={16} color="#007bff" />
+                    <Text style={styles.suggestionText}>{item}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          )}
 
-      {/* From & To Location Pickers */}
-      <Picker
-        selectedValue={fromLocation}
-        onValueChange={setFromLocation}
-        style={styles.picker}
-        enabled={allStages.length > 0}
-      >
-        <Picker.Item label="From Location" value="" />
-        {allStages.map((stage) => (
-          <Picker.Item key={stage} label={stage} value={stage} />
-        ))}
-      </Picker>
+          {/* Destination Location */}
+          <View style={styles.locationContainer}>
+            <View style={styles.markerIconContainer}>
+              <View style={styles.destinationMarker}>
+                <Ionicons name="navigate" size={20} color="#3F51B5" />
+              </View>
+            </View>
+            
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Your Destination"
+                value={toLocation}
+                onChangeText={handleToSearch}
+                placeholderTextColor="#9E9E9E"
+              />
+              {toLocation.length > 0 && (
+                <TouchableOpacity 
+                  style={styles.clearButton}
+                  onPress={() => setToLocation("")}
+                >
+                  <Ionicons name="close-circle" size={20} color="#9E9E9E" />
+                </TouchableOpacity>
+              )}
+            </View>
+            
+            <TouchableOpacity onPress={swapLocations} style={styles.swapButton}>
+              <MaterialIcons name="swap-vert" size={24} color="#007bff" />
+            </TouchableOpacity>
+          </View>
 
-      <Picker
-        selectedValue={toLocation}
-        onValueChange={setToLocation}
-        style={styles.picker}
-        enabled={allStages.length > 0}
-      >
-        <Picker.Item label="To Location" value="" />
-        {allStages.map((stage) => (
-          <Picker.Item key={stage} label={stage} value={stage} />
-        ))}
-      </Picker>
+          {filteredToStages.length > 0 && (
+            <View style={styles.suggestionsContainer}>
+              <FlatList
+                data={filteredToStages.slice(0, 4)}
+                keyExtractor={(item) => `to-${item}`}
+                renderItem={({ item }) => (
+                  <TouchableOpacity 
+                    style={styles.suggestionItem} 
+                    onPress={() => {
+                      setToLocation(item);
+                      setFilteredToStages([]);
+                    }}
+                  >
+                    <Ionicons name="location-outline" size={16} color="#007bff" />
+                    <Text style={styles.suggestionText}>{item}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          )}
 
-      {/* Search Button */}
-      <TouchableOpacity style={styles.searchButton} onPress={filterBuses}>
-        <Text style={styles.searchText}>Search Buses</Text>
-      </TouchableOpacity>
+          {/* Search Button */}
+          <TouchableOpacity 
+            style={styles.startButton} 
+            onPress={filterBuses}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <View style={styles.buttonContent}>
+                <Text style={styles.startText}>Start</Text>
+                <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
 
-      {/* Bus Listing */}
-      {fromLocation && toLocation ? (
-        <FlatList
-          data={filteredBuses}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item }) => {
-            const formattedTime = item.timings?.[fromLocation] || "N/A";
-            return (
-              <TouchableOpacity onPress={() => navigateToBusDetails(item)}>
-                <View style={styles.busCard}>
-                  <View style={styles.row}>
-                    <Text style={styles.busIcon}>🚌</Text>
-                    <Text style={styles.column}>{item.busRouteNo}</Text>
-                    <Text style={styles.column}>{item.fromStage}</Text>
-                    <Text style={styles.column}>{item.toStage}</Text>
-                    <Text style={styles.column}>{formattedTime}</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            );
-          }}
-        />
-      ) : (
-        <Text style={styles.infoText}>
-          Please select both From and To locations to view available buses.
-        </Text>
-      )}
-    </View>
+        {/* Results Section */}
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#007bff" />
+            <Text style={styles.loadingText}>Finding available buses...</Text>
+          </View>
+        ) : searchPerformed ? (
+          filteredBuses.length > 0 ? (
+            <View style={styles.resultsContainer}>
+              <Text style={styles.resultsHeader}>
+                {filteredBuses.length} {filteredBuses.length === 1 ? 'bus' : 'buses'} found
+              </Text>
+              <FlatList
+                data={filteredBuses}
+                keyExtractor={(item) => item._id}
+                renderItem={({ item }) => {
+                  const departureTime = item.timings?.[fromLocation] || "N/A";
+                  const arrivalTime = item.timings?.[toLocation] || "N/A";
+                  
+                  return (
+                    <TouchableOpacity 
+                      style={styles.busCard}
+                      onPress={() => navigateToBusDetails(item)}
+                    >
+                      <View style={styles.busCardHeader}>
+                        <View style={styles.busNumberContainer}>
+                          <Text style={styles.busNumber}>{item.busRouteNo}</Text>
+                        </View>
+                        <Text style={styles.busType}>{item.busType || "Regular"}</Text>
+                      </View>
+                      
+                      <View style={styles.routeContainer}>
+                        <View style={styles.routeInfo}>
+                          <View style={styles.routePoint}>
+                            <View style={styles.timeContainer}>
+                              <Text style={styles.timeText}>{departureTime}</Text>
+                            </View>
+                            <Text style={styles.locationText}>{fromLocation}</Text>
+                          </View>
+                          
+                          <View style={styles.routeLineContainer}>
+                            <View style={styles.routeLine} />
+                          </View>
+                          
+                          <View style={styles.routePoint}>
+                            <View style={styles.timeContainer}>
+                              <Text style={styles.timeText}>{arrivalTime}</Text>
+                            </View>
+                            <Text style={styles.locationText}>{toLocation}</Text>
+                          </View>
+                        </View>
+                      </View>
+                      
+                      <TouchableOpacity 
+                        style={styles.viewDetailsButton}
+                        onPress={() => navigateToBusDetails(item)}
+                      >
+                        <Text style={styles.viewDetailsText}>View Details</Text>
+                        <Ionicons name="chevron-forward" size={16} color="#007bff" />
+                      </TouchableOpacity>
+                    </TouchableOpacity>
+                  );
+                }}
+              />
+            </View>
+          ) : (
+            <View style={styles.noResultsContainer}>
+              <Ionicons name="bus-outline" size={60} color="#CCCCCC" />
+              <Text style={styles.noResultsText}>No buses available for this route</Text>
+              <Text style={styles.tryAgainText}>Try a different route or time</Text>
+            </View>
+          )
+        ) : (
+          <View style={styles.initialStateContainer}>
+            <Image 
+              source={{ uri: "https://static.vecteezy.com/system/resources/previews/009/589/758/large_2x/location-location-pin-location-icon-transparent-free-png.png" }} 
+            
+              style={styles.illustration}
+              resizeMode="contain"
+            />
+            <Text style={styles.infoText}>
+              Enter your location and destination to find available buses
+            </Text>
+          </View>
+        )}
+      </View>
+    </SafeAreaView>
   );
 };
 

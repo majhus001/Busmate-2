@@ -11,15 +11,16 @@ import {
 } from "react-native";
 import { WebView } from "react-native-webview";
 import * as SecureStore from "expo-secure-store";
-
+import { API_BASE_URL } from "../../../apiurl";
 const Payment = ({ route, navigation }) => {
   const [showWebView, setShowWebView] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState("");
   const [storedDistance, setStoredDistance] = useState(null);
   const [seatCount, setSeatCount] = useState(1); // Default 1 seat
-
+  const [userId, setUserId] = useState(null);
   const fareprice = route.params?.fareprice ? parseFloat(route.params.fareprice) : 0;
-
+  const busno = route.params?.busno || "Unknown Bus"; // Default to "Unknown Bus" if not provided
+console.log(busno);
   useEffect(() => {
     const fetchDistance = async () => {
       try {
@@ -60,6 +61,27 @@ const Payment = ({ route, navigation }) => {
     };
   }, [showWebView]);
 
+  const fetchId = async () => {
+    try {
+      const id = await SecureStore.getItemAsync("currentUserId"); // ✅ Corrected key
+      if (id) {
+        console.log("✅ Retrieved ID:", id);
+        setUserId(id);
+        return id;
+      } else {
+        console.warn("⚠️ No ID found in SecureStore");
+        return null;
+      }
+    } catch (error) {
+      console.error("❌ Error fetching ID:", error);
+      return null;
+    }
+  };
+  useEffect(() => {
+    fetchId();
+  }, []);
+    
+  
   const handlePayment = async () => {
     if (storedDistance === null || isNaN(storedDistance)) {
       Alert.alert("⚠️ Error", "Distance data is invalid.");
@@ -71,21 +93,44 @@ const Payment = ({ route, navigation }) => {
       return;
     }
 
+    if (!userId) {
+      Alert.alert("⚠️ Error", "User ID not found.");
+      return;
+    }
+
     try {
-      const response = await fetch("http://192.168.232.182:5000/api/payment/orders", {
+      const response = await fetch(`${API_BASE_URL}/api/payment/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: fareprice * seatCount, // Updated amount based on seat count
+          amount: fareprice * seatCount,
           currency: "INR",
           notes: { description: "Bus Ticketing Payment" },
+          busno: busno,
+          userId: userId
         }),
       });
 
-      const data = await response.json();
+      // Check if response is ok before parsing
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Get the response text first
+      const responseText = await response.text();
+      
+      // Try to parse as JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error("JSON Parse Error:", parseError);
+        console.error("Raw response:", responseText);
+        throw new Error("Invalid JSON response from server");
+      }
+
       if (!data?.order?.id) {
-        alert("❌ Failed to create order");
-        return;
+        throw new Error("Invalid order data received");
       }
 
       const { id, amount, currency } = data.order;

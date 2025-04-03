@@ -104,7 +104,13 @@ const Busdetails = ({ route, navigation }) => {
       {/* Pay Now Button */}
       <TouchableOpacity
   style={styles.payButton}
-  onPress={() => navigation.navigate("payment", { fareprice })}
+  onPress={() =>
+    navigation.navigate("payment", {
+      fareprice,         // Ticket price
+      busno: bus.busRouteNo,  // Bus number
+    })
+  }
+  
 >
   <Text style={styles.payButtonText}>💳 Pay Now</Text>
 </TouchableOpacity>

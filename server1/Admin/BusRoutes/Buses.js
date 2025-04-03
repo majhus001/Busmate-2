@@ -167,6 +167,20 @@ router.get("/fetchcities", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+router.get("/fetchAllBuses", async (req, res) => {
+  try {
+    const buses = await Bus.find(); // Fetch all buses from the database
+
+    if (buses.length === 0) {
+      return res.status(404).json({ message: "No buses available." });
+    }
+
+    res.json(buses);
+  } catch (error) {
+    console.error("Error fetching all buses:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 router.get("/fetchBy/cities/:selectedCity", async (req, res) => {
   try {
