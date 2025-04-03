@@ -23,6 +23,25 @@ router.post("/add", async (req, res) => {
   }
 });
 
+router.get("/getstates", async (req, res) => {
+
+  try {
+    const routes = await BusRoute.find();
+    
+    if (!routes || routes.length === 0) {
+      return res.json({ success: false, message: "No stages found." });
+    }
+
+    const states = [...new Set(routes.map((route) => route.state))];
+
+
+    res.json({ success: true, states: states });
+  } catch (error) {
+    console.error("Error fetching stages:", error);
+    res.status(500).json({ success: false, message: "Server error." });
+  }
+});
+
 router.get("/getcities/:selectedState", async (req, res) => {
   const {  selectedState } = req.params;
 console.log(selectedState)
@@ -82,3 +101,18 @@ router.post("/getstages", async (req, res) => {
 
 
 module.exports = router;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -29,6 +29,8 @@ const upload = multer({ storage });
 
 // Profile Update Route
 router.put("/admin/profileupdate/:adminId", upload.single("image"), async (req, res) => {
+  
+  console.log("gggg")
   try {
     const { name, email, password, age, city, state } = req.body;
     const { adminId } = req.params;

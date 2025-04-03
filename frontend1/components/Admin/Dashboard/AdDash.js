@@ -1,31 +1,33 @@
-import React, { useState,  useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Image, ScrollView, TouchableOpacity } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 import styles from "./AdDashStyles";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 import * as SecureStore from "expo-secure-store";
-
 
 const AdDash = ({ navigation, route }) => {
   const { buses = [], conductors = [] } = route.params || {};
   const [loading, setLoading] = useState(false);
 
   const [adminData, setAdminData] = useState(null);
-  useEffect(() => {
-    const fetchAdminData = async () => {
-      try {
-        const storedData = await SecureStore.getItemAsync("currentUserData");
-        if (storedData) {
-          const parsedData = JSON.parse(storedData);
-          setAdminData(parsedData);
+  useFocusEffect(
+    useCallback(() => {
+      const fetchAdminData = async () => {
+        try {
+          const storedData = await SecureStore.getItemAsync("currentUserData");
+          if (storedData) {
+            const parsedData = JSON.parse(storedData);
+            setAdminData(parsedData);
+          }
+        } catch (error) {
+          console.error("Error fetching admin data:", error);
         }
-      } catch (error) {
-        console.error("Error fetching admin data:", error);
-      }
-    };
-    fetchAdminData();
-  }, []);
+      };
 
-  console.log(adminData)
+      fetchAdminData();
+    }, []) // Empty dependency array ensures it only runs when the page is focused
+  );
 
   const activeBusesCount = buses.filter((bus) => bus.LoggedIn).length;
   const inactiveBusesCount = buses.length - activeBusesCount;
@@ -47,7 +49,7 @@ const AdDash = ({ navigation, route }) => {
       return;
     }
 
-    navigation.navigate("adprofile", { adminData: adminData, role: "Admin" });
+    navigation.navigate("adprofile");
   };
 
   return (
@@ -84,8 +86,17 @@ const AdDash = ({ navigation, route }) => {
       {/* Dashboard Cards */}
       <View style={styles.gridContainer}>
         {[
-          { title: "Total Buses", value: buses.length },
-          { title: "Total Conductors", value: conductors.length },
+          {
+            title: "Total Buses",
+            value: buses.length,
+            onPress: () => navigation.navigate("ViewBuses", { buses }),
+          },
+          {
+            title: "Total Conductors",
+            value: conductors.length,
+            onPress: () =>
+              navigation.navigate("ViewConductors", { conductors }),
+          },
           { title: "Active Buses", value: activeBusesCount },
           { title: "Inactive Buses", value: inactiveBusesCount },
           { title: "Conductors Logged In", value: loggedInConductors },
@@ -93,7 +104,12 @@ const AdDash = ({ navigation, route }) => {
           { title: "Reports", value: 10 },
           { title: "Alerts", value: 20 },
         ].map((item, index) => (
-          <TouchableOpacity key={index} style={styles.card} activeOpacity={0.7}>
+          <TouchableOpacity
+            key={index}
+            style={styles.card}
+            activeOpacity={0.7}
+            onPress={item.onPress} 
+          >
             <Text style={styles.cardTitle}>{item.title}</Text>
             <Text style={styles.cardValue}>{item.value}</Text>
           </TouchableOpacity>

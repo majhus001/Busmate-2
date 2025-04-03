@@ -9,28 +9,62 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
+import * as SecureStore from "expo-secure-store";
 import styles from "./AdminProfileStyles";
 import { API_BASE_URL } from "../../../apiurl";
 
-const AdminProfile = ({ route, navigation }) => {
-  const { adminData } = route.params || {};
-
+const AdminProfile = ({ navigation }) => {
+  const [adminData, setAdminData] = useState(null);
   const [user, setUser] = useState({
-    name: adminData?.Username || "",
-    email: adminData?.email || "",
-    password: adminData?.password || "",
-    age: adminData?.age ? String(adminData.age) : "",
-    city: adminData?.city || "",
-    state: adminData?.state || "",
+    name: "",
+    email: "",
+    password: "",
+    age: "",
+    city: "",
+    state: "",
   });
-
   const [profileImage, setProfileImage] = useState(
-    adminData?.image || "https://via.placeholder.com/150"
+    "https://via.placeholder.com/150"
   );
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchAdminData = async () => {
+        try {
+          const storedData = await SecureStore.getItemAsync("currentUserData");
+          if (storedData) {
+            const parsedData = JSON.parse(storedData);
+            setAdminData(parsedData);
+          }
+        } catch (error) {
+          console.error("Error fetching admin data:", error);
+        }
+      };
+
+      fetchAdminData();
+    }, []) // Empty dependency array ensures it only runs when the page is focused
+  );
+
+  // Update user state after adminData is fetched
+  useEffect(() => {
+    if (adminData) {
+      setUser({
+        name: adminData.Username || "",
+        email: adminData.email || "",
+        password: adminData.password || "",
+        age: adminData.age ? String(adminData.age) : "",
+        city: adminData.city || "",
+        state: adminData.state || "",
+      });
+      setProfileImage(adminData.image || "https://via.placeholder.com/150");
+    }
+  }, [adminData]);
 
   useEffect(() => {
     const requestPermission = async () => {
@@ -101,10 +135,14 @@ const AdminProfile = ({ route, navigation }) => {
           type: `image/${fileType}`,
         });
       }
-      const adminId = adminData._id;
+
+      if (!adminData?._id) {
+        Alert.alert("Error", "Admin ID not found.");
+        return;
+      }
 
       const response = await axios.put(
-        `${API_BASE_URL}/api/userdata/admin/profileupdate/${adminId}`,
+        `${API_BASE_URL}/api/userdata/admin/profileupdate/${adminData._id}`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -112,8 +150,17 @@ const AdminProfile = ({ route, navigation }) => {
       );
 
       if (response.status === 200) {
-        Alert.alert("Success", "Profile updated successfully!... login again to see the changes");
+        Alert.alert(
+          "Success",
+          "Profile updated successfully! Please log in again to see the changes."
+        );
         setIsEditing(false);
+
+        // Store updated user data
+        await SecureStore.setItemAsync(
+          "currentUserData",
+          JSON.stringify(response.data.admin)
+        );
       }
     } catch (error) {
       Alert.alert("Error", "Failed to update profile.");
@@ -132,6 +179,7 @@ const AdminProfile = ({ route, navigation }) => {
         <Text style={styles.changeText}>
           {isEditing ? "Tap to change image" : ""}
         </Text>
+
         {loading && (
           <ActivityIndicator
             size="large"
@@ -150,7 +198,7 @@ const AdminProfile = ({ route, navigation }) => {
           />
           <Text style={styles.label}>Email:</Text>
           <TextInput
-            style={[styles.input, !isEditing && styles.disabledInput]}
+            style={[styles.input, styles.disabledInput]}
             value={user.email}
             editable={false}
           />

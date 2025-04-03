@@ -41,7 +41,7 @@ router.post("/add", upload.single("image"), async (req, res) => {
       adminId,
     } = req.body;
 
-    console.log(req.file.path)
+    console.log(req.file.path);
 
     // Validate required fields
     if (!Username || !phoneNumber || !password) {
@@ -53,11 +53,9 @@ router.post("/add", upload.single("image"), async (req, res) => {
     // Validate phone number (10 digits)
     const phoneRegex = /^[0-9]{10}$/;
     if (!phoneRegex.test(phoneNumber)) {
-      return res
-        .status(400)
-        .json({
-          error: "Invalid phone number! Please enter a valid 10-digit number.",
-        });
+      return res.status(400).json({
+        error: "Invalid phone number! Please enter a valid 10-digit number.",
+      });
     }
 
     // Validate password (Minimum 6 characters)
@@ -71,11 +69,9 @@ router.post("/add", upload.single("image"), async (req, res) => {
     if (dob) {
       const parsedDate = new Date(dob);
       if (isNaN(parsedDate.getTime())) {
-        return res
-          .status(400)
-          .json({
-            error: "Invalid Date of Birth (DOB). Use YYYY-MM-DD format.",
-          });
+        return res.status(400).json({
+          error: "Invalid Date of Birth (DOB). Use YYYY-MM-DD format.",
+        });
       }
       dob = parsedDate;
     }
@@ -108,20 +104,16 @@ router.post("/add", upload.single("image"), async (req, res) => {
 
     await newConductor.save();
 
-    res
-      .status(201)
-      .json({
-        message: "Conductor added successfully!",
-        conductor: newConductor,
-      });
+    res.status(201).json({
+      message: "Conductor added successfully!",
+      conductor: newConductor,
+    });
   } catch (error) {
     console.error("Error saving conductor:", error);
-    res
-      .status(500)
-      .json({
-        error: error.message || "Internal Server Error",
-        details: error,
-      });
+    res.status(500).json({
+      error: error.message || "Internal Server Error",
+      details: error,
+    });
   }
 });
 
@@ -133,6 +125,56 @@ router.get("/fetchconductor/:adminId", async (req, res) => {
     res.json({ data: conductors });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+router.delete("/delete/:id", async (req, res) => {
+  try {
+    const conductorId = req.params.id;
+    const deletedConductor = await Conductor.findByIdAndDelete(conductorId);
+
+    if (!deletedConductor) {
+      return res.status(404).json({ message: "Conductor not found" });
+    }
+
+    res.status(200).json({ message: "Conductor deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting conductor:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+/**
+ * PUT: Update a conductor's details
+ */
+router.put("/update/:id", upload.single("image"), async (req, res) => {
+  try {
+    const conductorId = req.params.id;
+    const updatedData = req.body;
+
+    // If a new image is uploaded, add it to the update object
+    if (req.file) {
+      updatedData.image = req.file ? req.file.path : null;
+    }
+
+    const updatedConductor = await Conductor.findByIdAndUpdate(
+      conductorId,
+      updatedData,
+      { new: true }
+    );
+
+    if (!updatedConductor) {
+      return res.status(404).json({ message: "Conductor not found" });
+    }
+
+    res
+      .status(200)
+      .json({
+        message: "Conductor updated successfully",
+        conductor: updatedConductor,
+      });
+  } catch (error) {
+    console.error("Error updating conductor:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
