@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     paddingHorizontal: 16,
     paddingBottom: 16,
-    backgroundColor: "#5e72e4",
+    backgroundColor: "#00468b",
   },
   backButton: {
     padding: 8,
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8f9fe",
   },
   profileImageSection: {
-    backgroundColor: "#5e72e4",
+    backgroundColor: "#00468b",
     paddingBottom: 30,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
