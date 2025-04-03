@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -9,14 +9,13 @@ import {
   ActivityIndicator,
 } from "react-native";
 import axios from "axios";
-import styles from "./ConProfileStyles"; // Importing styles
-import { Button } from "react-native-paper";
 import { API_BASE_URL } from "../../../apiurl";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { LinearGradient } from "expo-linear-gradient";
+import styles from "./ConProfileStyles"; // Importing styles
 
 const ConProfile = ({ route, navigation }) => {
-  // Example user data
   const { conData } = route.params || {};
-
   const [loading, setLoading] = useState(false);
 
   const handleNavigate = (screen) => {
@@ -24,7 +23,6 @@ const ConProfile = ({ route, navigation }) => {
       Alert.alert("Error", "Conductor ID is missing. Please log in again.");
       return;
     }
-    console.log("Navigating with conductorId:", conData._id);
     navigation.navigate(screen, { conductorId: conData._id });
   };
 
@@ -32,10 +30,7 @@ const ConProfile = ({ route, navigation }) => {
     setLoading(true);
     const conId = conData._id;
     try {
-      const response = await axios.put(
-        `${API_BASE_URL}/api/Conductor/logout/${conId}`
-      );
-      console.log("Logout successful:", response.data);
+      await axios.put(`${API_BASE_URL}/api/Conductor/logout/${conId}`);
       navigation.navigate("login");
     } catch (error) {
       console.error("Logout error:", error);
@@ -46,63 +41,77 @@ const ConProfile = ({ route, navigation }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Conductor Profile</Text>
-      {/* Display the image at the top */}
-      <Image
-        source={{
-          uri:
-            conData.image ||
-            "https://th.bing.com/th/id/OIP.aKiTvd6drTIayNy2hddhiQHaHa?w=1024&h=1024&rs=1&pid=ImgDetMain",
-        }}
-        style={styles.profileImage}
-        onError={(e) => console.log("Image Load Error", e.nativeEvent.error)}
-      />
+      {/* Header */}
+      <View style={styles.header}>
+        <LinearGradient colors={["#3a7bd5", "#3a6073"]} style={styles.gradient}>
+          <Text style={styles.title}>Conductor Profile</Text>
+        </LinearGradient>
+      </View>
 
-      <View style={styles.infoContainer}>
-        <ProfileItem label="Username" value={conData.Username} />
-        <ProfileItem label="Age" value={conData.age} />
-        <ProfileItem label="Phone Number" value={conData.phoneNumber} />
-        <ProfileItem label="Gender" value={conData.gender} />
+      {/* Profile Image */}
+      <View style={styles.imageContainer}>
+        <Image
+          source={{
+            uri:
+              conData.image ||
+              "https://th.bing.com/th/id/OIP.aKiTvd6drTIayNy2hddhiQHaHa?w=1024&h=1024&rs=1&pid=ImgDetMain",
+          }}
+          style={styles.profileImage}
+        />
+      </View>
+
+      {/* Profile Details */}
+      <View style={styles.card}>
+        <ProfileItem label="Username" value={conData.Username} icon="person" />
+        <ProfileItem label="Age" value={conData.age} icon="cake" />
+        <ProfileItem label="Phone" value={conData.phoneNumber} icon="phone" />
+        <ProfileItem label="Gender" value={conData.gender} icon="wc" />
         <ProfileItem
           label="Date of Birth"
           value={new Date(conData.dob).toISOString().split("T")[0]}
+          icon="calendar-today"
         />
-        <ProfileItem label="Address" value={conData.address} />
+        <ProfileItem label="Address" value={conData.address} icon="home" />
         <ProfileItem
-          label="LoggedIn"
+          label="Status"
           value={conData.LoggedIn ? "Active" : "Inactive"}
+          icon="check-circle"
         />
-        <TouchableOpacity onPress={handleLogout} style={styles.lgbutton}>
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.lgbuttonText}>Logout</Text>
-          )}
-        </TouchableOpacity>
       </View>
-      <View style={styles.combtn}>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => handleNavigate("complaintform")}
-        >
-          <Text style={styles.buttonText}> Add Complaints</Text>
+
+      {/* Action Buttons */}
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity onPress={() => handleNavigate("complaintform")}>
+          <LinearGradient colors={["#ff7e5f", "#feb47b"]} style={styles.button}>
+            <Icon name="report" size={24} color="#fff" />
+            <Text style={styles.buttonText}>Add Complaint</Text>
+          </LinearGradient>
         </TouchableOpacity>
 
-        {/* View Complaints Button */}
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => handleNavigate("viewcomplaintform")}
-        >
-          <Text style={styles.buttonText}> View Complaints</Text>
+        <TouchableOpacity onPress={() => handleNavigate("viewcomplaintform")}>
+          <LinearGradient colors={["#6a11cb", "#2575fc"]} style={styles.button}>
+            <Icon name="visibility" size={24} color="#fff" />
+            <Text style={styles.buttonText}>View Complaints</Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
+
+      {/* Logout Button */}
+      <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.logoutText}>Logout</Text>
+        )}
+      </TouchableOpacity>
     </ScrollView>
   );
 };
 
-// Component to display label-value pairs
-const ProfileItem = ({ label, value }) => (
+// Profile Item Component
+const ProfileItem = ({ label, value, icon }) => (
   <View style={styles.item}>
+    <Icon name={icon} size={22} color="#333" style={styles.icon} />
     <Text style={styles.label}>{label}:</Text>
     <Text style={styles.value}>{value}</Text>
   </View>

@@ -137,6 +137,16 @@ const Updatebusesdata = ({ navigation, route }) => {
     }
   };
 
+  const updatePrice = (stage, price) => {
+    setBusDetails((prev) => ({
+      ...prev,
+      prices: {
+        ...prev.prices,
+        [stage]: price,
+      },
+    }));
+  };
+
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.header}>🚌 Update Bus Details</Text>
@@ -241,6 +251,22 @@ const Updatebusesdata = ({ navigation, route }) => {
         onConfirm={handleConfirm}
         onCancel={hideDatePicker}
       />
+
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>💰 Update Prices</Text>
+        {Object.entries(busDetails.prices).map(([stage, price], index) => (
+          <View key={index} style={styles.inputContainer}>
+            <Text style={styles.label}>{stage}:</Text>
+            <TextInput
+              style={styles.input}
+              value={price.toString()}
+              onChangeText={(value) => updatePrice(stage, value)}
+              placeholder="Enter Price"
+              keyboardType="numeric"
+            />
+          </View>
+        ))}
+      </View>
 
       {/* Update & Delete Buttons */}
       <View style={styles.buttonContainer}>
