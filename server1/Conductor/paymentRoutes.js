@@ -46,6 +46,25 @@ router.post("/orders", async (req, res) => {
   }
 });
 
+// 🔹 Get All Transactions for a User
+router.get("/transactions/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required!" });
+    }
+
+    const transactions = await Order.find({ userId }).sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, transactions });
+  } catch (error) {
+    console.error("❌ Error fetching transactions:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error!" });
+  }
+});
+
+
 // 🔹 Verify Payment
 router.post("/verify", async (req, res) => {
   try {

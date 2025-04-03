@@ -6,7 +6,26 @@ const styles = StyleSheet.create({
     backgroundColor: "#EAF2F8",
     padding: 20,
   },
-
+  payButton: {
+    backgroundColor: "green", // Vibrant orange for payment
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: "center",
+    marginVertical: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 5, // For Android shadow
+  },
+  
+  payButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  
   // Header
   header: {
     backgroundColor: "#1E90FF",

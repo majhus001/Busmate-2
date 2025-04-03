@@ -42,7 +42,7 @@ const Login = ({ navigation }) => {
           {
             text: "OK",
             onPress: () => {
-              navigation.navigate("usfindbus", { userData }); // Still pass userData if needed
+              navigation.navigate("UserHome", { userData }); // Still pass userData if needed
             },
           },
         ]);

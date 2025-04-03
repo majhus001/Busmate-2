@@ -11,7 +11,7 @@ const UserHomeApp = ({ navigation }) => {
       <StatusBar backgroundColor="#00468b" barStyle="light-content" />
       <Navbar />
       <UserFindBus navigation={navigation} />
-      <Footer />
+      <Footer navigation={navigation} />
     </SafeAreaView>
   );
 };
