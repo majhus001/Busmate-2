@@ -1,12 +1,12 @@
 import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
-    Admincontainer: {
+  Admincontainer: {
     flex: 1,
     backgroundColor: "#f9f9f9",
     paddingHorizontal: 20,
     paddingTop: 10,
-    paddingBottom:50,
+    paddingBottom: 50,
   },
 
   leftSection: {
@@ -54,9 +54,9 @@ const styles = StyleSheet.create({
   addButton: {
     backgroundColor: "#007bff",
     paddingVertical: 10,
-    borderRightWidth:2,
-    borderColor:"#fff",
-    width: 110, 
+    borderRightWidth: 2,
+    borderColor: "#fff",
+    width: 110,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#28a745",
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 30,
     marginTop: 10,
-    alignItems: "center", 
+    alignItems: "center",
   },
   busconbtn: {
     backgroundColor: "#fff",
@@ -83,10 +83,9 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     color: "#007bff",
     width: 150,
-    textAlign: "center", 
-    fontWeight: "bold", 
+    textAlign: "center",
+    fontWeight: "bold",
   },
-  
 
   /* Toggle Buttons Section */
   toggleContainer: {
@@ -113,18 +112,18 @@ const styles = StyleSheet.create({
   activeTabText: {
     color: "#fff",
   },
-// Search Input
-searchInput: {
-    width: '90%',
+  // Search Input
+  searchInput: {
+    width: "90%",
     height: 45,
     marginVertical: 15,
-    alignSelf: 'center',
-    backgroundColor: '#F0F0F0',
+    alignSelf: "center",
+    backgroundColor: "#F0F0F0",
     borderRadius: 25,
     paddingLeft: 20,
     fontSize: 16,
-    color: '#333',
-    shadowColor: '#000',
+    color: "#333",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 3,
@@ -133,7 +132,7 @@ searchInput: {
     shadowRadius: 4,
     elevation: 5,
   },
-  
+
   /* Section Title */
   sectionTitle: {
     fontSize: 24,
@@ -207,7 +206,6 @@ searchInput: {
     borderWidth: 1,
     borderColor: "#e0e0e0",
   },
-
   conductorName: {
     fontSize: 18,
     fontWeight: "bold",
@@ -237,16 +235,22 @@ searchInput: {
   bustimingcont: {
     backgroundColor: "#007bff",
     padding: 10,
-    borderRadius: 10
+    borderRadius: 10,
   },
   dropdowntimingText: {
-    color: "#fff"
+    color: "#fff",
   },
   /* Pagination Section */
   paginationContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginVertical: 20,
+  },
+  complaintIcon: {
+    position: "absolute",
+    top: 25, 
+    right: 15, 
+    zIndex: 10, 
   },
   loader: {
     flex: 1,
@@ -270,7 +274,6 @@ searchInput: {
   disabledButton: {
     backgroundColor: "#ccc",
   },
-
   /* No Data Message */
   noDataText: {
     fontSize: 16,

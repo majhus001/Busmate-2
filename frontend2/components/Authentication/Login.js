@@ -32,9 +32,8 @@ const Login = ({ navigation }) => {
 
       if (response.data && response.data.user) {
         const userData = response.data.user;
-        const userId = userData._id; // Extract userId
+        const userId = userData._id; 
 
-        // Save userId in SecureStore
         await SecureStore.setItemAsync("currentUserId", userId);
         console.log("User ID saved in SecureStore:", userId);
 
@@ -42,7 +41,7 @@ const Login = ({ navigation }) => {
           {
             text: "OK",
             onPress: () => {
-              navigation.navigate("usfindbus", { userData }); // Still pass userData if needed
+              navigation.navigate("UserHome", { userData }); // Still pass userData if needed
             },
           },
         ]);

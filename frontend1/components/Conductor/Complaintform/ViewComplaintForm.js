@@ -6,23 +6,17 @@ import axios from "axios";
 import styles from "./ViewComplaintFormStyles"; 
 import { API_BASE_URL } from "../../../apiurl"; 
 
-const ViewComplaintForm = ({ route }) => {
-  const { conductorId } = route.params || {};
+const ViewComplaintForm = () => {
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-
   useEffect(() => {
-    if (!conductorId) {
-      setError("Conductor ID is missing.");
-      return;
-    }
-    
     const fetchComplaints = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/Conductor/complaints/${conductorId}`);
-        setComplaints(response.data);
+        const response = await axios.get(`${API_BASE_URL}/api/Conductor/complaints`); // Fetch all complaints
+        const filteredComplaints = response.data.filter(item => item.status === true); // Filter unresolved complaints
+        setComplaints(filteredComplaints); // Remove slice(0, 3) to show all complaints
       } catch (error) {
         Alert.alert("Error", "Failed to load complaints.");
       } finally {
@@ -31,15 +25,7 @@ const ViewComplaintForm = ({ route }) => {
     };
 
     fetchComplaints();
-  }, [conductorId]);  
-
-  if (error) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>{error}</Text>
-      </View>
-    );
-  }
+  }, []);  
 
   const renderItem = ({ item }) => (
     <View style={styles.complaintCard}>
@@ -52,14 +38,14 @@ const ViewComplaintForm = ({ route }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Your Complaints</Text>
+      <Text style={styles.title}>Complaints</Text>
       {loading ? (
         <ActivityIndicator size="large" color="#007bff" />
       ) : complaints.length === 0 ? (
-        <Text style={styles.noDataText}>No complaints found.</Text>
+        <Text style={styles.noDataText}>No unresolved complaints.</Text>
       ) : (
         <FlatList
-          data={complaints}
+          data={complaints} // Now displaying all complaints
           keyExtractor={(item) => item._id} 
           renderItem={renderItem}
         />

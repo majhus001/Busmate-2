@@ -8,18 +8,13 @@ import {
   TextInput,
 } from "react-native";
 import axios from "axios";
+import Icon from "react-native-vector-icons/Ionicons";
 import { Card, ActivityIndicator } from "react-native-paper";
 import { API_BASE_URL } from "../../../apiurl";
 import styles from "./AdminHomeStyles";
+import * as SecureStore from "expo-secure-store";
 
 const AdminHome = ({ navigation, route }) => {
-  const { adminData } = route.params || {};
-
-  const adminId = adminData._id;
-  const username = adminData.Username;
-  const city = adminData.city;
-  const state = adminData.state;
-
   const [buses, setBuses] = useState([]);
   const [conductors, setConductors] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -27,6 +22,51 @@ const AdminHome = ({ navigation, route }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedTab, setSelectedTab] = useState("Buses");
   const busesPerPage = 5;
+
+  const [adminData, setAdminData] = useState(null);
+  useEffect(() => {
+    const fetchAdminData = async () => {
+      try {
+        const storedData = await SecureStore.getItemAsync("currentUserData");
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          setAdminData(parsedData);
+        }
+      } catch (error) {
+        console.error("Error fetching admin data:", error);
+      }
+    };
+    fetchAdminData();
+  }, []);
+
+  useEffect(() => {
+    if (!adminData) return; // Ensure adminData is available
+
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [busResponse, conductorResponse] = await Promise.all([
+          axios.get(
+            `${API_BASE_URL}/api/Admin/buses/fetchbus/${adminData._id}`
+          ),
+          axios.get(
+            `${API_BASE_URL}/api/Admin/conductor/fetchconductor/${adminData._id}`
+          ),
+        ]);
+
+        setBuses(
+          busResponse.data.data.map((bus) => ({ ...bus, expanded: false }))
+        );
+        setConductors(conductorResponse.data.data);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [adminData]);
 
   if (!buses || !conductors) {
     return (
@@ -41,33 +81,6 @@ const AdminHome = ({ navigation, route }) => {
       )
     );
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true); // Start Loading
-      try {
-        const [busResponse, conductorResponse] = await Promise.all([
-          axios.get(`${API_BASE_URL}/api/Admin/buses/fetchbus/${adminId}`),
-          axios.get(
-            `${API_BASE_URL}/api/Admin/conductor/fetchconductor/${adminId}`
-          ),
-        ]);
-
-        setBuses(
-          busResponse.data.data.map((bus) => ({ ...bus, expanded: false }))
-        );
-        setConductors(conductorResponse.data.data);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-      } finally {
-        setLoading(false); // Stop Loading
-      }
-    };
-
-    if (adminId) {
-      fetchData();
-    }
-  }, [adminId]);
 
   if (loading) {
     return (
@@ -117,7 +130,7 @@ const AdminHome = ({ navigation, route }) => {
       {/* Header Section */}
       <TouchableOpacity
         onPress={() =>
-          navigation.navigate("addash", { adminData, buses, conductors })
+          navigation.navigate("addash", {  buses, conductors })
         }
       >
         <View style={styles.leftSection}>
@@ -129,10 +142,13 @@ const AdminHome = ({ navigation, route }) => {
             }}
             style={styles.profileImage}
           />
-          <Text style={styles.profileName}>{username}</Text>
+          <Text style={styles.profileName}>
+            {adminData?.Username || "Admin"}
+          </Text>
           <Text style={styles.profileRole}>Administrator</Text>
+
           <Text style={styles.profileDetail}>
-            📍 {city}, {state}
+            📍 {adminData?.city || "city"}, {adminData?.state || "state"}
           </Text>
           <View style={styles.busconinfo}>
             <Text style={styles.busconbtn}>Total buses : {buses.length}</Text>
@@ -144,6 +160,18 @@ const AdminHome = ({ navigation, route }) => {
       </TouchableOpacity>
 
       {/* Action Buttons */}
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate("statuscomplient", {
+            adminData,
+            buses,
+            conductors,
+          })
+        }
+        style={styles.complaintIcon} // Apply styling
+      >
+        <Icon name="alert-circle-outline" size={28} color="red" />
+      </TouchableOpacity>
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.addButton}
@@ -361,7 +389,7 @@ const AdminHome = ({ navigation, route }) => {
                     📞 {conductor.phoneNumber}
                   </Text>
                   <Text style={styles.conductorContact}>
-                    ⚧ Gender: {conductor.gender || "Not Specified"}
+                    ⚧ {conductor.gender || "Not Specified"}
                   </Text>
                 </View>
                 <Text

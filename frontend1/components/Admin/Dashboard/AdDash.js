@@ -1,13 +1,32 @@
-import React, { useState } from "react";
+import React, { useState,  useEffect } from "react";
 import { View, Text, Image, ScrollView, TouchableOpacity } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 import styles from "./AdDashStyles";
+import * as SecureStore from "expo-secure-store";
+
 
 const AdDash = ({ navigation, route }) => {
-  const { adminData, buses = [], conductors = [] } = route.params || {};
+  const { buses = [], conductors = [] } = route.params || {};
   const [loading, setLoading] = useState(false);
 
-  // Calculate Active and Inactive Buses
+  const [adminData, setAdminData] = useState(null);
+  useEffect(() => {
+    const fetchAdminData = async () => {
+      try {
+        const storedData = await SecureStore.getItemAsync("currentUserData");
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          setAdminData(parsedData);
+        }
+      } catch (error) {
+        console.error("Error fetching admin data:", error);
+      }
+    };
+    fetchAdminData();
+  }, []);
+
+  console.log(adminData)
+
   const activeBusesCount = buses.filter((bus) => bus.LoggedIn).length;
   const inactiveBusesCount = buses.length - activeBusesCount;
   const loggedOutConductors = conductors.filter(
@@ -45,15 +64,17 @@ const AdDash = ({ navigation, route }) => {
         >
           <Image
             source={{
-              uri: adminData.image || "https://th.bing.com/th/id/OIP.aKiTvd6drTIayNy2hddhiQHaHa?w=1024&h=1024&rs=1&pid=ImgDetMain",
+              uri:
+                adminData?.image ||
+                "https://th.bing.com/th/id/OIP.aKiTvd6drTIayNy2hddhiQHaHa?w=1024&h=1024&rs=1&pid=ImgDetMain",
             }}
             style={styles.profileImage}
           />
           {adminData && (
             <View>
-              <Text style={styles.welcomeText}>{adminData.Username}</Text>
+              <Text style={styles.welcomeText}>{adminData?.Username}</Text>
               <Text style={styles.welcomeText}>
-                {adminData.state},{adminData.city}
+                {adminData?.state},{adminData?.city}
               </Text>
             </View>
           )}
