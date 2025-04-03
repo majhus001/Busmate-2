@@ -1,4 +1,4 @@
-export const API_BASE_URL = "http://192.168.149.182:5000"; // Ensure this is your correct API URL
+export const API_BASE_URL = "http://172.17.17.23:5000"; 
 
 //thamil - http://192.168.232.182:5000
 //majid  - http://192.168.11.6:5000
