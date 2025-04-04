@@ -1,16 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import axios from "axios";
-import styles from "./BusloginStyles"; 
+import styles from "./BusloginStyles";
 import { API_BASE_URL } from "../../../apiurl";
 
 const Buslogin = ({ route, navigation }) => {
-  const { busplateNo, selectedFrom, selectedTo, selectedBusNo, selectedCity, selectedState } = route.params; 
-  
+  const {
+    busplateNo,
+    selectedFrom,
+    selectedTo,
+    selectedBusNo,
+    selectedCity,
+    selectedState,
+  } = route.params;
+
   const [password, setPassword] = useState("");
 
-  console.log(busplateNo, selectedFrom, selectedTo, selectedBusNo);
-
+  console.log("Selected Bus Info on loign:", {
+    busplateNo,
+  });
   const handleLogin = async () => {
     if (!password) {
       Alert.alert("Error", "Please enter the password");
@@ -18,14 +26,26 @@ const Buslogin = ({ route, navigation }) => {
     }
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/Admin/buses/login`, {
-        busplateNo,
-        password,
-      });
+      console.log(busplateNo, password);
+      const response = await axios.post(
+        `${API_BASE_URL}/api/Admin/buses/login`,
+        {
+          busplateNo,
+          password,
+        }
+      );
 
       if (response.data.success) {
         Alert.alert("Success", "Login Successful");
-        navigation.navigate("taketicket", { selectedFrom, selectedTo, selectedBusNo,busplateNo, selectedCity, selectedState }); 
+        
+        navigation.navigate("taketicket", {
+          selectedFrom,
+          selectedTo,
+          selectedBusNo,
+          busplateNo,
+          selectedCity,
+          selectedState,
+        });
       } else {
         Alert.alert("Error", response.data.message || "Invalid Credentials");
       }

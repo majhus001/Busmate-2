@@ -112,7 +112,6 @@ router.get("/fetchbus/:adminId", async (req, res) => {
 
 router.get("/fetchstate", async (req, res) => {
   try {
-    
     const { state } = req.query;
     const buses = await Bus.find({ state });
 
@@ -132,7 +131,7 @@ router.get("/fetchstate", async (req, res) => {
 router.get("/fetchcities", async (req, res) => {
   try {
     const { city } = req.query;
-    console.log("hi");
+
     if (!city) {
       return res.status(400).json({ message: "City is required" });
     }
@@ -165,6 +164,55 @@ router.get("/fetchcities", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+router.post("/getstages", async (req, res) => {
+  const { busplateNo, selectedBusNo } = req.body;
+  console.log("Received request:", { busplateNo, selectedBusNo });
+
+  if (!busplateNo || !selectedBusNo) {
+    console.log("Missing required parameters.");
+    return res
+      .status(400)
+      .json({
+        success: false,
+        message: "Bus plate number and route number are required.",
+      });
+  }
+
+  try {
+    const bus = await Bus.findOne({
+      busNo: { $regex: `^${busplateNo}$`, $options: "i" },
+      busRouteNo: { $regex: `^${selectedBusNo}$`, $options: "i" },
+    }).lean(); // Convert to plain object
+
+    console.log("Bus found:", bus);
+
+    if (!bus) {
+      console.log("No bus found.");
+      return res.json({ success: false, message: "No bus found." });
+    }
+
+    if (!bus.timings || typeof bus.timings !== "object") {
+      console.log("Timings field is not valid.");
+      return res.json({
+        success: false,
+        message: "No valid timing data found.",
+      });
+    }
+
+    const stageNames = Object.keys(bus.timings); // Extract timing keys
+
+    console.log("Extracted Stages:", stageNames);
+
+    return res.json({ success: true, stages: stageNames });
+  } catch (error) {
+    console.error("Error fetching stages:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error." });
+  }
+});
+
 router.get("/fetchAllBuses", async (req, res) => {
   try {
     const buses = await Bus.find(); // Fetch all buses from the database
