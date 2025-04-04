@@ -171,21 +171,17 @@ router.post("/getstages", async (req, res) => {
 
   if (!busplateNo || !selectedBusNo) {
     console.log("Missing required parameters.");
-    return res
-      .status(400)
-      .json({
-        success: false,
-        message: "Bus plate number and route number are required.",
-      });
+    return res.status(400).json({
+      success: false,
+      message: "Bus plate number and route number are required.",
+    });
   }
 
   try {
     const bus = await Bus.findOne({
       busNo: { $regex: `^${busplateNo}$`, $options: "i" },
       busRouteNo: { $regex: `^${selectedBusNo}$`, $options: "i" },
-    }).lean(); // Convert to plain object
-
-    console.log("Bus found:", bus);
+    }).lean();
 
     if (!bus) {
       console.log("No bus found.");
@@ -201,8 +197,6 @@ router.post("/getstages", async (req, res) => {
     }
 
     const stageNames = Object.keys(bus.timings); // Extract timing keys
-
-    console.log("Extracted Stages:", stageNames);
 
     return res.json({ success: true, stages: stageNames });
   } catch (error) {
@@ -370,4 +364,23 @@ router.put("/updatebus/:busId", async (req, res) => {
   }
 });
 
+router.get("/seat-availability", async (req, res) => {
+  const { busplateNo, selectedBusNo } = req.query; // Changed from req.params to req.query
+  console.log("llll", busplateNo, selectedBusNo);
+  try {
+    const bus = await Bus.findOne({
+      busNo: { $regex: `^${busplateNo}$`, $options: "i" },
+      busRouteNo: { $regex: `^${selectedBusNo}$`, $options: "i" },
+    }).lean();
+
+    if (!bus) {
+      return res.status(404).json({ error: "Bus not found" });
+    }
+
+    res.json({ data: bus.availableSeats });
+  } catch (error) {
+    console.error("Error fetching seat availability:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 module.exports = router;
