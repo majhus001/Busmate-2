@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import axios from "axios"; // Axios for API calls
 import styles from "./LoginStyles"; // Import styles
 import { API_BASE_URL } from "../../apiurl";
+import * as SecureStore from "expo-secure-store";
 
 const Login = ({ navigation }) => {
   const [userName, setUserName] = useState("");
@@ -22,13 +23,22 @@ const Login = ({ navigation }) => {
       };
 
       console.log("Login attempt with:", loginData);
-      
+
       const response = await axios.post(
         `${API_BASE_URL}/api/auth/login`,
         loginData
       );
 
-      if ( response.data.user) {
+      try {
+        const userData = response.data.user;
+        await SecureStore.setItemAsync(
+          "currentUserData",
+          JSON.stringify(userData)
+        );
+      } catch (error) {
+        console.error("Error fetching admin data:", error);
+      }
+      if (response.data.user) {
         Alert.alert("Success", "Login successful!", [
           {
             text: "OK",
@@ -39,8 +49,7 @@ const Login = ({ navigation }) => {
                   navigation.navigate("conhomepage", { conData });
                   break;
                 case "Admin":
-                  const adminData = response.data.user;
-                  navigation.navigate("AdminHome", { adminData });
+                  navigation.navigate("AdminHome");
                   break;
               }
             },

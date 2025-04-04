@@ -46,7 +46,7 @@ router.post("/add", async (req, res) => {
       prices,
       timings,
       adminId,
-      LoggedIn:false,
+      LoggedIn: false,
     });
     await newBus.save();
     res.status(201).json({ message: "Bus added successfully!", bus: newBus });
@@ -97,12 +97,11 @@ router.post("/login", async (req, res) => {
   }
 });
 
-
 router.get("/fetchbus/:adminId", async (req, res) => {
   const { adminId } = req.params;
- 
+
   try {
-    const buses = await Bus.find({adminId});
+    const buses = await Bus.find({ adminId });
 
     console.log(buses);
     res.json({ data: buses });
@@ -113,8 +112,7 @@ router.get("/fetchbus/:adminId", async (req, res) => {
 
 router.get("/fetchstate", async (req, res) => {
   try {
-    console.log("hi");
-    console.log("Fetching buses for state:", req.query.state);
+    
     const { state } = req.query;
     const buses = await Bus.find({ state });
 
@@ -185,18 +183,20 @@ router.get("/fetchAllBuses", async (req, res) => {
 router.get("/fetchBy/cities/:selectedCity", async (req, res) => {
   try {
     const { selectedCity } = req.params;
-    console.log(selectedCity)
+    console.log(selectedCity);
     if (!selectedCity) {
       return res.status(400).json({ message: "City is required" });
     }
 
     // Case-insensitive city match
-    const routes = await Bus.find({ city: new RegExp(`^${selectedCity}$`, "i") });
+    const routes = await Bus.find({
+      city: new RegExp(`^${selectedCity}$`, "i"),
+    });
 
     if (routes.length === 0) {
       return res.status(404).json({ message: "No routes found for this city" });
     }
-    
+
     res.json({ data: routes });
   } catch (error) {
     console.error("Error fetching locations:", error);
@@ -272,6 +272,53 @@ router.post("/getprice", async (req, res) => {
       success: false,
       message: "Internal server error",
     });
+  }
+});
+
+router.delete("/deletebus/:busId", async (req, res) => {
+  try {
+    const { busId } = req.params;
+
+    const deletedBus = await Bus.findByIdAndDelete(busId);
+
+    if (!deletedBus) {
+      return res.status(404).json({ message: "Bus not found" });
+    }
+
+    res.json({ message: "Bus deleted successfully!", deletedBus });
+  } catch (error) {
+    console.error("Error deleting bus:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
+router.put("/updatebus/:busId", async (req, res) => {
+  try {
+    const { busId } = req.params;
+    const updateData = req.body;
+
+    // Ensure that numerical fields are correctly parsed
+    if (updateData.totalSeats)
+      updateData.totalSeats = Number(updateData.totalSeats);
+    if (updateData.totalShifts)
+      updateData.totalShifts = Number(updateData.totalShifts);
+    if (updateData.availableSeats)
+      updateData.availableSeats = Number(updateData.availableSeats);
+
+    // Update the bus document
+    const updatedBus = await Bus.findByIdAndUpdate(busId, updateData, {
+      new: true, // Returns the updated document
+      runValidators: true, // Ensures validation rules apply
+    });
+
+    if (!updatedBus) {
+      return res.status(404).json({ message: "Bus not found" });
+    }
+
+    res.json({ message: "Bus updated successfully!", bus: updatedBus });
+  } catch (error) {
+    console.error("Error updating bus:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 

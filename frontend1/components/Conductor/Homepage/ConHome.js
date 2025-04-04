@@ -4,8 +4,8 @@ import styles from "./ConHomeStyles";
 import ConductorMap from "./Conductormap";
 
 const ConHome = ({ navigation, route }) => {
-  const { conData } = route.params || {}; // Assuming conData is passed from previous screen
-
+  const { conData } = route.params || {}; 
+console.log("eeeeee")
   useEffect(() => {
     if (conData) {
       console.log("conData received in ConHome:", conData);

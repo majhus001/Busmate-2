@@ -39,12 +39,13 @@ const EtmTicket = ({ route, navigation }) => {
 
   useEffect(() => {
     const fetchStages = async () => {
+      console.log("dfghj");
       try {
         const response = await axios.post(
-          `${API_BASE_URL}/api/busroutes/get_stages`,
+          `${API_BASE_URL}/api/busroutes/getstages/etm`,
           {
-            selectedCity,
-            selectedState,
+            selectedFrom,
+            selectedTo,
           }
         );
 
@@ -56,6 +57,7 @@ const EtmTicket = ({ route, navigation }) => {
       } catch (error) {
         console.error("Error fetching stages:", error);
         setStages([]);
+
       }
     };
 

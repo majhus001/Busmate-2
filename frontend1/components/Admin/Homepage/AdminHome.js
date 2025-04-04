@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 import {
   View,
   Text,
@@ -8,25 +10,58 @@ import {
   TextInput,
 } from "react-native";
 import axios from "axios";
+import Icon from "react-native-vector-icons/Ionicons";
 import { Card, ActivityIndicator } from "react-native-paper";
 import { API_BASE_URL } from "../../../apiurl";
 import styles from "./AdminHomeStyles";
+import * as SecureStore from "expo-secure-store";
 
 const AdminHome = ({ navigation, route }) => {
-  const { adminData } = route.params || {};
-
-  const adminId = adminData._id;
-  const username = adminData.Username;
-  const city = adminData.city;
-  const state = adminData.state;
-
   const [buses, setBuses] = useState([]);
   const [conductors, setConductors] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedTab, setSelectedTab] = useState("Buses");
+  const [expandedConductor, setExpandedConductor] = useState(null);
   const busesPerPage = 5;
+  const conductorsPerPage = 10;
+
+  const [adminData, setAdminData] = useState(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchData = async () => {
+        setLoading(true);
+        try {
+          const storedData = await SecureStore.getItemAsync("currentUserData");
+          if (storedData) {
+            const parsedData = JSON.parse(storedData);
+            setAdminData(parsedData);
+            console.log(parsedData);
+            const adminId = parsedData._id;
+            const [busResponse, conductorResponse] = await Promise.all([
+              axios.get(`${API_BASE_URL}/api/Admin/buses/fetchbus/${adminId}`),
+              axios.get(
+                `${API_BASE_URL}/api/Admin/conductor/fetchconductor/${adminId}`
+              ),
+            ]);
+
+            setBuses(
+              busResponse.data.data.map((bus) => ({ ...bus, expanded: false }))
+            );
+            setConductors(conductorResponse.data.data);
+          }
+        } catch (err) {
+          console.error("Error fetching data:", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchData();
+    }, [])
+  );
 
   if (!buses || !conductors) {
     return (
@@ -34,7 +69,7 @@ const AdminHome = ({ navigation, route }) => {
     );
   }
 
-  const toggleDropdown = (id) => {
+  const toggleDropdownbus = (id) => {
     setBuses((prevBuses) =>
       prevBuses.map((bus) =>
         bus._id === id ? { ...bus, expanded: !bus.expanded } : bus
@@ -42,46 +77,33 @@ const AdminHome = ({ navigation, route }) => {
     );
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true); // Start Loading
-      try {
-        const [busResponse, conductorResponse] = await Promise.all([
-          axios.get(`${API_BASE_URL}/api/Admin/buses/fetchbus/${adminId}`),
-          axios.get(
-            `${API_BASE_URL}/api/Admin/conductor/fetchconductor/${adminId}`
-          ),
-        ]);
-
-        setBuses(
-          busResponse.data.data.map((bus) => ({ ...bus, expanded: false }))
-        );
-        setConductors(conductorResponse.data.data);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-      } finally {
-        setLoading(false); // Stop Loading
-      }
-    };
-
-    if (adminId) {
-      fetchData();
-    }
-  }, [adminId]);
-
+  const toggleDropdowncon = (id) => {
+    setExpandedConductor(expandedConductor === id ? null : id);
+  };
   if (loading) {
     return (
       <ActivityIndicator size="large" color="#007bff" style={styles.loader} />
     );
   }
 
-  const handleNextPage = () => {
+  const handleBusNextPage = () => {
     if ((currentPage + 1) * busesPerPage < buses.length) {
       setCurrentPage(currentPage + 1);
     }
   };
 
-  const handlePrevPage = () => {
+  const handleBusPrevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+  const handleConNextPage = () => {
+    if ((currentPage + 1) * conductorsPerPage < conductors.length) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handleConPrevPage = () => {
     if (currentPage > 0) {
       setCurrentPage(currentPage - 1);
     }
@@ -112,13 +134,16 @@ const AdminHome = ({ navigation, route }) => {
     conductor.Username.toLowerCase().startsWith(searchQuery.toLowerCase())
   );
 
+  const paginatedConductors = filteredConductors.slice(
+    currentPage * conductorsPerPage,
+    (currentPage + 1) * conductorsPerPage
+  );
+
   return (
     <ScrollView style={styles.Admincontainer}>
       {/* Header Section */}
       <TouchableOpacity
-        onPress={() =>
-          navigation.navigate("addash", { adminData, buses, conductors })
-        }
+        onPress={() => navigation.navigate("addash", { buses, conductors })}
       >
         <View style={styles.leftSection}>
           <Image
@@ -129,10 +154,13 @@ const AdminHome = ({ navigation, route }) => {
             }}
             style={styles.profileImage}
           />
-          <Text style={styles.profileName}>{username}</Text>
+          <Text style={styles.profileName}>
+            {adminData?.Username || "Admin"}
+          </Text>
           <Text style={styles.profileRole}>Administrator</Text>
+
           <Text style={styles.profileDetail}>
-            📍 {city}, {state}
+            📍 {adminData?.city || "city"}, {adminData?.state || "state"}
           </Text>
           <View style={styles.busconinfo}>
             <Text style={styles.busconbtn}>Total buses : {buses.length}</Text>
@@ -144,6 +172,18 @@ const AdminHome = ({ navigation, route }) => {
       </TouchableOpacity>
 
       {/* Action Buttons */}
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate("statuscomplient", {
+            adminData,
+            buses,
+            conductors,
+          })
+        }
+        style={styles.complaintIcon} // Apply styling
+      >
+        <Icon name="alert-circle-outline" size={28} color="red" />
+      </TouchableOpacity>
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.addButton}
@@ -231,7 +271,7 @@ const AdminHome = ({ navigation, route }) => {
               paginatedBuses.map((item) => (
                 <View key={item._id} style={styles.busCard}>
                   <TouchableOpacity
-                    onPress={() => toggleDropdown(item._id)}
+                    onPress={() => toggleDropdownbus(item._id)}
                     style={styles.busHeader}
                   >
                     <Text style={styles.busText}>
@@ -325,7 +365,7 @@ const AdminHome = ({ navigation, route }) => {
                   styles.paginationButton,
                   currentPage === 0 && styles.disabledButton,
                 ]}
-                onPress={handlePrevPage}
+                onPress={handleBusPrevPage}
                 disabled={currentPage === 0}
               >
                 <Text style={styles.paginationButtonText}>Previous</Text>
@@ -337,7 +377,7 @@ const AdminHome = ({ navigation, route }) => {
                   (currentPage + 1) * busesPerPage >= filteredBuses.length &&
                     styles.disabledButton,
                 ]}
-                onPress={handleNextPage}
+                onPress={handleBusNextPage}
                 disabled={
                   (currentPage + 1) * busesPerPage >= filteredBuses.length
                 }
@@ -350,34 +390,73 @@ const AdminHome = ({ navigation, route }) => {
       ) : (
         <View style={styles.rightSection}>
           <Text style={styles.sectionTitle}>List of Conductors</Text>
-          {filteredConductors.length > 0 ? (
-            filteredConductors.map((conductor) => (
-              <View key={conductor._id} style={styles.conductorCard}>
-                <View>
-                  <Text style={styles.conductorName}>
-                    👤 {conductor.Username}
-                  </Text>
-                  <Text style={styles.conductorContact}>
-                    📞 {conductor.phoneNumber}
-                  </Text>
-                  <Text style={styles.conductorContact}>
-                    ⚧ Gender: {conductor.gender || "Not Specified"}
-                  </Text>
-                </View>
-                <Text
-                  style={
-                    conductor.LoggedIn
-                      ? styles.activeStatus
-                      : styles.inactiveStatus
-                  }
+
+          {paginatedConductors.length > 0 ? (
+            paginatedConductors.map((conductor) => (
+              <View key={conductor._id} style={styles.busCard}>
+                <TouchableOpacity
+                  onPress={() => toggleDropdowncon(conductor._id)}
+                  style={styles.busHeader}
                 >
-                  {conductor.LoggedIn ? "Active" : "Inactive"}
-                </Text>
+                  <Text style={styles.busText}>👤 {conductor.Username}</Text>
+                  <Text style={styles.busText}>📞 {conductor.phoneNumber}</Text>
+                  <Text
+                    style={[
+                      styles.status,
+                      conductor.isActive ? styles.available : styles.onService,
+                    ]}
+                  >
+                    {conductor.isActive ? "Active" : "Inactive"}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Expandable Section */}
+                {conductor.expanded && (
+                  <View style={styles.dropdown}>
+                    <Text style={styles.dropdownText}>
+                      ⚧ Gender: {conductor.gender || "Not Specified"}
+                    </Text>
+                    <Text style={styles.dropdownText}>
+                       Age: {conductor.age || "Not Provided"}
+                    </Text>
+                    <Text style={styles.dropdownText}>
+                      🏠 Address: {conductor.address || "Not Available"}
+                    </Text>
+
+                  
+                  </View>
+                )}
               </View>
             ))
           ) : (
             <Text style={styles.noDataText}>No Conductors Found</Text>
           )}
+          <View style={styles.paginationContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.paginationButton,
+                  currentPage === 0 && styles.disabledButton,
+                ]}
+                onPress={handleConPrevPage}
+                disabled={currentPage === 0}
+              >
+                <Text style={styles.paginationButtonText}>Previous</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.paginationButton,
+                  (currentPage + 1) * busesPerPage >= filteredBuses.length &&
+                    styles.disabledButton,
+                ]}
+                onPress={handleConNextPage}
+                disabled={
+                  (currentPage + 1) * busesPerPage >= filteredBuses.length
+                }
+              >
+                <Text style={styles.paginationButtonText}>Next</Text>
+              </TouchableOpacity>
+            </View>
         </View>
       )}
     </ScrollView>

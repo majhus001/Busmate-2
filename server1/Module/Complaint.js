@@ -6,6 +6,7 @@ const complaintSchema = new mongoose.Schema({
   complaint: { type: String, required: true },
   timestamp: { type: Date, default: Date.now },
   complaintTime: { type: String, required: true },
+  status: { type: Boolean, default: false },
   image: { type: String, default: null }, // Cloudinary image URL
 });
 

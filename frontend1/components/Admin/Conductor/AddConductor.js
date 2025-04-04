@@ -13,6 +13,7 @@ import {
   Keyboard,
   ActivityIndicator,
 } from "react-native";
+import moment from "moment";
 import RNPickerSelect from "react-native-picker-select";
 import axios from "axios";
 import { API_BASE_URL } from "../../../apiurl";
@@ -47,10 +48,14 @@ const AddConductor = ({ navigation, route }) => {
 
   // Handle date selection
   const handleConfirm = (date) => {
-    setDob(date.toISOString().split("T")[0]); // Save the selected date in the desired format (YYYY-MM-DD)
+    const formattedDate = moment(date).format("DD-MM-YYYY"); // Format DOB
+    const calculatedAge = moment().diff(date, "years"); // Calculate Age
+
+    setDob(formattedDate);
+    setAge(calculatedAge.toString()); // Ensure age is a string for TextInput
+
     hideDatePicker();
   };
-
   const requestPermission = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
@@ -75,7 +80,6 @@ const AddConductor = ({ navigation, route }) => {
 
     if (!result.canceled && result.assets?.length > 0) {
       setImageUri(result.assets[0].uri); // Correct way to get URI
-      console.log("Selected Image URI:", result.assets[0].uri);
     }
   };
 

@@ -29,6 +29,7 @@ const upload = multer({ storage });
 
 // Profile Update Route
 router.put("/admin/profileupdate/:adminId", upload.single("image"), async (req, res) => {
+  
   try {
     const { name, email, password, age, city, state } = req.body;
     const { adminId } = req.params;
@@ -39,7 +40,7 @@ router.put("/admin/profileupdate/:adminId", upload.single("image"), async (req, 
     if (!admin) {
       return res.status(404).json({ message: "Admin not found." });
     }
-
+    console.log(admin)
     // Update fields if provided
     if (name) admin.name = name;
     if (email) admin.email = email;

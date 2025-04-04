@@ -20,7 +20,7 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="TicketHistory"
+        initialRouteName="welcomepage"
         screenOptions={{ headerShown: false }}
       >
         <Stack.Screen name="usfindbus" component={UserFindBus} />

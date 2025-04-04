@@ -107,5 +107,48 @@ router.put("/logout/:conId", async (req, res) => {
 });
 
 
+router.get("/complaints", async (req, res) => {
+  try {
+    const complaints = await Complaint.find().sort({ timestamp: -1 }); // Fetch only unresolved complaints
+    res.json(complaints);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch complaints." });
+  }
+});
+
+router.put("/complaints/accept/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedComplaint = await Complaint.findByIdAndUpdate(
+      id,
+      { status: true },
+      { new: true }
+    );
+
+    if (!updatedComplaint) {
+      return res.status(404).json({ error: "Complaint not found" });
+    }
+
+    res.json({ message: "Complaint accepted", complaint: updatedComplaint });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update complaint status." });
+  }
+});
+
+// DELETE: Decline Complaint (Remove from database)
+router.delete("/complaints/decline/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedComplaint = await Complaint.findByIdAndDelete(id);
+
+    if (!deletedComplaint) {
+      return res.status(404).json({ error: "Complaint not found" });
+    }
+
+    res.json({ message: "Complaint declined and deleted" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete complaint." });
+  }
+});
 
 module.exports = router;

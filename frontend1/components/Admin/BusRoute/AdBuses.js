@@ -29,6 +29,7 @@ const AdBuses = ({ navigation, route }) => {
   const [availableSeats, setAvailableSeats] = useState("");
   const [busType, setBusType] = useState("");
   const [state, setState] = useState("");
+  const [states, setStates] = useState([]);
   const [city, setCity] = useState("");
   const [cities, setCities] = useState([]);
   const [stages, setStages] = useState([]);
@@ -41,18 +42,21 @@ const AdBuses = ({ navigation, route }) => {
   const [currentStage, setCurrentStage] = useState("");
 
   const busTypes = ["AC", "Non-AC"];
-  const states = ["Tamilnadu", "Kerala", "Karnataka"];
+  
 
-  const allStages = {
-    Coimbatore: ["Ukkadam", "Kurichi", "Kinathukadavu", "Pollachi"],
-    Chennai: ["Koyambedu", "T Nagar", "Guindy"],
-    Madurai: ["Periyar", "Mattuthavani", "Thirunagar"],
-    Kochi: ["Ernakulam", "Aluva", "Kalamassery"],
-    Palakkad: ["Chandranagar", "Olavakode", "Vadakkanthara"],
-    Bangalore: ["Majestic", "Silk Board", "Electronic City"],
-    Mysore: ["City Bus Stand", "Chamundi Hill", "Vijayanagar"],
-  };
-
+  useEffect(() => {
+    const fetchStates = async () => {
+      try {
+        const statesres = await axios.get(`${API_BASE_URL}/api/busroutes/getstates`);
+        setStates(statesres.data.states);
+      } catch (error) {
+        console.error("Error fetching states:", error);
+      }
+    };
+  
+    fetchStates();
+  }, []);
+  
   const handleStateChange = async (selectedState) => {
     setState(selectedState);
     setCity(""); // Reset city selection
@@ -64,7 +68,7 @@ const AdBuses = ({ navigation, route }) => {
         `${API_BASE_URL}/api/busroutes/getcities/${selectedState}`
       );
       if (response.data.success) {
-        setCities(response.data.cities); // ✅ Update city dropdown
+        setCities(response.data.cities); 
       } else {
         Alert.alert("No Cities Found", response.data.message);
       }

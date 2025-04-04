@@ -13,13 +13,17 @@ import Signup from "./components/Authentication/Signup";
 import Login from "./components/Authentication/Login";
 import AdminHome from "./components/Admin/Homepage/AdminHome";
 import AddConductor from "./components/Admin/Conductor/AddConductor";
-import Example from "./components/Admin/BusRoute/Example";
 import ComplaintForm from "./components/Conductor/Complaintform/ComplaintForm";
 import ViewComplaintForm from "./components/Conductor/Complaintform/ViewComplaintForm";
 import AdDash from "./components/Admin/Dashboard/AdDash";
 import Upiqr from "./components/Conductor/Ticket/Upiqr";
 import AdminProfile from "./components/Admin/Profile/AdminProfile";
 import ConProfile from "./components/Conductor/Profile/ConProfile";
+import StatusCompliant from "./components/Admin/Admincompliant/StatusCompliant";
+import Updateconductordata from "./components/Admin/Dashboard/Updatedatas/Updateconductordata";
+import ViewBusesdata from "./components/Admin/Dashboard/Updatedatas/ViewBusesdata";
+import Viewconductordata from "./components/Admin/Dashboard/Updatedatas/Viewconductordata";
+import Updatebusesdata from "./components/Admin/Dashboard/Updatedatas/Updatebusesdata";
 
 const Stack = createNativeStackNavigator();
 
@@ -46,9 +50,14 @@ export default function App() {
         <Stack.Screen name="AdminHome" component={AdminHome} />
         <Stack.Screen name="AddConductor" component={AddConductor} />
         <Stack.Screen name="addash" component={AdDash} />
-        <Stack.Screen name="Upiqr" component={Upiqr}/>
-        <Stack.Screen name="adprofile" component={AdminProfile}/>
-        <Stack.Screen name="conprofile" component={ConProfile}/>
+        <Stack.Screen name="Upiqr" component={Upiqr} />
+        <Stack.Screen name="adprofile" component={AdminProfile} />
+        <Stack.Screen name="conprofile" component={ConProfile} />
+        <Stack.Screen name="statuscomplient" component={StatusCompliant} />
+        <Stack.Screen name="updatebusesdata" component={Updatebusesdata} />
+        <Stack.Screen name="updateconductordata" component={Updateconductordata} />
+        <Stack.Screen name="ViewBuses" component={ViewBusesdata} />
+        <Stack.Screen name="ViewConductors" component={Viewconductordata} />
       </Stack.Navigator>
     </NavigationContainer>
   );
