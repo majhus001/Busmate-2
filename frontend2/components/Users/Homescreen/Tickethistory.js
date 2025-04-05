@@ -12,13 +12,68 @@ import * as SecureStore from "expo-secure-store";
 import * as FileSystem from "expo-file-system";
 import * as Notifications from "expo-notifications";
 import * as Sharing from "expo-sharing";
-import * as MediaLibrary from "expo-media-library";
 import axios from "axios";
 import { API_BASE_URL } from "../../../apiurl";
-import styles from "./Tickethistorystyles.js";
-import { Feather } from "@expo/vector-icons"; // Download icon
+import styles from "./Tickethistorystyles.js"; // Ensure this path is correct
+import { Feather } from "@expo/vector-icons";
+import { useLanguage } from "../../../LanguageContext"; // Ensure this path is correct
+
+// Define translations for all text in the component
+const translations = {
+  English: {
+    title: "Ticket History",
+    busNo: "Bus No:",
+    orderId: "Order ID:",
+    noHistory: "No ticket history found",
+    success: "Success",
+    pending: "Pending",
+    failed: "Failed",
+    downloadSuccessTitle: "✅ Ticket Downloaded",
+    downloadSuccessBody: "Your ticket is saved successfully!",
+    downloadSuccessAlert: "Ticket saved in your Downloads folder.",
+    permissionDenied: "Permission Denied",
+    permissionDeniedMessage: "Please allow storage access.",
+    error: "Error",
+    errorMessage: "Failed to save the ticket.",
+  },
+  Tamil: {
+    title: "டிக்கெட் வரலாறு",
+    busNo: "பேருந்து எண்:",
+    orderId: "ஆர்டர் ஐடி:",
+    noHistory: "டிக்கெட் வரலாறு எதுவும் இல்லை",
+    success: "வெற்றி",
+    pending: "நிலுவையில்",
+    failed: "தோல்வி",
+    downloadSuccessTitle: "✅ டிக்கெட் பதிவிறக்கம்",
+    downloadSuccessBody: "உங்கள் டிக்கெட் வெற்றிகரமாக சேமிக்கப்பட்டது!",
+    downloadSuccessAlert: "உங்கள் பதிவிறக்கங்கள் கோப்புறையில் டிக்கெட் சேமிக்கப்பட்டது.",
+    permissionDenied: "அனுமதி மறுக்கப்பட்டது",
+    permissionDeniedMessage: "சேமிப்பக அணுகலை அனுமதிக்கவும்.",
+    error: "பிழை",
+    errorMessage: "டிக்கெட்டை சேமிக்க முடியவில்லை.",
+  },
+  Hindi: {
+    title: "टिकट इतिहास",
+    busNo: "बस नंबर:",
+    orderId: "ऑर्डर आईडी:",
+    noHistory: "कोई टिकट इतिहास नहीं मिला",
+    success: "सफल",
+    pending: "लंबित",
+    failed: "असफल",
+    downloadSuccessTitle: "✅ टिकट डाउनलोड हुआ",
+    downloadSuccessBody: "आपका टिकट सफलतापूर्वक सहेजा गया है!",
+    downloadSuccessAlert: "आपके डाउनलोड फ़ोल्डर में टिकट सहेजा गया है।",
+    permissionDenied: "अनुमति अस्वीकृत",
+    permissionDeniedMessage: "कृपया स्टोरेज एक्सेस की अनुमति दें।",
+    error: "त्रुटि",
+    errorMessage: "टिकट सहेजने में विफल।",
+  },
+};
 
 const TicketHistory = () => {
+  const { language, darkMode } = useLanguage(); // Use the language context with darkMode
+  const t = translations[language] || translations.English; // Fallback to English
+
   const [userId, setUserId] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,70 +109,56 @@ const TicketHistory = () => {
     }
   };
 
-  // Send Notification
-  const sendNotification = async () => {
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "✅ Ticket Downloaded",
-        body: "Your ticket has been saved successfully!",
-      },
-      trigger: null,
-    });
-  };
+  // Download Ticket
   const downloadTicket = async (item) => {
     try {
       const ticketUrl = `${API_BASE_URL}/api/payment/ticket/${item.orderId}`;
       const fileName = `Ticket_${item.orderId}.pdf`;
       const internalUri = `${FileSystem.documentDirectory}${fileName}`;
-  
+
       console.log("📥 Downloading ticket:", ticketUrl);
       const { uri } = await FileSystem.downloadAsync(ticketUrl, internalUri);
       if (!uri) throw new Error("Download failed. File URI is empty.");
-  
+
       const fileInfo = await FileSystem.getInfoAsync(uri);
       if (!fileInfo.exists) throw new Error("Downloaded file does not exist.");
-  
+
       if (Platform.OS === "android") {
-        // 📂 Request Storage Access Framework (SAF) permissions
         const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
         if (!permissions.granted) {
-          Alert.alert("Permission Denied", "Please allow storage access.");
+          Alert.alert(t.permissionDenied, t.permissionDeniedMessage);
           return;
         }
-  
-        // 📝 Create file in Downloads folder
+
         const externalUri = await FileSystem.StorageAccessFramework.createFileAsync(
-          permissions.directoryUri, 
-          fileName, 
+          permissions.directoryUri,
+          fileName,
           "application/pdf"
         );
-  
-        // 📄 Write the file content
+
         const fileContent = await FileSystem.readAsStringAsync(uri, {
           encoding: FileSystem.EncodingType.Base64,
         });
-  
+
         await FileSystem.writeAsStringAsync(externalUri, fileContent, {
           encoding: FileSystem.EncodingType.Base64,
         });
-  
+
         console.log("✅ Ticket saved in Downloads folder:", externalUri);
-        Alert.alert("Success", "Ticket saved in your Downloads folder.");
+        Alert.alert(t.success, t.downloadSuccessAlert);
       } else {
         if (await Sharing.isAvailableAsync()) {
           await Sharing.shareAsync(uri);
         }
       }
-  
-      // 🔔 Send notification
+
       await Notifications.scheduleNotificationAsync({
-        content: { title: "✅ Ticket Downloaded", body: "Your ticket is saved successfully!" },
+        content: { title: t.downloadSuccessTitle, body: t.downloadSuccessBody },
         trigger: null,
       });
-  
     } catch (error) {
       console.error("❌ Error downloading ticket:", error.message);
-      Alert.alert("Error", error.message || "Failed to save the ticket.");
+      Alert.alert(t.error, error.message || t.errorMessage);
     }
   };
 
@@ -132,21 +173,29 @@ const TicketHistory = () => {
   }, []);
 
   if (loading) {
-    return <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />;
+    return (
+      <View style={[styles.loaderContainer, darkMode && styles.darkLoaderContainer]}>
+        <ActivityIndicator size="large" color={darkMode ? "#4DA8FF" : "#0000ff"} />
+      </View>
+    );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Ticket History</Text>
+    <View style={[styles.container, darkMode && styles.darkContainer]}>
+      <Text style={[styles.title, darkMode && styles.darkTitle]}>{t.title}</Text>
       {transactions.length > 0 ? (
         <FlatList
           data={transactions}
           keyExtractor={(item) => item.orderId}
           renderItem={({ item }) => (
-            <View style={styles.card}>
-              <View style={styles.busInfoContainer}>
-                <Text style={styles.busNumberText}>Bus No: {item.busno}</Text>
-                <Text style={styles.amountText}>₹{item.amount / 100}</Text>
+            <View style={[styles.card, darkMode && styles.darkCard]}>
+              <View style={[styles.busInfoContainer, darkMode && styles.darkBusInfoContainer]}>
+                <Text style={[styles.busNumberText, darkMode && styles.darkBusNumberText]}>
+                  {t.busNo} {item.busno}
+                </Text>
+                <Text style={[styles.amountText, darkMode && styles.darkAmountText]}>
+                  ₹{item.amount / 100}
+                </Text>
               </View>
               <View style={styles.statusContainer}>
                 <View
@@ -167,24 +216,29 @@ const TicketHistory = () => {
                       : item.status === "pending"
                       ? styles.statusTextPending
                       : styles.statusTextFailed,
+                    darkMode && styles.darkStatusText,
                   ]}
                 >
-                  {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                  {t[item.status] || item.status.charAt(0).toUpperCase() + item.status.slice(1)}
                 </Text>
               </View>
 
               <View style={styles.downloadContainer}>
-                <Text style={styles.orderIdText}>Order ID: {item.orderId}</Text>
+                <Text style={[styles.orderIdText, darkMode && styles.darkOrderIdText]}>
+                  {t.orderId} {item.orderId}
+                </Text>
                 <TouchableOpacity onPress={() => downloadTicket(item)}>
-                  <Feather name="download" size={24} color="black" />
+                  <Feather name="download" size={24} color={darkMode ? "#FFFFFF" : "#000000"} />
                 </TouchableOpacity>
               </View>
             </View>
           )}
         />
       ) : (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No ticket history found</Text>
+        <View style={[styles.emptyContainer, darkMode && styles.darkEmptyContainer]}>
+          <Text style={[styles.emptyText, darkMode && styles.darkEmptyText]}>
+            {t.noHistory}
+          </Text>
         </View>
       )}
     </View>

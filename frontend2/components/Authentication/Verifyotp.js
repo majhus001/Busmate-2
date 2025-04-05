@@ -1,22 +1,23 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, TextInput, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
-import styles from "./VerifyOtpStyles"; // Import styles
+import styles from "./SignupStyles";
 import { API_BASE_URL } from "../../apiurl";
 
 const Verifyotp = () => {
   const route = useRoute();
   const navigation = useNavigation();
+
+  // Destructure user data passed from previous screen
   const { Username, email, password, role, city, state } = route.params;
 
-  const [otp, setOtp] = useState(["", "", "", ""]); // Array for individual OTP boxes
+  const [otp, setOtp] = useState("");
 
   const handleVerify = async () => {
-    const enteredOtp = otp.join(""); // Convert array to string
-    if (!enteredOtp || enteredOtp.length !== 4) {
-      Alert.alert("Error", "Please enter the complete OTP.");
+    if (!otp) {
+      Alert.alert("Error", "Please enter the OTP");
       return;
     }
 
@@ -28,61 +29,47 @@ const Verifyotp = () => {
         role,
         city,
         state,
-        otp: enteredOtp.trim(),
+        otp: otp.trim(),
       });
 
       const userData = response.data.user;
       const userId = userData._id;
+  
       await SecureStore.setItemAsync("currentUserId", String(userId));
+      console.log("User ID saved in SecureStore:", userId);
 
       Alert.alert("Success", "Account verified successfully!");
-      navigation.reset({ index: 0, routes: [{ name: "UserHome", params: { userData } }] });
+  
+      // ✅ Navigate to Home or Login (You decide based on flow)
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "UserHome", params: { userData } }], // or "UserHome"
+      });
+  
     } catch (error) {
-      Alert.alert("Error", error.response?.data?.message || "Invalid OTP or expired.");
+      console.error("OTP Verification Error:", error.response?.data || error.message);
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Invalid OTP or expired."
+      );
     }
   };
 
+
   return (
     <View style={styles.container}>
-      {/* OTP Image */}
-      <View style={styles.imageContainer}>
-        <Text>📱</Text> {/* You can use an actual image here */}
-      </View>
+      <Text style={styles.title}>Verify OTP</Text>
 
-      <Text style={styles.title}>OTP Verification</Text>
-      <Text style={styles.subtitle}>
-        Enter the OTP sent to <Text style={styles.phoneText}>{email}</Text>
-      </Text>
-
-      {/* OTP Input Boxes */}
-      <View style={styles.otpContainer}>
-        {otp.map((digit, index) => (
+      <Text style={styles.label}>OTP sent to: {email}</Text>
           <TextInput
-            key={index}
-            style={styles.otpInput}
-            maxLength={1}
+        style={styles.input}
+        placeholder="Enter OTP"
+        value={otp}
+        onChangeText={setOtp}
             keyboardType="numeric"
-            value={digit}
-            onChangeText={(text) => {
-              const newOtp = [...otp];
-              newOtp[index] = text;
-              setOtp(newOtp);
-            }}
-          />
-        ))}
-      </View>
+      />
 
-      {/* Resend OTP */}
-      <TouchableOpacity onPress={() => Alert.alert("OTP Resent!")}>
-        <Text style={styles.resendOtpText}>Didn’t receive the OTP? <Text style={styles.resendOtp}>Resend OTP</Text></Text>
-      </TouchableOpacity>
-
-      {/* Verify Button */}
-      <TouchableOpacity 
-        style={[styles.button, otp.join("").length !== 4 && styles.disabledButton]}
-        onPress={handleVerify}
-        disabled={otp.join("").length !== 4}
-      >
+      <TouchableOpacity style={styles.button} onPress={handleVerify}>
         <Text style={styles.buttonText}>Verify</Text>
       </TouchableOpacity>
     </View>
