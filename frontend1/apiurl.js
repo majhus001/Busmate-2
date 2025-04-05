@@ -1,8 +1,5 @@
-<<<<<<< HEAD
+
 export const API_BASE_URL = "192.168.232.182:5000"; 
-=======
-export const API_BASE_URL = "http://192.168.148.6:5000"; 
->>>>>>> 7daefeef90e17acdb733084c35c78747ed3e6f33
 
 //thamil - http://192.168.232.182:5000
 //majid  - http://192.168.11.6:5000
