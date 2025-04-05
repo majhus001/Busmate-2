@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '../../../LanguageContext';
-import { useFocusEffect } from '@react-navigation/native'; // ✅ This was missing
+import { useFocusEffect } from '@react-navigation/native';
 
 const messages = {
-  en: 'No Notifications Available',
-  ta: 'அறிவிப்புகள் இல்லை',
-  hi: 'कोई सूचना उपलब्ध नहीं है',
+  English: 'No Notifications Available',
+  Tamil: 'அறிவிப்புகள் இல்லை',
+  Hindi: 'कोई सूचना उपलब्ध नहीं है',
 };
 
 const UserNotification = () => {
   const [fadeAnim] = useState(new Animated.Value(0));
-  const { language } = useLanguage();
+  const { language, darkMode } = useLanguage(); // Access darkMode from context
 
   useFocusEffect(
     React.useCallback(() => {
@@ -25,10 +25,21 @@ const UserNotification = () => {
   );
 
   return (
-    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-      <Ionicons name="notifications-off-outline" size={50} color="#999" />
-      <Text style={styles.message}>
-        {messages[language] || messages.en}
+    <Animated.View style={[
+      styles.container,
+      { opacity: fadeAnim },
+      darkMode && styles.darkContainer // Apply dark mode styles
+    ]}>
+      <Ionicons
+        name="notifications-off-outline"
+        size={50}
+        color={darkMode ? "#ccc" : "#999"} // Adjust icon color
+      />
+      <Text style={[
+        styles.message,
+        darkMode && styles.darkMessage // Adjust text color
+      ]}>
+        {messages[language] || messages.English}
       </Text>
     </Animated.View>
   );
@@ -41,6 +52,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#f7f7f7',
   },
+  darkContainer: {
+    backgroundColor: '#111', // Dark mode background
+  },
   message: {
     fontSize: 18,
     color: '#666',
@@ -48,6 +62,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     paddingHorizontal: 20,
+  },
+  darkMessage: {
+    color: '#ccc', // Dark mode text color
   },
 });
 

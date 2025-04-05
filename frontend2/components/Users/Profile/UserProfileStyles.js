@@ -1,9 +1,12 @@
 import { StyleSheet, Platform, StatusBar } from "react-native";
 
-const styles = StyleSheet.create({
+export default StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#5e72e4", // Primary blue color
+  },
+  darkSafeArea: {
+    backgroundColor: "#222", // Darker shade for dark mode
   },
   loaderContainer: {
     flex: 1,
@@ -11,11 +14,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#f8f9fe",
   },
+  darkLoaderContainer: {
+    backgroundColor: "#111",
+  },
   loaderText: {
     marginTop: 10,
     fontSize: 16,
     color: "#5e72e4",
     fontWeight: "500",
+  },
+  darkLoaderText: {
+    color: "#4DA8FF",
   },
   header: {
     flexDirection: "row",
@@ -26,6 +35,9 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     backgroundColor: "#00468b",
   },
+  darkHeader: {
+    backgroundColor: "#222",
+  },
   backButton: {
     padding: 8,
   },
@@ -33,6 +45,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "700",
     color: "#fff",
+  },
+  darkHeaderTitle: {
+    color: "#FFFFFF",
   },
   editIcon: {
     width: 40,
@@ -43,6 +58,9 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     backgroundColor: "#f8f9fe",
+  },
+  darkScrollView: {
+    backgroundColor: "#111",
   },
   profileImageSection: {
     backgroundColor: "#00468b",
@@ -55,6 +73,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
+  },
+  darkProfileImageSection: {
+    backgroundColor: "#222",
+    shadowColor: "#000",
   },
   profileImageContainer: {
     position: "relative",
@@ -80,11 +102,17 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#fff",
   },
+  darkChangePhotoButton: {
+    backgroundColor: "#4DA8FF",
+  },
   userName: {
     fontSize: 22,
     fontWeight: "700",
     color: "#fff",
     marginBottom: 4,
+  },
+  darkUserName: {
+    color: "#FFFFFF",
   },
   locationContainer: {
     flexDirection: "row",
@@ -96,9 +124,15 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     marginLeft: 4,
   },
+  darkLocationText: {
+    color: "#AAAAAA",
+  },
   formContainer: {
     paddingHorizontal: 20,
     paddingTop: 20,
+  },
+  darkFormContainer: {
+    backgroundColor: "#111",
   },
   inputContainer: {
     marginBottom: 20,
@@ -113,6 +147,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#8898aa",
     marginLeft: 8,
+  },
+  darkLabel: {
+    color: "#AAAAAA",
   },
   input: {
     backgroundColor: "#fff",
@@ -129,13 +166,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e2e8f0",
   },
+  darkInput: {
+    backgroundColor: "#222",
+    color: "#FFFFFF",
+    borderColor: "#444",
+    shadowColor: "#000",
+  },
   disabledInput: {
     backgroundColor: "#f7fafc",
     color: "#4a5568",
   },
+  darkDisabledInput: {
+    backgroundColor: "#333",
+    color: "#AAAAAA",
+  },
   emailDisabled: {
     backgroundColor: "#f7fafc",
     color: "#a0aec0",
+  },
+  darkEmailDisabled: {
+    backgroundColor: "#333",
+    color: "#666",
   },
   buttonContainer: {
     paddingHorizontal: 20,
@@ -154,6 +205,10 @@ const styles = StyleSheet.create({
     elevation: 3,
     marginBottom: 16,
   },
+  darkSaveButton: {
+    backgroundColor: "#4DA8FF",
+    shadowColor: "#4DA8FF",
+  },
   saveButtonText: {
     color: "#fff",
     fontSize: 16,
@@ -167,18 +222,32 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e2e8f0",
   },
+  darkCancelButton: {
+    backgroundColor: "#222",
+    borderColor: "#444",
+  },
   cancelButtonText: {
     color: "#5e72e4",
     fontSize: 16,
     fontWeight: "700",
   },
+  darkCancelButtonText: {
+    color: "#4DA8FF",
+  },
   footer: {
     alignItems: "center",
     paddingVertical: 20,
+    backgroundColor: "#f8f9fe",
+  },
+  darkFooter: {
+    backgroundColor: "#111",
   },
   footerText: {
     fontSize: 12,
     color: "#a0aec0",
+  },
+  darkFooterText: {
+    color: "#666",
   },
   loadingOverlay: {
     position: "absolute",
@@ -191,6 +260,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     zIndex: 1000,
   },
+  darkLoadingOverlay: {
+    backgroundColor: "rgba(0,0,0,0.7)",
+  },
 });
-
-export default styles;

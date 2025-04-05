@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react'; // Ensure useState is imported
 import {
   View, Text, Switch, StyleSheet, Animated, TouchableOpacity,
   Alert, Share, Linking, ScrollView
@@ -6,6 +6,7 @@ import {
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLanguage } from '../../../LanguageContext'; // Adjust path as needed
 
 const translations = {
   English: {
@@ -69,9 +70,8 @@ const translations = {
 
 const Settings = () => {
   const navigation = useNavigation();
-  const [darkMode, setDarkMode] = useState(false);
-  const [expandedSection, setExpandedSection] = useState(null);
-  const [language, setLanguage] = useState('English');
+  const { language, setLanguage, darkMode, setDarkMode } = useLanguage(); // Use context
+  const [expandedSection, setExpandedSection] = useState(null); // Local state for expanded section
 
   const translateY = useRef(new Animated.Value(-10)).current;
   const opacity = useRef(new Animated.Value(0)).current;
@@ -79,23 +79,35 @@ const Settings = () => {
   const t = translations[language]; // Translation helper
 
   useEffect(() => {
+    // Animation for entry
     Animated.timing(translateY, { toValue: 0, duration: 300, useNativeDriver: true }).start();
     Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }).start();
 
-    // Load saved language
-    const loadLanguage = async () => {
+    // Load saved settings
+    const loadSettings = async () => {
       try {
         const savedLang = await AsyncStorage.getItem('app_language');
+        const savedDarkMode = await AsyncStorage.getItem('app_darkMode');
         if (savedLang) setLanguage(savedLang);
+        if (savedDarkMode !== null) setDarkMode(JSON.parse(savedDarkMode)); // Parse string to boolean
       } catch (error) {
-        console.error("Failed to load language:", error);
+        console.error("Failed to load settings:", error);
       }
     };
 
-    loadLanguage();
-  }, []);
+    loadSettings();
+  }, [setLanguage, setDarkMode]); // Dependencies
 
-  const toggleDarkMode = () => setDarkMode(!darkMode);
+  const toggleDarkMode = async () => {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    try {
+      await AsyncStorage.setItem('app_darkMode', JSON.stringify(newDarkMode));
+    } catch (error) {
+      console.error("Error saving dark mode:", error);
+    }
+  };
+
   const toggleSection = (section) => setExpandedSection(expandedSection === section ? null : section);
 
   const rateApp = () => Linking.openURL('https://play.google.com/store/apps/details?id=com.yourapp');
@@ -110,10 +122,7 @@ const Settings = () => {
   const handleLogout = () => {
     Alert.alert(t.logout, t.logoutConfirm, [
       { text: "Cancel", style: "cancel" },
-      {
-        text: t.logout,
-        onPress: () => navigation.replace('welcomepage')
-      }
+      { text: t.logout, onPress: () => navigation.replace('welcomepage') }
     ]);
   };
 
@@ -149,7 +158,7 @@ const Settings = () => {
         {settingsOptions.map((item, index) => (
           <TouchableOpacity
             key={index}
-            onPress={() => item.section ? toggleSection(item.section) : item.action?.()}
+            onPress={() => (item.section ? toggleSection(item.section) : item.action?.())}
           >
             <Animated.View style={[
               styles.option,
@@ -176,24 +185,23 @@ const Settings = () => {
           </TouchableOpacity>
         ))}
 
-        {/* Expandable Sections */}
         {expandedSection === 'privacy' && (
           <View style={[styles.expandedSection, darkMode && styles.darkSection]}>
-            <Text style={styles.sectionTitle}>{t.privacyPolicy}</Text>
-            <Text style={styles.sectionText}>{t.privacyText}</Text>
+            <Text style={[styles.sectionTitle, darkMode && styles.darkSectionTitle]}>{t.privacyPolicy}</Text>
+            <Text style={[styles.sectionText, darkMode && styles.darkSectionText]}>{t.privacyText}</Text>
           </View>
         )}
 
         {expandedSection === 'terms' && (
           <View style={[styles.expandedSection, darkMode && styles.darkSection]}>
-            <Text style={styles.sectionTitle}>{t.terms}</Text>
-            <Text style={styles.sectionText}>{t.termsText}</Text>
+            <Text style={[styles.sectionTitle, darkMode && styles.darkSectionTitle]}>{t.terms}</Text>
+            <Text style={[styles.sectionText, darkMode && styles.darkSectionText]}>{t.termsText}</Text>
           </View>
         )}
 
         {expandedSection === 'contact' && (
           <View style={[styles.expandedSection, darkMode && styles.darkSection]}>
-            <Text style={styles.sectionTitle}>{t.contactUs}</Text>
+            <Text style={[styles.sectionTitle, darkMode && styles.darkSectionTitle]}>{t.contactUs}</Text>
             <TouchableOpacity style={styles.contactOption} onPress={callSupport}>
               <Ionicons name="call-outline" size={20} color="#007AFF" />
               <Text style={styles.contactText}>{t.callSupport}</Text>
@@ -211,7 +219,7 @@ const Settings = () => {
 
         {expandedSection === 'language' && (
           <View style={[styles.expandedSection, darkMode && styles.darkSection]}>
-            <Text style={styles.sectionTitle}>{t.selectLang}</Text>
+            <Text style={[styles.sectionTitle, darkMode && styles.darkSectionTitle]}>{t.selectLang}</Text>
             {['English', 'Tamil', 'Hindi'].map((lang) => (
               <TouchableOpacity key={lang} style={styles.contactOption} onPress={() => changeLanguage(lang)}>
                 <Ionicons
@@ -222,7 +230,9 @@ const Settings = () => {
                 <Text style={styles.contactText}>{lang}</Text>
               </TouchableOpacity>
             ))}
-            <Text style={{ marginTop: 10, color: darkMode ? '#aaa' : '#666' }}>{t.selectedLang}: {language}</Text>
+            <Text style={[styles.selectedLangText, darkMode && styles.darkSelectedLangText]}>
+              {t.selectedLang}: {language}
+            </Text>
           </View>
         )}
       </ScrollView>
@@ -233,17 +243,52 @@ const Settings = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', padding: 20 },
   darkContainer: { backgroundColor: '#111' },
-  header: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
+  header: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, color: '#333' },
   darkHeader: { color: '#fff' },
-  option: { flexDirection: 'row', alignItems: 'center', padding: 15, marginVertical: 5, borderRadius: 10 },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    marginVertical: 5,
+    borderRadius: 10,
+  },
   optionText: { flex: 1, fontSize: 16, marginLeft: 10, color: '#333' },
   darkText: { color: '#fff' },
-  expandedSection: { padding: 15, backgroundColor: '#f0f0f0', borderRadius: 10, marginBottom: 10 },
+  expandedSection: {
+    padding: 15,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+    marginBottom: 10,
+  },
   darkSection: { backgroundColor: '#222' },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
-  sectionText: { fontSize: 14, color: '#555' },
-  contactOption: { flexDirection: 'row', alignItems: 'center', padding: 10 },
-  contactText: { fontSize: 16, marginLeft: 10, color: '#007AFF' },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#007AFF',
+  },
+  darkSectionTitle: { color: '#4DA8FF' }, // Lighter blue for dark mode
+  sectionText: {
+    fontSize: 14,
+    color: '#444',
+    lineHeight: 20,
+  },
+  darkSectionText: { color: '#ccc' }, // Light gray for dark mode
+  contactOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 8,
+  },
+  contactText: {
+    fontSize: 15,
+    marginLeft: 10,
+    color: '#007AFF',
+  },
+  selectedLangText: {
+    marginTop: 10,
+    color: '#666',
+  },
+  darkSelectedLangText: { color: '#aaa' }, // Light gray for dark mode
 });
 
 export default Settings;

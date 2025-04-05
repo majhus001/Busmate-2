@@ -1,13 +1,13 @@
-// LanguageContext.js
 import React, { createContext, useContext, useState } from 'react';
 
 const LanguageContext = createContext();
 
 export const LanguageProvider = ({ children }) => {
-  const [language, setLanguage] = useState('en');
+  const [language, setLanguage] = useState('English'); // Default to 'English'
+  const [darkMode, setDarkMode] = useState(false); // Default to light mode
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage }}>
+    <LanguageContext.Provider value={{ language, setLanguage, darkMode, setDarkMode }}>
       {children}
     </LanguageContext.Provider>
   );
