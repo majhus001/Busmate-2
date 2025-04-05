@@ -243,7 +243,6 @@ const EtmTicket = ({ route, navigation }) => {
       console.log("jjjj")
     }
 
-
     const ticketData = {
       routeName: RouteName,
       busRouteNo: selectedBusNo,

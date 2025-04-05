@@ -1,40 +1,43 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, Button, Alert } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  TouchableOpacity,
+} from "react-native";
 import QRCode from "react-native-qrcode-svg";
 
-const Upiqr = ({ route, successCallback }) => {
-  const { upiId = "", amount = "" } = route.params || {};
+const Upiqr = ({ route, navigation }) => {
+  const { upiId = "567", amount = "560" } = route.params || {};
   const [displayAmount, setDisplayAmount] = useState(amount);
   const [qrValue, setQrValue] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("Upiqr screen loaded");
+
     if (!upiId || !amount) {
       Alert.alert("Error", "Missing UPI ID or amount. Please check again.");
       return;
     }
 
-    if (amount) {
-      setDisplayAmount(amount);
-      const upiLink = `upi://pay?pa=${upiId}&pn=Rahul&am=${amount}&cu=INR`;
-      setQrValue(upiLink);
-      setLoading(false);
-    }
+    const upiLink = `upi://pay?pa=${upiId}&pn=Rahul&am=${amount}&cu=INR`;
+    setQrValue(upiLink);
+    setLoading(false);
   }, [upiId, amount]);
 
-  // Function to handle successful payment
-  const handleSuccess = () => {
-    if (successCallback) {
-      successCallback("Payment Successful");
-    }
-  };
+  // const handleSuccess = () => {
+  //   console.log("Payment success clicked");
+  //   navigation.navigate("ticsuccess");
+  // };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>UPI Payment</Text>
       <Text style={styles.amount}>Amount: ₹{displayAmount}</Text>
 
-      {/* Show loading indicator while generating QR */}
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
@@ -48,10 +51,9 @@ const Upiqr = ({ route, successCallback }) => {
         </View>
       )}
 
-      {/* Success button */}
-      <View style={styles.buttonContainer}>
-        <Button title="Payment Success" onPress={handleSuccess} />
-      </View>
+      <TouchableOpacity style={styles.successButton} >
+        <Text style={styles.buttonText}>Payment Success</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -82,8 +84,17 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 10,
   },
-  buttonContainer: {
+  successButton: {
     marginTop: 30,
+    backgroundColor: "#4CAF50",
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 10,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 
