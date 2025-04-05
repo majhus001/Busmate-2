@@ -18,6 +18,7 @@ const ConductorRoute = require("./Conductor/ConductorRoute");
 const paymentRoutes = require("./Conductor/paymentRoutes");
 const userdata = require("./Authentication/UserData");
 const favoriteBusesRoutes = require("./User/favorites");
+const buzzer = require("./Conductor/Buzzer");
 
 const app = express();
 const server = http.createServer(app);
@@ -42,6 +43,7 @@ app.use("/api/Conductor", ConductorRoute);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/userdata", userdata);
 app.use("/api/favorites", favoriteBusesRoutes);
+app.use("/api/buzzer", buzzer);
 // MongoDB Connection
 const connectDB = async () => {
   try {

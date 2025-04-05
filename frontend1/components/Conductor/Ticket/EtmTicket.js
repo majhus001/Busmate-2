@@ -9,7 +9,7 @@ import {
   Alert,
   Animated,
   Easing,
-  ActivityIndicator
+  ActivityIndicator,
 } from "react-native";
 import axios from "axios";
 import { Picker } from "@react-native-picker/picker";
@@ -210,6 +210,11 @@ const EtmTicket = ({ route, navigation }) => {
     setTicketCount((prev) => (prev > 1 ? prev - 1 : prev));
 
   const handleSubmit = async () => {
+    if (availableSeats <= 1){
+      const response = await axios.post(`${API_BASE_URL}/api/buzzer/trigger`, { selectedBusNo: selectedBusNo });
+      console.log(response.data);
+      
+    } 
     if (!boarding || !destination) {
       Alert.alert(
         "Selection Required",
@@ -230,6 +235,14 @@ const EtmTicket = ({ route, navigation }) => {
       Alert.alert("Payment Method Required", "Please select a payment method.");
       return;
     }
+
+    if (paymentMethod === "Online" && ticketCount >= 1) {
+      const amount =  ticketPrice * ticketCount;
+      const upiId = "thamilprakasam2005@okhdfcbank";
+      navigation.navigate("Upiqr",{upiId, amount});
+      console.log("jjjj")
+    }
+
 
     const ticketData = {
       routeName: RouteName,
