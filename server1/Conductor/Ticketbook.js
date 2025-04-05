@@ -7,7 +7,7 @@ router.post("/add_ticket", async (req, res) => {
   try {
     let {
       routeName,
-      BusNo,
+      busRouteNo,
       busplateNo,
       boarding,
       destination,
@@ -20,7 +20,7 @@ router.post("/add_ticket", async (req, res) => {
 
     if (
       !routeName ||
-      !BusNo ||
+      !busRouteNo ||
       !busplateNo ||
       !boarding ||
       !destination ||
@@ -41,7 +41,7 @@ router.post("/add_ticket", async (req, res) => {
     // Create and save the ticket
     const newTicket = new Ticket({
       routeName,
-      BusNo,
+      busRouteNo,
       busplateNo,
       boarding,
       destination,
@@ -57,7 +57,7 @@ router.post("/add_ticket", async (req, res) => {
 
     // Find the bus and update available seats
     console.log("🔍 Searching for bus with:", {
-      BusNo,
+      busRouteNo,
       busplateNo,
       boarding,
       destination,
@@ -66,7 +66,7 @@ router.post("/add_ticket", async (req, res) => {
     });
 
     const bus = await Bus.findOne({
-      busRouteNo: BusNo,
+      busRouteNo: busRouteNo,
       busNo: busplateNo,
       city: selectedCity,
       state: selectedState,
@@ -116,7 +116,7 @@ router.get("/seatcount", async (req, res) => {
     }
 
     // Find all tickets with matching BusNo
-    const tickets = await Ticket.find({ BusNo: busNo });
+    const tickets = await Ticket.find({ busRouteNo: busNo });
 
     if (tickets.length === 0) {
       return res.json({
@@ -139,6 +139,89 @@ router.get("/seatcount", async (req, res) => {
   } catch (error) {
     console.error("Error fetching seat count:", error);
     res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+router.put("/update/seats", async (req, res) => {
+  try {
+    const {
+      selectedBusNo,
+      busplateNo,
+      RouteName,
+      dest,
+      selectedCity,
+      selectedState,
+    } = req.body;
+
+    console.log("Received body params:", {
+      selectedBusNo,
+      busplateNo,
+      RouteName,
+      dest,
+      selectedCity,
+      selectedState,
+    });
+
+    // Validate required fields
+    if (!selectedBusNo || !RouteName  || !dest) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields: Bus number, Route, From, or To",
+      });
+    }
+
+    // Find all tickets with matching criteria
+    const tickets = await Ticket.find({
+      busRouteNo: selectedBusNo,
+      routeName: RouteName,
+      destination: dest,
+    });
+
+    if (!tickets || tickets.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No tickets found for this bus route",
+        totalBookedSeats: 0,
+      });
+    }
+
+    // Calculate total booked seats
+    const totalBookedSeats = tickets.reduce(
+      (sum, ticket) => sum + (ticket.ticketCount || 0),
+      0
+    );
+
+    // Find and update the bus
+    const bus = await Bus.findOne({
+      busRouteNo: selectedBusNo,
+      state: selectedState,
+      city: selectedCity,
+      busNo: busplateNo,
+    });
+
+    if (!bus) {
+      return res.status(404).json({
+        success: false,
+        message: "Bus not found",
+      });
+    }
+
+    // Update available seats
+    bus.availableSeats = (bus.availableSeats || 0) + totalBookedSeats;
+    await bus.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Seats updated successfully",
+      updatedAvailableSeats: bus.availableSeats,
+    });
+  } catch (error) {
+    console.error("Error in /update/seats:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 });
 

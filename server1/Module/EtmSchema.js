@@ -5,7 +5,7 @@ const TicketSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  BusNo: {
+  busRouteNo: {
     type: String,
     required: true
   },
