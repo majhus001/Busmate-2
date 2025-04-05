@@ -210,6 +210,11 @@ const EtmTicket = ({ route, navigation }) => {
     setTicketCount((prev) => (prev > 1 ? prev - 1 : prev));
 
   const handleSubmit = async () => {
+    if (availableSeats <= 1){
+      const response = await axios.post(`${API_BASE_URL}/api/buzzer/trigger`, { selectedBusNo: selectedBusNo });
+      console.log(response.data);
+      
+    } 
     if (!boarding || !destination) {
       Alert.alert(
         "Selection Required",

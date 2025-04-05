@@ -1,120 +1,86 @@
-import { StyleSheet } from "react-native";
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
+const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const fs = require("fs");
+require("dotenv").config(); // Load environment variables
 
-export const pickerSelectStyles = StyleSheet.create({
-  inputIOS: {
-    fontSize: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 8,
-    color: '#1E293B',
-    backgroundColor: '#FFFFFF',
-  },
-  inputAndroid: {
-    fontSize: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 8,
-    color: '#1E293B',
-    backgroundColor: '#FFFFFF',
-  },
-  iconContainer: {
-    top: 12,
-    right: 10,
-  },
-  placeholder: {
-    color: '#94A3B8',
-  },
+// Import Routes
+const buses = require("./Admin/BusRoutes/Buses");
+const Etm = require("./Conductor/Ticketbook");
+const busroutes = require("./Conductor/BusRoutes");
+const loginRoutes = require("./Authentication/LoginRoute");
+const SignupRoute = require("./Authentication/SignupRoute");
+const Adconductor = require("./Admin/AdConductor/Adconductor");
+const ConductorRoute = require("./Conductor/ConductorRoute");
+const paymentRoutes = require("./Conductor/paymentRoutes");
+const userdata = require("./Authentication/UserData");
+const favoriteBusesRoutes = require("./User/favorites");
+const buzzer = require("./Conductor/Buzzer");
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: { origin: "*", methods: ["GET", "POST"] },
 });
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  scrollContainer: {
-    padding: 16,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 24,
-    paddingTop: 16,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: '#1E293B',
-    marginTop: 8,
-  },
-  formContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  inputContainer: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#64748B',
-    marginBottom: 6,
-  },
-  pickerWrapper: {
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 8,
-  },
-  button: {
-    backgroundColor: '#3B82F6',
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  plateContainer: {
-    backgroundColor: '#EFF6FF',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 12,
-    alignItems: 'center',
-  },
-  plateText: {
-    color: '#1D4ED8',
-    fontWeight: '500',
-  },
-  loaderContainer: {
-    padding: 24,
-    alignItems: 'center',
-  },
-  errorContainer: {
-    backgroundColor: '#FEF2F2',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: '#DC2626',
-  },
-  errorText: {
-    color: '#DC2626',
-    fontSize: 14,
-  },
-  icon: {
-    marginRight: 8,
-  },
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+// API Routes
+app.use("/api/Admin/buses", buses);
+app.use("/api/Admin/conductor", Adconductor);
+app.use("/api/tickets", Etm);
+app.use("/api/busroutes", busroutes);
+app.use("/api/auth", loginRoutes);
+app.use("/api/authSign", SignupRoute);
+app.use("/api/Conductor", ConductorRoute);
+app.use("/api/payment", paymentRoutes);
+app.use("/api/userdata", userdata);
+app.use("/api/favorites", favoriteBusesRoutes);
+app.use("/api/buzzer", buzzer);
+// MongoDB Connection
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log("✅ MongoDB Connected Successfully");
+  } catch (error) {
+    console.error("❌ MongoDB Connection Failed:", error);
+    process.exit(1);
+  }
+};
+
+connectDB();
+
+// Socket.io Setup
+io.on("connection", (socket) => {
+  console.log("✅ New Client Connected:", socket.id);
+
+  socket.on("sendLocation", (data) => {
+    console.log("📍 Location Received:", data);
+    io.emit("sendLocation", data); // Broadcast to all clients
+  });
+
+  socket.on("disconnect", () => {
+    console.log("❌ Client Disconnected:", socket.id);
+  });
 });
 
-export default styles;
+// Start Server (Express + Socket.io)
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
+
+
+
+
+
+
