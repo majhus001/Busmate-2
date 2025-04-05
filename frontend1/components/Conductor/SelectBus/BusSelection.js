@@ -192,6 +192,12 @@ const BusSelection = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      {loading && (
+      <View style={styles.fullscreenLoader}>
+        <ActivityIndicator size="large" color="#3182CE" />
+        <Text style={styles.loadingText}>Loading options...</Text>
+      </View>
+    )}
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         keyboardShouldPersistTaps="handled"
@@ -207,12 +213,7 @@ const BusSelection = ({ navigation }) => {
           <Text style={styles.subtitle}>Choose your route and bus number</Text>
         </View>
 
-        {loading && (
-          <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color="#3182CE" />
-            <Text style={styles.loadingText}>Loading options...</Text>
-          </View>
-        )}
+        
 
         {error && (
           <View style={styles.errorContainer}>
@@ -228,7 +229,7 @@ const BusSelection = ({ navigation }) => {
               <MaterialIcons
                 name="location-on"
                 size={16}
-                color="#3182CE"
+                color="#1E2761"
                 style={styles.icon}
               />
               State
@@ -264,7 +265,7 @@ const BusSelection = ({ navigation }) => {
               <MaterialIcons
                 name="location-city"
                 size={16}
-                color="#3182CE"
+                color="#1E2761"
                 style={styles.icon}
               />
               City
@@ -311,7 +312,7 @@ const BusSelection = ({ navigation }) => {
               <MaterialIcons
                 name="trip-origin"
                 size={16}
-                color="#3182CE"
+                color="#1E2761"
                 style={styles.icon}
               />
               From
@@ -355,7 +356,7 @@ const BusSelection = ({ navigation }) => {
               <MaterialIcons
                 name="location-pin"
                 size={16}
-                color="#3182CE"
+                color="#1E2761"
                 style={styles.icon}
               />
               To
@@ -380,7 +381,7 @@ const BusSelection = ({ navigation }) => {
                   <MaterialIcons
                     name="arrow-drop-down"
                     size={24}
-                    color="#A0AEC0"
+                    color="#fff"
                   />
                 )}
                 value={selectedTo}
@@ -394,7 +395,7 @@ const BusSelection = ({ navigation }) => {
               <MaterialIcons
                 name="confirmation-number"
                 size={16}
-                color="#3182CE"
+                color="#1E2761"
                 style={styles.icon}
               />
               Bus Number
@@ -433,7 +434,7 @@ const BusSelection = ({ navigation }) => {
               <MaterialIcons
                 name="directions-bus"
                 size={20}
-                color="#2B6CB0"
+                color="#1E2761"
                 style={styles.icon}
               />
               <Text style={styles.plateLabel}>Bus Plate:</Text>
@@ -450,7 +451,7 @@ const BusSelection = ({ navigation }) => {
             >
               <View style={styles.buttonInner}>
                 <Text style={styles.buttonText}>
-                  <MaterialIcons name="arrow-forward" size={18} color="#FFF" />
+                  <MaterialIcons name="arrow-forward" size={18} color="#3182CE" />
                   Proceed to Bus Login
                 </Text>
               </View>

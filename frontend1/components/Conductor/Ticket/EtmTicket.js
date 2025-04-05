@@ -240,7 +240,6 @@ const EtmTicket = ({ route, navigation }) => {
       const amount =  ticketPrice * ticketCount;
       const upiId = "thamilprakasam2005@okhdfcbank";
       navigation.navigate("Upiqr",{upiId, amount});
-      console.log("jjjj")
     }
 
     const ticketData = {

@@ -35,6 +35,10 @@ const TicketSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  checkout:{
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Ticket = mongoose.model("ticket", TicketSchema);
