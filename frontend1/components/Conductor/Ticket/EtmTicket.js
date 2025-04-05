@@ -9,7 +9,7 @@ import {
   Alert,
   Animated,
   Easing,
-  ActivityIndicator
+  ActivityIndicator,
 } from "react-native";
 import axios from "axios";
 import { Picker } from "@react-native-picker/picker";
@@ -229,6 +229,13 @@ const EtmTicket = ({ route, navigation }) => {
     if (!paymentMethod) {
       Alert.alert("Payment Method Required", "Please select a payment method.");
       return;
+    }
+
+    if (paymentMethod === "Online" && ticketCount >= 1) {
+      const amount =  ticketPrice * ticketCount;
+      const upiId = "thamilprakasam2005@okhdfcbank";
+      navigation.navigate("Upiqr",{upiId, amount});
+      console.log("jjjj")
     }
 
     const ticketData = {

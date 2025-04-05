@@ -2,10 +2,11 @@ import React, { useEffect } from "react";
 import { View, Text } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
-const TicketSuccess = ({ navigation }) => {
+const TicketSuccess = ({ route, navigation }) => {
+  const { method } = route.params || 0; 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigation.goBack(); // Go back to the previous screen after 3 seconds
+      navigation.pop(2); 
     }, 3000);
 
     return () => clearTimeout(timer); // Cleanup timer if screen unmounts
