@@ -263,7 +263,7 @@ const EtmTicket = ({ route, navigation }) => {
 
       if (response.data.success) {
         setAvailableSeats(availableSeats - ticketData.ticketCount);
-        navigation.navigate("ticsuccess");
+        navigation.navigate("ticsuccess", {method: "Cash"});
       } else {
         Alert.alert("Failed", "Could not issue ticket. Try again.");
       }
@@ -278,9 +278,9 @@ const EtmTicket = ({ route, navigation }) => {
   return (
     <View style={styles.container}>
       {/* HEADER */}
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <Text style={styles.title}>Bus Ticket Booking</Text>
-      </View>
+      </View> */}
 
       {/* BUS DETAILS */}
       <View style={styles.cardheader}>

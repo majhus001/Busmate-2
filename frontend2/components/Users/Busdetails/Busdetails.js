@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Alert } from "react-native";
-import styles from "./BusdetailsStyles"; // Ensure this path is correct
-import { useLanguage } from "../../../LanguageContext"; // Ensure this path is correct
+import styles from "./BusdetailsStyles";
+import { useLanguage } from "../../../LanguageContext";
+import { API_BASE_URL } from "../../../apiurl";
+import axios from "axios";
 
-// Define translations for all text in the component
 const translations = {
   English: {
     title: (busRouteNo) => `🚌 ${busRouteNo} Bus Details`,
@@ -68,10 +69,15 @@ const translations = {
 };
 
 const Busdetails = ({ route, navigation }) => {
-  const { language, darkMode } = useLanguage(); // Use the language context with darkMode
-  const t = translations[language] || translations.English; // Fallback to English
+  const { language, darkMode } = useLanguage();
+  const t = translations[language] || translations.English;
 
   const { bus, fromLocation, toLocation } = route.params;
+
+  const [availableSeats, setAvailableSeats] = useState(0);
+  const [bookedSeats, setBookedSeats] = useState(0);
+
+  const totalSeats = bus?.totalSeats || 0;
 
   if (!bus) {
     Alert.alert(t.errorTitle, t.errorMessage);
@@ -79,22 +85,44 @@ const Busdetails = ({ route, navigation }) => {
     return null;
   }
 
-  const totalseats = bus.totalSeats || 0;
-  const availableSeats = bus.availableSeats;
-  const bookedSeats = totalseats - availableSeats;
+  useEffect(() => {
+    const fetchAvailableSeats = async () => {
+      try {
+        const response = await axios.post(
+          `${API_BASE_URL}/api/tickets/getseats/available`,
+          {
+            boardingPoint: fromLocation,
+            busRouteNo: bus.busRouteNo,
+          }
+        );
 
-  const BoardformattedTime = bus.timings?.[fromLocation] || "N/A";
-  const ArrformattedTime = bus.timings?.[toLocation] || "N/A";
+        if (response.data) {
+          const checkoutseats = response.data.checkoutseats || 0;
+          const newavailableSeats = bus.availableSeats + checkoutseats;
+          const bookedSeats = bus.totalSeats - newavailableSeats;
+          setAvailableSeats(newavailableSeats);
+          setBookedSeats(bookedSeats);
+        }
+      } catch (error) {
+        console.error("Error fetching available seats:", error);
+      }
+    };
 
-  // Correct fare price calculation
+    fetchAvailableSeats();
+  }, [fromLocation, totalSeats]);
+
+  const boardingTime = bus.timings?.[fromLocation] || "N/A";
+  const arrivalTime = bus.timings?.[toLocation] || "N/A";
   const routeKey = `${fromLocation}-${toLocation}`;
-  console.log(routeKey);
   const fareprice = bus.prices?.[routeKey] || "N/A";
-  console.log(fareprice);
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, darkMode && styles.darkContainer]}>
-      {/* Header Section */}
+    <ScrollView
+      contentContainerStyle={[
+        styles.container,
+        darkMode && styles.darkContainer,
+      ]}
+    >
       <View style={[styles.header, darkMode && styles.darkHeader]}>
         <Text style={[styles.title, darkMode && styles.darkTitle]}>
           {t.title(bus.busRouteNo)}
@@ -104,58 +132,59 @@ const Busdetails = ({ route, navigation }) => {
         </Text>
       </View>
 
-      {/* Info Cards Section */}
       <View style={styles.infoContainer}>
-        {/* Route Info */}
         <View style={[styles.card, darkMode && styles.darkCard]}>
           <Text style={[styles.label, darkMode && styles.darkLabel]}>
-            {t.boardingPoint} <Text style={[styles.value, darkMode && styles.darkValue]}>{fromLocation}</Text>
+            {t.boardingPoint} <Text style={styles.value}>{fromLocation}</Text>
           </Text>
           <Text style={[styles.label, darkMode && styles.darkLabel]}>
-            {t.boardingTime} <Text style={[styles.value, darkMode && styles.darkValue]}>{BoardformattedTime}</Text>
+            {t.boardingTime} <Text style={styles.value}>{boardingTime}</Text>
           </Text>
           <Text style={[styles.label, darkMode && styles.darkLabel]}>
-            {t.expectedTime} <Text style={[styles.value, darkMode && styles.darkValue]}>{BoardformattedTime}</Text>
+            {t.expectedTime} <Text style={styles.value}>{boardingTime}</Text>
           </Text>
           <Text style={[styles.label, darkMode && styles.darkLabel]}>
-            {t.farePrice} <Text style={[styles.value, darkMode && styles.darkValue]}>{fareprice}</Text>
+            {t.farePrice} <Text style={styles.value}>{fareprice}</Text>
           </Text>
         </View>
 
         <View style={[styles.card, darkMode && styles.darkCard]}>
           <Text style={[styles.label, darkMode && styles.darkLabel]}>
-            {t.arrivalPoint} <Text style={[styles.value, darkMode && styles.darkValue]}>{toLocation}</Text>
+            {t.arrivalPoint} <Text style={styles.value}>{toLocation}</Text>
           </Text>
           <Text style={[styles.label, darkMode && styles.darkLabel]}>
-            {t.arrivalTime} <Text style={[styles.value, darkMode && styles.darkValue]}>{ArrformattedTime}</Text>
+            {t.arrivalTime} <Text style={styles.value}>{arrivalTime}</Text>
           </Text>
           <Text style={[styles.label, darkMode && styles.darkLabel]}>
-            {t.expectedTime} <Text style={[styles.value, darkMode && styles.darkValue]}>{ArrformattedTime}</Text>
+            {t.expectedTime} <Text style={styles.value}>{arrivalTime}</Text>
           </Text>
         </View>
 
-        {/* Seat Details */}
         <View style={[styles.card, darkMode && styles.darkCard]}>
           <Text style={[styles.label, darkMode && styles.darkLabel]}>
-            {t.totalSeats} <Text style={[styles.value, darkMode && styles.darkValue]}>{totalseats}</Text>
+            {t.totalSeats} <Text style={styles.value}>{totalSeats}</Text>
           </Text>
           <Text style={[styles.label, darkMode && styles.darkLabel]}>
-            {t.bookedSeats} <Text style={[styles.value, darkMode && styles.darkValue]}>{bookedSeats}</Text>
+            {t.bookedSeats} <Text style={styles.value}>{bookedSeats}</Text>
           </Text>
           <Text style={[styles.label, darkMode && styles.darkLabel]}>
-            {t.availableSeats} <Text style={[styles.value, darkMode && styles.darkValue]}>{availableSeats}</Text>
+            {t.availableSeats}{" "}
+            <Text style={styles.value}>{availableSeats}</Text>
           </Text>
           <Text style={[styles.label, darkMode && styles.darkLabel]}>
-            {t.standings} <Text style={[styles.value, darkMode && styles.darkValue]}>{Math.max(bookedSeats - totalseats, 0)}</Text>
+            {t.standings}{" "}
+            <Text style={styles.value}>
+              {Math.max(bookedSeats - totalSeats, 0)}
+            </Text>
           </Text>
         </View>
 
-        {/* Status Card */}
         <View
           style={[
             styles.statusCard,
             bus.LoggedIn ? styles.active : styles.inactive,
-            darkMode && (bus.LoggedIn ? styles.darkActive : styles.darkInactive),
+            darkMode &&
+              (bus.LoggedIn ? styles.darkActive : styles.darkInactive),
           ]}
         >
           <Text style={[styles.statusText, darkMode && styles.darkStatusText]}>
@@ -164,7 +193,6 @@ const Busdetails = ({ route, navigation }) => {
         </View>
       </View>
 
-      {/* Action Buttons */}
       <TouchableOpacity
         style={[styles.trackButton, darkMode && styles.darkTrackButton]}
         onPress={() => navigation.navigate("usmap")}
@@ -172,13 +200,12 @@ const Busdetails = ({ route, navigation }) => {
         <Text style={styles.trackButtonText}>{t.liveTrack}</Text>
       </TouchableOpacity>
 
-      {/* Pay Now Button */}
       <TouchableOpacity
         style={[styles.payButton, darkMode && styles.darkPayButton]}
         onPress={() =>
           navigation.navigate("payment", {
-            fareprice, // Ticket price
-            busno: bus.busRouteNo, // Bus number
+            fareprice,
+            busno: bus.busRouteNo,
           })
         }
       >

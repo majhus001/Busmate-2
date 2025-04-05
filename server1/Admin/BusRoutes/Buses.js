@@ -366,7 +366,7 @@ router.put("/updatebus/:busId", async (req, res) => {
 
 router.get("/seat-availability", async (req, res) => {
   const { busplateNo, selectedBusNo } = req.query; 
-  console.log("llll", busplateNo, selectedBusNo);
+  
   try {
     const bus = await Bus.findOne({
       busNo: { $regex: `^${busplateNo}$`, $options: "i" },

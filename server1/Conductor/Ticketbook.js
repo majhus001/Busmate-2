@@ -183,4 +183,32 @@ router.put("/update/seats", async (req, res) => {
   }
 });
 
+router.post("/getseats/available", async (req, res) => {
+  const { boardingPoint, busRouteNo } = req.body;
+  
+  try {
+    const tickets = await Ticket.find({
+      busRouteNo: busRouteNo,
+      destination: boardingPoint,
+      checkout: false,
+    });
+
+console.log("tot ",tickets)
+
+const checkoutseats = tickets.reduce(
+  (total, ticket) => total + (ticket.ticketCount || 0),
+  0
+);
+console.log("che ",checkoutseats)
+
+
+    res.status(200).json({
+      checkoutseats
+    });
+  } catch (error) {
+    console.error("Error fetching seats:", error);
+    res.status(500).json({ message: "Server error fetching seats" });
+  }
+});
+
 module.exports = router;
