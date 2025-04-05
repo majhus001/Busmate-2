@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
-import axios from "axios"; // Import Axios for API calls
+import axios from "axios";
 import styles from "./SignupStyles";
 import { API_BASE_URL } from "../../apiurl";
 
@@ -17,14 +17,6 @@ const Signup = ({ navigation }) => {
       Alert.alert("Error", "All fields are required!");
       return;
     }
-    console.log("Signup Data:", {
-      Username,
-      email,
-      password,
-      role,
-      city,
-      state,
-    });
 
     const userData = { Username, email, password, role, city, state };
 
@@ -33,29 +25,17 @@ const Signup = ({ navigation }) => {
         `${API_BASE_URL}/api/authSign/signup`,
         userData
       );
-      Alert.alert("Success", "Account created successfully!", [
+
+      Alert.alert("Success", "OTP sent to your email", [
         {
-          text: "OK",
+          text: "Verify OTP",
           onPress: () => {
-            if (role === "Admin") {
-              navigation.navigate("AdminHome", {
-                city: city,
-                state: state,
-              });
-            } else {
-              navigation.navigate("ushomescreen", {
-                city: city,
-                state: state,
-              });
-            }
+            navigation.navigate("Verifyotp", userData); // Pass all user data
           },
         },
       ]);
     } catch (error) {
-      console.error(
-        "Signup Error:",
-        error.response ? error.response.data : error.message
-      );
+      console.error("Signup Error:", error.response?.data || error.message);
       Alert.alert(
         "Error",
         error.response?.data?.message || "Signup failed. Try again."
@@ -70,46 +50,35 @@ const Signup = ({ navigation }) => {
       <TextInput
         style={styles.input}
         placeholder="Username"
-        placeholderTextColor="#ccc"
         value={Username}
         onChangeText={setUsername}
       />
-
       <TextInput
         style={styles.input}
-        placeholder="Email Address"
-        placeholderTextColor="#ccc"
-        keyboardType="email-address"
+        placeholder="Email"
         value={email}
         onChangeText={setEmail}
+        keyboardType="email-address"
       />
-
       <TextInput
         style={styles.input}
         placeholder="Password"
-        placeholderTextColor="#ccc"
-        secureTextEntry
         value={password}
         onChangeText={setPassword}
+        secureTextEntry
       />
-
       <TextInput
         style={styles.input}
         placeholder="City"
-        placeholderTextColor="#ccc"
         value={city}
         onChangeText={setCity}
       />
-
       <TextInput
         style={styles.input}
         placeholder="State"
-        placeholderTextColor="#ccc"
         value={state}
         onChangeText={setState}
       />
-
-      
 
       <TouchableOpacity style={styles.button} onPress={handleSignup}>
         <Text style={styles.buttonText}>Sign Up</Text>
