@@ -13,14 +13,16 @@ import FavouriteBuses from "./components/Users/Homescreen/FavouriteBuses";
 import UserProfile from "./components/Users/Profile/UserProfile";
 import Settings from "./components/Users/Homescreen/Settings";
 import UserNotification from "./components/Users/Homescreen/UserNotification";
-
+import Verifyotp from "./components/Authentication/Verifyotp";
+import { LanguageProvider } from "./LanguageContext";
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
+    <LanguageProvider>
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="welcomepage"
+        initialRouteName="signup"
         screenOptions={{ headerShown: false }}
       >
         <Stack.Screen name="usfindbus" component={UserFindBus} />
@@ -36,7 +38,9 @@ export default function App() {
         <Stack.Screen name="UserProfile" component={UserProfile} />
         <Stack.Screen name="UserSettings" component={Settings} />
         <Stack.Screen name="UserNoti" component={UserNotification} />
+        <Stack.Screen name="Verifyotp" component={Verifyotp} />
       </Stack.Navigator>
     </NavigationContainer>
+    </LanguageProvider>
   );
 }

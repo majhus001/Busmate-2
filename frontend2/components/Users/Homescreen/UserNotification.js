@@ -1,22 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useLanguage } from '../../../LanguageContext';
+import { useFocusEffect } from '@react-navigation/native'; // ✅ This was missing
+
+const messages = {
+  en: 'No Notifications Available',
+  ta: 'அறிவிப்புகள் இல்லை',
+  hi: 'कोई सूचना उपलब्ध नहीं है',
+};
 
 const UserNotification = () => {
-  const [fadeAnim] = useState(new Animated.Value(0)); // Fade-in effect
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const { language } = useLanguage();
 
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+    }, [fadeAnim])
+  );
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       <Ionicons name="notifications-off-outline" size={50} color="#999" />
-      <Text style={styles.message}>No Notifications Available</Text>
+      <Text style={styles.message}>
+        {messages[language] || messages.en}
+      </Text>
     </Animated.View>
   );
 };
@@ -33,6 +46,8 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 10,
     fontWeight: 'bold',
+    textAlign: 'center',
+    paddingHorizontal: 20,
   },
 });
 
