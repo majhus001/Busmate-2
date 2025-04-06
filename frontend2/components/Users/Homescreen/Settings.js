@@ -7,6 +7,7 @@ import { Ionicons, Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLanguage } from '../../../LanguageContext'; // Adjust path as needed
+import Footer from './Footer';
 
 const translations = {
   English: {
@@ -68,8 +69,8 @@ const translations = {
   }
 };
 
-const Settings = () => {
-  const navigation = useNavigation();
+const Settings = ({navigation}) => {
+  // const navigation = useNavigation();
   const { language, setLanguage, darkMode, setDarkMode } = useLanguage(); // Use context
   const [expandedSection, setExpandedSection] = useState(null); // Local state for expanded section
 
@@ -151,7 +152,10 @@ const Settings = () => {
   ];
 
   return (
+    <>
+    
     <View style={[styles.container, darkMode && styles.darkContainer]}>
+      
       <Text style={[styles.header, darkMode && styles.darkHeader]}>{t.settings}</Text>
 
       <ScrollView>
@@ -237,6 +241,8 @@ const Settings = () => {
         )}
       </ScrollView>
     </View>
+    <Footer navigation={navigation} />
+    </>
   );
 };
 

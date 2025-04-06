@@ -8,6 +8,8 @@ import {
   Alert,
   Platform,
 } from "react-native";
+
+import { useNavigation } from "@react-navigation/native";
 import * as SecureStore from "expo-secure-store";
 import * as FileSystem from "expo-file-system";
 import * as Notifications from "expo-notifications";
@@ -17,6 +19,7 @@ import { API_BASE_URL } from "../../../apiurl";
 import styles from "./Tickethistorystyles.js"; // Ensure this path is correct
 import { Feather } from "@expo/vector-icons";
 import { useLanguage } from "../../../LanguageContext"; // Ensure this path is correct
+import Footer from "./Footer.js";
 
 // Define translations for all text in the component
 const translations = {
@@ -46,7 +49,8 @@ const translations = {
     failed: "தோல்வி",
     downloadSuccessTitle: "✅ டிக்கெட் பதிவிறக்கம்",
     downloadSuccessBody: "உங்கள் டிக்கெட் வெற்றிகரமாக சேமிக்கப்பட்டது!",
-    downloadSuccessAlert: "உங்கள் பதிவிறக்கங்கள் கோப்புறையில் டிக்கெட் சேமிக்கப்பட்டது.",
+    downloadSuccessAlert:
+      "உங்கள் பதிவிறக்கங்கள் கோப்புறையில் டிக்கெட் சேமிக்கப்பட்டது.",
     permissionDenied: "அனுமதி மறுக்கப்பட்டது",
     permissionDeniedMessage: "சேமிப்பக அணுகலை அனுமதிக்கவும்.",
     error: "பிழை",
@@ -70,7 +74,7 @@ const translations = {
   },
 };
 
-const TicketHistory = () => {
+const TicketHistory = ({ navigation }) => {
   const { language, darkMode } = useLanguage(); // Use the language context with darkMode
   const t = translations[language] || translations.English; // Fallback to English
 
@@ -100,10 +104,15 @@ const TicketHistory = () => {
   const fetchTransactions = async (id) => {
     if (!id) return;
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/payment/transactions/${id}`);
+      const response = await axios.get(
+        `${API_BASE_URL}/api/payment/transactions/${id}`
+      );
       setTransactions(response.data.transactions);
     } catch (error) {
-      console.error("❌ Error fetching transactions:", error?.response?.data || error.message);
+      console.error(
+        "❌ Error fetching transactions:",
+        error?.response?.data || error.message
+      );
     } finally {
       setLoading(false);
     }
@@ -124,17 +133,19 @@ const TicketHistory = () => {
       if (!fileInfo.exists) throw new Error("Downloaded file does not exist.");
 
       if (Platform.OS === "android") {
-        const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+        const permissions =
+          await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
         if (!permissions.granted) {
           Alert.alert(t.permissionDenied, t.permissionDeniedMessage);
           return;
         }
 
-        const externalUri = await FileSystem.StorageAccessFramework.createFileAsync(
-          permissions.directoryUri,
-          fileName,
-          "application/pdf"
-        );
+        const externalUri =
+          await FileSystem.StorageAccessFramework.createFileAsync(
+            permissions.directoryUri,
+            fileName,
+            "application/pdf"
+          );
 
         const fileContent = await FileSystem.readAsStringAsync(uri, {
           encoding: FileSystem.EncodingType.Base64,
@@ -174,74 +185,115 @@ const TicketHistory = () => {
 
   if (loading) {
     return (
-      <View style={[styles.loaderContainer, darkMode && styles.darkLoaderContainer]}>
-        <ActivityIndicator size="large" color={darkMode ? "#4DA8FF" : "#0000ff"} />
+      <View
+        style={[styles.loaderContainer, darkMode && styles.darkLoaderContainer]}
+      >
+        <ActivityIndicator
+          size="large"
+          color={darkMode ? "#4DA8FF" : "#0000ff"}
+        />
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, darkMode && styles.darkContainer]}>
-      <Text style={[styles.title, darkMode && styles.darkTitle]}>{t.title}</Text>
-      {transactions.length > 0 ? (
-        <FlatList
-          data={transactions}
-          keyExtractor={(item) => item.orderId}
-          renderItem={({ item }) => (
-            <View style={[styles.card, darkMode && styles.darkCard]}>
-              <View style={[styles.busInfoContainer, darkMode && styles.darkBusInfoContainer]}>
-                <Text style={[styles.busNumberText, darkMode && styles.darkBusNumberText]}>
-                  {t.busNo} {item.busno}
-                </Text>
-                <Text style={[styles.amountText, darkMode && styles.darkAmountText]}>
-                  ₹{item.amount / 100}
-                </Text>
-              </View>
-              <View style={styles.statusContainer}>
+    <>
+      <View style={[styles.container, darkMode && styles.darkContainer]}>
+        <Text style={[styles.title, darkMode && styles.darkTitle]}>
+          {t.title}
+        </Text>
+        {transactions.length > 0 ? (
+          <FlatList
+            data={transactions}
+            keyExtractor={(item) => item.orderId}
+            renderItem={({ item }) => (
+              <View style={[styles.card, darkMode && styles.darkCard]}>
                 <View
                   style={[
-                    styles.statusIndicator,
-                    item.status === "success"
-                      ? styles.statusSuccess
-                      : item.status === "pending"
-                      ? styles.statusPending
-                      : styles.statusFailed,
-                  ]}
-                />
-                <Text
-                  style={[
-                    styles.statusText,
-                    item.status === "success"
-                      ? styles.statusTextSuccess
-                      : item.status === "pending"
-                      ? styles.statusTextPending
-                      : styles.statusTextFailed,
-                    darkMode && styles.darkStatusText,
+                    styles.busInfoContainer,
+                    darkMode && styles.darkBusInfoContainer,
                   ]}
                 >
-                  {t[item.status] || item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                </Text>
-              </View>
+                  <Text
+                    style={[
+                      styles.busNumberText,
+                      darkMode && styles.darkBusNumberText,
+                    ]}
+                  >
+                    {t.busNo} {item.busno}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.amountText,
+                      darkMode && styles.darkAmountText,
+                    ]}
+                  >
+                    ₹{item.amount / 100}
+                  </Text>
+                </View>
+                <View style={styles.statusContainer}>
+                  <View
+                    style={[
+                      styles.statusIndicator,
+                      item.status === "success"
+                        ? styles.statusSuccess
+                        : item.status === "pending"
+                        ? styles.statusPending
+                        : styles.statusFailed,
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      styles.statusText,
+                      item.status === "success"
+                        ? styles.statusTextSuccess
+                        : item.status === "pending"
+                        ? styles.statusTextPending
+                        : styles.statusTextFailed,
+                      darkMode && styles.darkStatusText,
+                    ]}
+                  >
+                    {t[item.status] ||
+                      item.status.charAt(0).toUpperCase() +
+                        item.status.slice(1)}
+                  </Text>
+                </View>
 
-              <View style={styles.downloadContainer}>
-                <Text style={[styles.orderIdText, darkMode && styles.darkOrderIdText]}>
-                  {t.orderId} {item.orderId}
-                </Text>
-                <TouchableOpacity onPress={() => downloadTicket(item)}>
-                  <Feather name="download" size={24} color={darkMode ? "#FFFFFF" : "#000000"} />
-                </TouchableOpacity>
+                <View style={styles.downloadContainer}>
+                  <Text
+                    style={[
+                      styles.orderIdText,
+                      darkMode && styles.darkOrderIdText,
+                    ]}
+                  >
+                    {t.orderId} {item.orderId}
+                  </Text>
+                  <TouchableOpacity onPress={() => downloadTicket(item)}>
+                    <Feather
+                      name="download"
+                      size={24}
+                      color={darkMode ? "#FFFFFF" : "#000000"}
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
-          )}
-        />
-      ) : (
-        <View style={[styles.emptyContainer, darkMode && styles.darkEmptyContainer]}>
-          <Text style={[styles.emptyText, darkMode && styles.darkEmptyText]}>
-            {t.noHistory}
-          </Text>
-        </View>
-      )}
-    </View>
+            )}
+          />
+        ) : (
+          <View
+            style={[
+              styles.emptyContainer,
+              darkMode && styles.darkEmptyContainer,
+            ]}
+          >
+            <Text style={[styles.emptyText, darkMode && styles.darkEmptyText]}>
+              {t.noHistory}
+            </Text>
+          </View>
+        )}
+      </View>
+      <Footer navigation={navigation} />
+    </>
   );
 };
 

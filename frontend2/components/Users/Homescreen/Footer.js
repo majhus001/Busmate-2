@@ -1,8 +1,33 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useLanguage } from "../../../LanguageContext";
+
+const translations = {
+  home: {
+    english: 'Home',
+    tamil: 'முகப்பு',
+    hindi: 'होम'
+  },
+  ticket: {
+    english: 'Tickets',
+    tamil: 'டிக்கெட்',
+    hindi: 'टिकट'
+  },
+  place: {
+    english: 'Places',
+    tamil: 'இடங்கள்',
+    hindi: 'स्थान'
+  },
+  profile: {
+    english: 'Profile',
+    tamil: 'சுயவிவரம்',
+    hindi: 'प्रोफ़ाइल'
+  }
+};
 
 const Footer = ({ navigation }) => {
+  const { language, darkMode } = useLanguage();
   const [activeTab, setActiveTab] = useState('home');
   const [scaleAnims] = useState({
     home: new Animated.Value(1),
@@ -17,6 +42,12 @@ const Footer = ({ navigation }) => {
     place: new Animated.Value(0),
     profile: new Animated.Value(0),
   });
+
+  const getLabel = (tabName) => {
+    // Ensure language is lowercase to match our translation keys
+    const lang = language.toLowerCase();
+    return translations[tabName]?.[lang] || tabName.charAt(0).toUpperCase() + tabName.slice(1);
+  };
 
   const handleTabPress = (tabName) => {
     Object.keys(scaleAnims).forEach((key) => {
@@ -54,14 +85,16 @@ const Footer = ({ navigation }) => {
 
     setActiveTab(tabName);
 
-    // Navigate when tab is pressed
-    if (tabName === 'ticket') {
+    if (tabName === 'home') {
+      navigation.navigate('UserHome');
+    }
+    else if (tabName === 'ticket') {
       navigation.navigate('TicketHistory');
     }
-    if (tabName === 'place') {
+    else if (tabName === 'place') {
       navigation.navigate('FavouriteBuses');
     }
-    if (tabName === 'profile') {
+    else if (tabName === 'profile') {
       navigation.navigate('UserProfile');
     }
   };
@@ -69,22 +102,31 @@ const Footer = ({ navigation }) => {
   const renderTabItem = (tabName, iconName, activeIconName) => {
     const isActive = activeTab === tabName;
     const iconToUse = isActive ? activeIconName : iconName;
-    const colorToUse = isActive ? '#00468b' : '#aaa';
-    const textStyle = isActive ? styles.footerText : styles.footerTextInactive;
-
+    const colorToUse = isActive ? '#ffffff' : 'rgba(255,255,255,0.7)';
+    
     return (
-      <TouchableOpacity onPress={() => handleTabPress(tabName)} activeOpacity={0.7}>
+      <TouchableOpacity 
+        onPress={() => handleTabPress(tabName)} 
+        activeOpacity={0.7}
+        key={tabName}
+      >
         <Animated.View
           style={[
             styles.footerItem,
             {
-              transform: [{ scale: scaleAnims[tabName] }, { translateY: translateYAnims[tabName] }],
+              transform: [
+                { scale: scaleAnims[tabName] }, 
+                { translateY: translateYAnims[tabName] }
+              ],
             },
           ]}
         >
           <Ionicons name={iconToUse} size={22} color={colorToUse} />
-          <Text style={textStyle}>{tabName.charAt(0).toUpperCase() + tabName.slice(1)}</Text>
-
+          <Text style={[
+            isActive ? styles.footerText : styles.footerTextInactive,
+          ]}>
+            {getLabel(tabName)}
+          </Text>
           {isActive && <View style={styles.activeDot} />}
         </Animated.View>
       </TouchableOpacity>
@@ -106,16 +148,16 @@ const Footer = ({ navigation }) => {
 const styles = StyleSheet.create({
   footerContainer: {
     borderTopWidth: 1,
-    borderTopColor: '#eee',
-    backgroundColor: '#fff',
+    borderTopColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: '#007AFF',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    backgroundColor: '#007AFF',
+    paddingVertical: 5,
+    paddingHorizontal: 15,
   },
   footerItem: {
     alignItems: 'center',
@@ -126,19 +168,19 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
-    color: '#00468b',
+    color: '#fff',
     marginTop: 4,
     fontWeight: '500',
   },
   footerTextInactive: {
     fontSize: 12,
-    color: '#00468b',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 4,
   },
   activeDot: {
     width: 4,
     height: 4,
-    backgroundColor: '#00468b',
+    backgroundColor: '#fff',
     borderRadius: 2,
     position: 'absolute',
     bottom: 0,

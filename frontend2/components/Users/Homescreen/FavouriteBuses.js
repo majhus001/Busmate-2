@@ -9,13 +9,13 @@ import {
   SafeAreaView,
   ActivityIndicator,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import axios from "axios";
 import styles from "./FavouriteBusesStyles"; // Ensure this path is correct
 import { API_BASE_URL } from "../../../apiurl";
 import { useLanguage } from "../../../LanguageContext"; // Ensure this path is correct
+import Footer from "./Footer";
 
 // Define translations for all text in the component
 const translations = {
@@ -70,7 +70,7 @@ const fetchId = async () => {
   }
 };
 
-const FavouriteBuses = () => {
+const FavouriteBuses = ({navigation}) => {
   const { language, darkMode } = useLanguage(); // Use the language context with darkMode
   const t = translations[language] || translations.English; // Fallback to English
 
@@ -80,7 +80,6 @@ const FavouriteBuses = () => {
   const [favoriteBuses, setFavoriteBuses] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [userId, setUserId] = useState(null);
-  const navigation = useNavigation();
 
   useEffect(() => {
     const getUserId = async () => {
@@ -181,6 +180,8 @@ const FavouriteBuses = () => {
   };
 
   return (
+    <>
+    
     <SafeAreaView style={[styles.safeArea, darkMode && styles.darkSafeArea]}>
       <View style={[styles.container, darkMode && styles.darkContainer]}>
         <Text style={[styles.title, darkMode && styles.darkTitle]}>{t.searchTitle}</Text>
@@ -280,6 +281,8 @@ const FavouriteBuses = () => {
         )}
       </View>
     </SafeAreaView>
+    <Footer navigation={navigation}/>
+    </>
   );
 };
 

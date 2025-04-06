@@ -211,10 +211,10 @@ const EtmTicket = ({ route, navigation }) => {
 
   const handleSubmit = async () => {
     if (availableSeats <= 1){
-      const response = await axios.post(`${API_BASE_URL}/api/buzzer/trigger`, { selectedBusNo: selectedBusNo });
-      console.log(response.data);
+     axios.post(`${API_BASE_URL}/api/buzzer/trigger`, { selectedBusNo: selectedBusNo });
       
     } 
+    
     if (!boarding || !destination) {
       Alert.alert(
         "Selection Required",
@@ -222,7 +222,7 @@ const EtmTicket = ({ route, navigation }) => {
       );
       return;
     }
-
+    
     if (ticketPrice === 0) {
       Alert.alert(
         "Price Not Available",
@@ -230,18 +230,18 @@ const EtmTicket = ({ route, navigation }) => {
       );
       return;
     }
-
+    
     if (!paymentMethod) {
       Alert.alert("Payment Method Required", "Please select a payment method.");
       return;
     }
-
+    
     if (paymentMethod === "Online" && ticketCount >= 1) {
       const amount =  ticketPrice * ticketCount;
       const upiId = "thamilprakasam2005@okhdfcbank";
       navigation.navigate("Upiqr",{upiId, amount});
     }
-
+    
     const ticketData = {
       routeName: RouteName,
       busRouteNo: selectedBusNo,
@@ -254,13 +254,14 @@ const EtmTicket = ({ route, navigation }) => {
       selectedCity,
       selectedState,
     };
-
+    
     try {
+      console.log("kkkkk")
       const response = await axios.post(
         `${API_BASE_URL}/api/tickets/add_ticket`,
         ticketData
       );
-
+      console.log(response.data.message)
       if (response.data.success) {
         setAvailableSeats(availableSeats - ticketData.ticketCount);
         navigation.navigate("ticsuccess", {method: "Cash"});
@@ -277,11 +278,7 @@ const EtmTicket = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* HEADER */}
-      {/* <View style={styles.header}>
-        <Text style={styles.title}>Bus Ticket Booking</Text>
-      </View> */}
-
+      
       {/* BUS DETAILS */}
       <View style={styles.cardheader}>
         <View style={styles.row}>

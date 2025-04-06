@@ -3,7 +3,7 @@ import { StyleSheet, Platform, StatusBar } from "react-native";
 export default StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#5e72e4", // Primary blue color
+    backgroundColor: "#007AFF", // Primary blue color
   },
   darkSafeArea: {
     backgroundColor: "#222", // Darker shade for dark mode
@@ -33,10 +33,10 @@ export default StyleSheet.create({
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     paddingHorizontal: 16,
     paddingBottom: 16,
-    backgroundColor: "#00468b",
+    backgroundColor: "#007AFF",
   },
   darkHeader: {
-    backgroundColor: "#222",
+    backgroundColor: "#007AFF",
   },
   backButton: {
     padding: 8,
@@ -63,7 +63,7 @@ export default StyleSheet.create({
     backgroundColor: "#111",
   },
   profileImageSection: {
-    backgroundColor: "#00468b",
+    backgroundColor: "#007AFF",
     paddingBottom: 30,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
@@ -75,7 +75,7 @@ export default StyleSheet.create({
     elevation: 5,
   },
   darkProfileImageSection: {
-    backgroundColor: "#222",
+    backgroundColor: "#007AFF",
     shadowColor: "#000",
   },
   profileImageContainer: {

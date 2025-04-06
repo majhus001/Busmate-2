@@ -1,5 +1,5 @@
 
-export const API_BASE_URL = "http://192.168.1.5:5000"; 
+export const API_BASE_URL = "http://192.168.148.6:5000"; 
 
 
 //thamil - http://192.168.232.182:5000
