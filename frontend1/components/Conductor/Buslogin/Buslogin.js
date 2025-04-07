@@ -37,7 +37,7 @@ const Buslogin = ({ route, navigation }) => {
 
       if (response.data.success) {
         Alert.alert("Success", "Login Successful");
-        
+
         navigation.navigate("taketicket", {
           selectedFrom,
           selectedTo,
@@ -59,20 +59,27 @@ const Buslogin = ({ route, navigation }) => {
     <View style={styles.container}>
       <Text style={styles.title}>🚌 Bus Login</Text>
 
-      <Text style={styles.label}>Bus Plate No : {busplateNo}</Text>
+      <View style={styles.infoBox}>
+        <Text style={styles.infoText}>Bus Plate No: {busplateNo}</Text>
+      </View>
+      <View style={styles.infoBox}>
+        <Text style={styles.infoText}>Bus Route No: {selectedBusNo}</Text>
+      </View>
 
-      <Text style={styles.label}>Password</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Bus Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+      <View style={styles.card}>
+        <Text style={styles.label}>Password</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter Bus Password"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>🔑 Login</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handleLogin}>
+          <Text style={styles.buttonText}>🔐 Login</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };

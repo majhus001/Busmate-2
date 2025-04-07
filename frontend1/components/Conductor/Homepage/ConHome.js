@@ -5,12 +5,8 @@ import ConductorMap from "./Conductormap";
 
 const ConHome = ({ navigation, route }) => {
   const { conData } = route.params || {}; 
-console.log("eeeeee")
-  useEffect(() => {
-    if (conData) {
-      console.log("conData received in ConHome:", conData);
-    }
-  }, [conData]);
+
+
 
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });

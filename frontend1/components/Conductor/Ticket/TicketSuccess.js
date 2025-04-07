@@ -6,7 +6,11 @@ const TicketSuccess = ({ route, navigation }) => {
   const { method } = route.params || 0; 
   useEffect(() => {
     const timer = setTimeout(() => {
+      if(method === "Online") {
       navigation.pop(2); 
+      }else {
+        navigation.pop(1); // Navigate to ConductorHome screen
+      }
     }, 3000);
 
     return () => clearTimeout(timer); // Cleanup timer if screen unmounts

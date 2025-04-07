@@ -28,10 +28,10 @@ const Upiqr = ({ route, navigation }) => {
     setLoading(false);
   }, [upiId, amount]);
 
-  // const handleSuccess = () => {
-  //   console.log("Payment success clicked");
-  //   navigation.navigate("ticsuccess");
-  // };
+  const handleSuccess = () => {
+    console.log("Payment success clicked");
+    navigation.navigate("ticsuccess",{method: "Online"}); // Navigate to TicketSuccess screen
+  };
 
   return (
     <View style={styles.container}>
@@ -52,7 +52,7 @@ const Upiqr = ({ route, navigation }) => {
       )}
 
       <TouchableOpacity style={styles.successButton} >
-        <Text style={styles.buttonText}>Payment Success</Text>
+        <Text style={styles.buttonText} onPress={handleSuccess}>Payment Success</Text>
       </TouchableOpacity>
     </View>
   );

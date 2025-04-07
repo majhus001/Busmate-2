@@ -8,7 +8,8 @@ const User = require("../Module/User");
 const otpStore = {};
 
 // OTP utils
-const generateOTP = () => crypto.randomInt(100000, 999999).toString();
+
+const generateOTP = () => crypto.randomInt(1000, 10000).toString(); // 4-digit OTP
 const setOTP = (email, otp) => { otpStore[email] = otp; };
 const verifyOTP = (email, otp) => otpStore[email] === otp;
 const clearOTP = (email) => { delete otpStore[email]; };

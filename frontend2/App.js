@@ -22,7 +22,7 @@ export default function App() {
     <LanguageProvider>
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="signup"
+        initialRouteName="welcomepage"
         screenOptions={{ headerShown: false }}
       >
         <Stack.Screen name="usfindbus" component={UserFindBus} />

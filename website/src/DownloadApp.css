@@ -1,0 +1,99 @@
+.download-app {
+    background-color: #ffffff;
+    padding: 60px 20px;
+    text-align: center;
+    font-family: 'Inter', sans-serif; /* Ensure this font is loaded */
+    color: #1e1e1e;
+  }
+  
+  .download-app h2 {
+    font-size: 32px;
+    margin-bottom: 40px;
+    color: #1e90ff; /* Blue for the heading */
+  }
+  
+  .app-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 40px;
+  }
+  
+  .app-card {
+    background: #f9f9f9;
+    border-radius: 16px;
+    padding: 30px 25px;
+    width: 360px; /* Fixed width for consistency */
+    min-height: 300px; /* Minimum height to ensure uniformity */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Distributes content evenly */
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.05);
+    transition: 0.3s ease;
+  }
+  
+  .app-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+  }
+  
+  .app-icon {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 20px;
+    border-radius: 12px; /* Slightly rounded edges */
+    margin-left: 100px;
+  }
+  
+  .app-card h3 {
+    font-size: 22px;
+    margin-bottom: 15px;
+    color: #1e90ff; /* Blue for the app titles */
+  }
+  
+  .app-card p {
+    font-size: 15px;
+    color: #4f4f4f;
+    margin-bottom: 20px;
+    line-height: 1.5;
+    flex-grow: 1; /* Allows paragraph to expand and maintain spacing */
+  }
+  
+  .download-button {
+    background-color: #1e90ff; /* Blue button */
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    transition: background 0.3s ease;
+  }
+  
+  .download-button:hover {
+    background-color: #1873cc; /* Darker blue on hover */
+  }
+  
+  /* Responsive */
+  @media (max-width: 800px) {
+    .app-card {
+      width: 300px; /* Slightly smaller width for medium screens */
+      min-height: 280px; /* Adjust height for consistency */
+    }
+  
+    .download-app h2 {
+      font-size: 28px;
+    }
+  
+    .app-card h3 {
+      font-size: 20px;
+    }
+  }
+  
+  @media (max-width: 400px) {
+    .app-card {
+      width: 100%; /* Full width on very small screens */
+      max-width: 300px; /* Cap the width */
+      min-height: 260px; /* Slightly shorter for small screens */
+    }
+  }

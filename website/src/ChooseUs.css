@@ -1,0 +1,170 @@
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  #choose-us {
+    width: 100%;
+    background: linear-gradient(135deg, #f7f9fc 0%, #e8eef5 100%); /* Subtle gradient */
+    padding: 100px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden; /* Prevent overflow issues */
+  }
+  
+  .choose-container {
+    max-width: 1200px; /* Constrain width for larger screens */
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 60px; /* Increased gap for breathing room */
+    flex-wrap: wrap;
+    margin: 0 auto; /* Center container */
+  }
+  
+  .choose-text {
+    flex: 1;
+    padding: 30px;
+    animation: fadeInUp 0.8s ease-out forwards; /* Smoother animation */
+    min-width: 300px; /* Ensure readability on smaller screens */
+  }
+  
+  .choose-text h2 {
+    font-size: 42px; /* Larger for emphasis */
+    color: #007bff;
+    margin-bottom: 25px;
+    font-weight: 800; /* Bolder for impact */
+    letter-spacing: -0.5px; /* Tighten spacing */
+    background: linear-gradient(to right, #007bff, #00c4ff); /* Gradient text */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .choose-text p {
+    font-size: 18px;
+    color: #555; /* Softer color for readability */
+    margin-bottom: 30px;
+    line-height: 1.8; /* Improved readability */
+    font-family: 'Inter', sans-serif; /* Modern font (load via Google Fonts) */
+  }
+  
+  .choose-list {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .choose-list li {
+    font-size: 17px;
+    margin-bottom: 15px;
+    color: #222; /* Darker for contrast */
+    background: #ffffff;
+    padding: 14px 20px;
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08); /* Softer shadow */
+    transition: all 0.3s ease; /* Smooth transition */
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between emoji and text */
+    font-family: 'Inter', sans-serif;
+  }
+  
+  .choose-list li:hover {
+    transform: translateX(10px); /* More pronounced hover effect */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    background: #f0f7ff; /* Subtle hover color */
+  }
+  
+  .choose-image {
+    flex: 1;
+    text-align: center;
+    min-width: 300px; /* Prevent collapse on smaller screens */
+  }
+  
+  .choose-image img {
+    max-width: 100%;
+    width: 600px; /* Slightly larger */
+    height: auto;
+    border-radius: 16px; /* Softer corners */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15); /* Deeper shadow */
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+  }
+  
+  .choose-image img:hover {
+    transform: scale(1.06); /* Slightly larger scale */
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Animation */
+  @keyframes fadeInUp {
+    0% {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 1024px) {
+    .choose-container {
+      gap: 40px;
+    }
+  
+    .choose-text h2 {
+      font-size: 36px;
+    }
+  
+    .choose-image img {
+      width: 450px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .choose-container {
+      flex-direction: column-reverse;
+      text-align: center;
+      padding: 0 15px;
+    }
+  
+    .choose-text {
+      padding: 20px;
+    }
+  
+    .choose-text h2 {
+      font-size: 32px;
+    }
+  
+    .choose-text p {
+      font-size: 16px;
+    }
+  
+    .choose-list li {
+      font-size: 16px;
+      padding: 12px 16px;
+    }
+  
+    .choose-image img {
+      width: 100%;
+      max-width: 400px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .choose-text h2 {
+      font-size: 28px;
+    }
+  
+    .choose-text p {
+      font-size: 15px;
+    }
+  
+    .choose-list li {
+      font-size: 14px;
+    }
+  }

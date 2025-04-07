@@ -1,53 +1,141 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
+
+export const pickerSelectStyles = {
+  inputIOS: {
+    fontSize: 16,
+    color: "#2D3748",
+  },
+  inputAndroid: {
+    fontSize: 16,
+    color: "#2B6CB0",
+  },
+  placeholder: {
+    color: "#A0AEC0",
+  },
+};
 
 const styles = StyleSheet.create({
+  fullscreenLoader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)', // semi-transparent background
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  
   container: {
+    marginTop:40,
     flex: 1,
-    backgroundColor: "#F9FAFC",
+    backgroundColor: "#F7FAFC",
+  },
+  scrollContainer: {
     padding: 20,
+    paddingBottom: 40,
+  },
+  header: {
+    alignItems: "center",
+    marginBottom: 30,
+  },
+  icon: {
+    marginBottom: 8,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "bold",
-    color: "#1E3A8A",
-    textAlign: "center",
+    color: "#2D3748",
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#718096",
+    marginTop: 4,
+  },
+  loaderContainer: {
+    alignItems: "center",
+    marginVertical: 20,
+  },
+  loadingText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: "#4A5568",
+  },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FED7D7",
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 15,
+  },
+  errorText: {
+    marginLeft: 8,
+    color: "#C53030",
+    fontSize: 14,
+  },
+  formContainer: {
+    backgroundColor: "#408EC6",
+    padding: 20,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  inputContainer: {
     marginBottom: 20,
   },
   label: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#374151",
-    marginBottom: 5,
-    marginTop: 15,
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#fff",
+    marginBottom: 6,
   },
-  picker: {
-    backgroundColor: "#FFF",
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 15,
-    fontSize: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  pickerContainer: {
+    backgroundColor: "#EDF2F7",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  plateContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#EBF8FF",
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  plateLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#2B6CB0",
+    marginLeft: 6,
+  },
+  plateNumber: {
+    fontSize: 14,
+    color: "#2B6CB0",
+    marginLeft: 6,
   },
   button: {
-    backgroundColor: "#1E88E5",
-    paddingVertical: 15,
+    backgroundColor: "#fff",
     borderRadius: 10,
+    paddingVertical: 14,
     alignItems: "center",
     marginTop: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 4,
+    justifyContent: "center",
+    flexDirection: "row",
+  },
+  buttonInner: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   buttonText: {
-    fontSize: 18,
-    color: "#FFF",
-    fontWeight: "bold",
+    color: "#3182CE",
+    fontWeight: "600",
+    fontSize: 16,
+    marginLeft: 5,
   },
 });
 
