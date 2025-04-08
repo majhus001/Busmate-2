@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Image, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, Image, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 import styles from "./AdDashStyles";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
 import * as SecureStore from "expo-secure-store";
+import Icon from "react-native-vector-icons/Ionicons";
+import axios from "axios";
+import { API_BASE_URL } from "../../../apiurl";
 
 const AdDash = ({ navigation, route }) => {
   const { buses = [], conductors = [] } = route.params || {};
   const [loading, setLoading] = useState(false);
-
   const [adminData, setAdminData] = useState(null);
+  const [complaints, setComplaints] = useState([]);
+  const [alertsCount, setAlertsCount] = useState(0);
+    
   useFocusEffect(
     useCallback(() => {
       const fetchAdminData = async () => {
@@ -25,8 +30,28 @@ const AdDash = ({ navigation, route }) => {
         }
       };
 
+      const fetchComplaints = async () => {
+        try {
+          setLoading(true);
+          const response = await axios.get(
+            `${API_BASE_URL}/api/Conductor/complaints`
+          );
+          const unresolvedComplaints = response.data.filter(
+            (item) => item.status === false
+          );
+          setComplaints(unresolvedComplaints);
+          setAlertsCount(unresolvedComplaints.length);
+        } catch (error) {
+          Alert.alert("Error", "Failed to load complaints.");
+          console.error("Error fetching complaints:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
       fetchAdminData();
-    }, []) // Empty dependency array ensures it only runs when the page is focused
+      fetchComplaints();
+    }, [])
   );
 
   const activeBusesCount = buses.filter((bus) => bus.LoggedIn).length;
@@ -36,82 +61,165 @@ const AdDash = ({ navigation, route }) => {
   ).length;
   const loggedInConductors = conductors.length - loggedOutConductors;
 
-  // Show loading indicator
   if (loading) {
     return <ActivityIndicator animating size="large" style={styles.loader} />;
   }
 
   const handleProfile = () => {
-    console.log("Admin Data before navigating:", adminData); // Debugging
-
     if (!adminData) {
       console.error("adminData is undefined! Navigation aborted.");
       return;
     }
-
     navigation.navigate("adprofile");
   };
 
+  // Card data configuration
+  const cardData = [
+    {
+      title: "Total Buses",
+      value: buses.length,
+      icon: "bus-outline",
+      color: "#007AFF",
+      onPress: () => navigation.navigate("ViewBuses", { buses }),
+    },
+    {
+      title: "Total Conductors",
+      value: conductors.length,
+      icon: "people-outline",
+      color: "#007AFF",
+      onPress: () => navigation.navigate("ViewConductors", { conductors }),
+    },
+    {
+      title: "Active Buses",
+      value: activeBusesCount,
+      icon: "checkmark-circle-outline",
+      color: "#34C759",
+    },
+    {
+      title: "Inactive Buses",
+      value: inactiveBusesCount,
+      icon: "close-circle-outline",
+      color: "#FF3B30",
+    },
+    {
+      title: "Logged In",
+      value: loggedInConductors,
+      icon: "log-in-outline",
+      color: "#34C759",
+    },
+    {
+      title: "Logged Out",
+      value: loggedOutConductors,
+      icon: "log-out-outline",
+      color: "#FF3B30",
+    },
+    {
+      title: "Reports",
+      value: "10+",
+      icon: "document-text-outline",
+      color: "#AF52DE",
+      onPress: () => navigation.navigate("Reports"),
+    },
+    {
+      title: "Alerts",
+      value: alertsCount > 0 ? `${alertsCount}+` : "0",
+      icon: "alert-circle-outline",
+      color: "#FF3B30",
+      onPress: () => navigation.navigate("Alerts", { complaints }),
+    },
+  ];
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Title */}
-      <Text style={styles.title}>Bus Management Dashboard</Text>
-
-      {/* Profile Section */}
-      <View style={styles.profileContainer}>
+      {/* Header Section */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Admin Dashboard</Text>
         <TouchableOpacity
-          onPress={handleProfile}
-          style={styles.dashheader}
-          activeOpacity={0.7}
+          style={styles.notificationIcon}
+          onPress={() => navigation.navigate("Alerts", { complaints })}
         >
-          <Image
-            source={{
-              uri:
-                adminData?.image ||
-                "https://th.bing.com/th/id/OIP.aKiTvd6drTIayNy2hddhiQHaHa?w=1024&h=1024&rs=1&pid=ImgDetMain",
-            }}
-            style={styles.profileImage}
-          />
-          {adminData && (
-            <View>
-              <Text style={styles.welcomeText}>{adminData?.Username}</Text>
-              <Text style={styles.welcomeText}>
-                {adminData?.state},{adminData?.city}
+          <Icon name="notifications-outline" size={24} color="#007AFF" />
+          {alertsCount > 0 && (
+            <View style={styles.notificationBadge}>
+              <Text style={styles.notificationText}>
+                {alertsCount > 9 ? "9+" : alertsCount}
               </Text>
             </View>
           )}
         </TouchableOpacity>
       </View>
 
-      {/* Dashboard Cards */}
+      {/* Profile Section */}
+      <TouchableOpacity
+        onPress={handleProfile}
+        style={styles.profileCard}
+        activeOpacity={0.8}
+      >
+        <Image
+          source={{
+            uri:
+              adminData?.image ||
+              "https://th.bing.com/th/id/OIP.aKiTvd6drTIayNy2hddhiQHaHa?w=1024&h=1024&rs=1&pid=ImgDetMain",
+          }}
+          style={styles.profileImage}
+        />
+        <View style={styles.profileTextContainer}>
+          <Text style={styles.welcomeText}>Welcome back,</Text>
+          <Text style={styles.adminName}>{adminData?.Username || "Admin"}</Text>
+          <View style={styles.locationContainer}>
+            <Icon name="location-outline" size={14} color="#8E8E93" />
+            <Text style={styles.locationText}>
+              {adminData?.city || "City"}, {adminData?.state || "State"}
+            </Text>
+          </View>
+        </View>
+        <Icon name="chevron-forward" size={20} color="#C7C7CC" />
+      </TouchableOpacity>
+
+      {/* Stats Overview */}
+      <View style={styles.statsContainer}>
+        <View style={styles.statItem}>
+          <Icon name="bus" size={20} color="#007AFF" />
+          <Text style={styles.statNumber}>{buses.length}</Text>
+          <Text style={styles.statLabel}>Buses</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Icon name="people" size={20} color="#007AFF" />
+          <Text style={styles.statNumber}>{conductors.length}</Text>
+          <Text style={styles.statLabel}>Conductors</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Icon name="alert-circle" size={20} color="#007AFF" />
+          <Text style={styles.statNumber}>{alertsCount}</Text>
+          <Text style={styles.statLabel}>Alerts</Text>
+        </View>
+      </View>
+
+      {/* Dashboard Cards Grid */}
       <View style={styles.gridContainer}>
-        {[
-          {
-            title: "Total Buses",
-            value: buses.length,
-            onPress: () => navigation.navigate("ViewBuses", { buses }),
-          },
-          {
-            title: "Total Conductors",
-            value: conductors.length,
-            onPress: () =>
-              navigation.navigate("ViewConductors", { conductors }),
-          },
-          { title: "Active Buses", value: activeBusesCount },
-          { title: "Inactive Buses", value: inactiveBusesCount },
-          { title: "Conductors Logged In", value: loggedInConductors },
-          { title: "Conductors Logged Out", value: loggedOutConductors },
-          { title: "Reports", value: 10 },
-          { title: "Alerts", value: 20 },
-        ].map((item, index) => (
+        {cardData.map((item, index) => (
           <TouchableOpacity
             key={index}
-            style={styles.card}
-            activeOpacity={0.7}
-            onPress={item.onPress} 
+            style={[styles.card, { borderTopColor: item.color }]}
+            activeOpacity={0.8}
+            onPress={item.onPress}
           >
-            <Text style={styles.cardTitle}>{item.title}</Text>
-            <Text style={styles.cardValue}>{item.value}</Text>
+            <View style={styles.cardHeader}>
+              <View
+                style={[
+                  styles.iconContainer,
+                  { backgroundColor: `${item.color}20` },
+                ]}
+              >
+                <Icon name={item.icon} size={20} color={item.color} />
+              </View>
+              <Text style={styles.cardTitle}>{item.title}</Text>
+            </View>
+            <Text style={[styles.cardValue, { color: item.color }]}>
+              {item.value}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>

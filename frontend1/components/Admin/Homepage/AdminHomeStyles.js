@@ -1,287 +1,363 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet } from 'react-native';
 
-const styles = StyleSheet.create({
-  Admincontainer: {
-    flex: 1,
-    backgroundColor: "#f9f9f9",
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 50,
-  },
-
-  leftSection: {
-    alignItems: "center",
-    marginBottom: 10,
+export default StyleSheet.create({
+  container: {
     marginTop: 20,
-    backgroundColor: "#007bff",
-    padding: 20,
-    borderRadius: 20,
-    shadowColor: "#007bff",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 10,
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  contentContainer: {
+    padding: 16,
+    paddingBottom: 32,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  profileTouchable: {
+    flex: 1,
+    
+  },
+  profileSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 3,
-    borderColor: "#fff",
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 16,
+  },
+  profileTextContainer: {
+    flex: 1,
   },
   profileName: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#fff",
-    marginTop: 10,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1c1c1e',
+    marginBottom: 2,
   },
   profileRole: {
-    fontSize: 16,
-    color: "#dfe6e9",
-  },
-  profileDetail: {
     fontSize: 14,
-    color: "#b2bec3",
-    marginTop: 5,
-  },
-
-  /* Buttons Section */
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  addButton: {
-    backgroundColor: "#007bff",
-    paddingVertical: 10,
-    borderRightWidth: 2,
-    borderColor: "#fff",
-    width: 110,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#28a745",
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-
-  addButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 14,
-  },
-  busconinfo: {
-    display: "flex",
-    flexDirection: "row",
-    gap: 30,
-    marginTop: 10,
-    alignItems: "center",
-  },
-  busconbtn: {
-    backgroundColor: "#fff",
-    padding: 7,
-    borderRadius: 15,
-    color: "#007bff",
-    width: 150,
-    textAlign: "center",
-    fontWeight: "bold",
-  },
-
-  /* Toggle Buttons Section */
-  toggleContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-  toggleButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    backgroundColor: "#e0e0e0",
-    borderRadius: 8,
-    flex: 1,
-    marginHorizontal: 5,
-  },
-  toggleButtonText: {
-    color: "#555",
-    fontSize: 16,
-    textAlign: "center",
-    fontWeight: "bold",
-  },
-  activeTab: {
-    backgroundColor: "#007bff",
-  },
-  activeTabText: {
-    color: "#fff",
-  },
-  // Search Input
-  searchInput: {
-    width: "90%",
-    height: 45,
-    marginVertical: 15,
-    alignSelf: "center",
-    backgroundColor: "#F0F0F0",
-    borderRadius: 25,
-    paddingLeft: 20,
-    fontSize: 16,
-    color: "#333",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-
-  /* Section Title */
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#007bff",
-    marginBottom: 10,
-  },
-
-  /* Bus Card */
-  busCard: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    marginBottom: 10,
-    shadowColor: "#007bff",
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  busHeader: {
-    marginBottom: 10,
-  },
-  busText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#333",
+    color: '#007AFF',
+    fontWeight: '500',
     marginBottom: 4,
   },
-  status: {
-    fontSize: 14,
-    fontWeight: "bold",
-    marginTop: 10,
-  },
-  available: {
-    color: "#28a745",
-  },
-  onService: {
-    color: "#ffc107",
-  },
-
-  /* Dropdown Details */
-  dropdown: {
-    backgroundColor: "#f1f3f5",
-    padding: 15,
-    borderRadius: 15,
-    marginTop: 10,
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 10,
-    borderWidth: 1,
-    borderColor: "#ccc",
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  dropdownText: {
-    fontSize: 14,
-    color: "#555",
-    marginBottom: 5,
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
   },
-
-  /* Conductor Card */
-  conductorCard: {
-    backgroundColor: "#fff",
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 12,
-    shadowColor: "#6c757d",
-    shadowOpacity: 0.15,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 8,
-    elevation: 6,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
+  statDivider: {
+    width: 1,
+    backgroundColor: '#F0F0F0',
   },
-  conductorName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#007bff",
+  statNumber: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#007AFF',
+    marginVertical: 4,
   },
-  conductorContact: {
-    fontSize: 14,
-    color: "#555",
-    marginBottom: 5,
+  statLabel: {
+    fontSize: 13,
+    color: '#8E8E93',
   },
-  conductorStatus: {
-    fontSize: 14,
-    fontWeight: "bold",
-    textAlign: "right",
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  activeStatus: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "green",
-  },
-
-  inactiveStatus: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "red",
-  },
-  bustimingcont: {
-    backgroundColor: "#007bff",
-    padding: 10,
-    borderRadius: 10,
-  },
-  dropdowntimingText: {
-    color: "#fff",
-  },
-  /* Pagination Section */
-  paginationContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginVertical: 20,
+  profileDetail: {
+    fontSize: 13,
+    color: '#8E8E93',
+    marginLeft: 4,
   },
   complaintIcon: {
-    position: "absolute",
-    top: 25, 
-    right: 15, 
-    zIndex: 10, 
+    backgroundColor: '#fff',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  loader: {
+  
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  actionButton: {
+    width: '32%',
+    backgroundColor: '#FFF',
+    borderRadius: 10,
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  actionText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#007AFF',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 4,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  toggleButton: {
     flex: 1,
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  activeToggleButton: {
+    backgroundColor: '#007AFF',
+  },
+  toggleButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#007AFF',
+    marginLeft: 6,
+  },
+  activeToggleButtonText: {
+    color: '#fff',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: '#1c1c1e',
+  },
+  contentSection: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1c1c1e',
+    marginBottom: 12,
+  },
+  sectionTitleSmall: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1c1c1e',
+    marginBottom: 8,
+  },
+  sectionTitleContainer: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    paddingBottom: 6,
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginBottom: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  cardHeader: {
+    padding: 16,
+  },
+  cardHeaderContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1c1c1e',
+  },
+  cardSubtitle: {
+    fontSize: 14,
+    color: '#8E8E93',
+  },
+  chevronIcon: {
+    position: 'absolute',
+    right: 30,
+    top: 40,
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusActive: {
+    backgroundColor: '#d5f7d1',
+  },
+  statusInactive: {
+    backgroundColor: '#ffecec',
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  cardBody: {
+    padding: 16,
+    paddingTop: 0,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  detailText: {
+    fontSize: 14,
+    color: '#1c1c1e',
+    marginLeft: 8,
+  },
+  timingsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  timingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  timingText: {
+    fontSize: 12,
+    color: '#1c1c1e',
+    marginLeft: 4,
+  },
+  conductorInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  conductorContact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  emptyState: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#8E8E93',
+    marginTop: 12,
+    fontWeight: '500',
+  },
+  noDataTextSmall: {
+    fontSize: 13,
+    color: '#8E8E93',
+    fontStyle: 'italic',
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
   },
   paginationButton: {
-    backgroundColor: "#007bff",
-    paddingVertical: 12,
+    backgroundColor: '#007AFF',
+    borderRadius: 8,
+    paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 30,
-    shadowColor: "#007bff",
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 5,
+  },
+  paginationButtonDisabled: {
+    backgroundColor: '#C7C7CC',
   },
   paginationButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
   },
-  disabledButton: {
-    backgroundColor: "#ccc",
+  pageIndicator: {
+    fontSize: 14,
+    color: '#8E8E93',
+    fontWeight: '500',
   },
-  /* No Data Message */
-  noDataText: {
-    fontSize: 16,
-    color: "#777",
-    textAlign: "center",
-    marginTop: 20,
+  loader: {
+    marginTop: 40,
   },
 });
-
-export default styles;

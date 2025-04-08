@@ -34,13 +34,11 @@ router.put("/admin/profileupdate/:adminId", upload.single("image"), async (req, 
     const { name, email, password, age, city, state } = req.body;
     const { adminId } = req.params;
 
-    console.log("Received Image:", req.file); // Debugging Image Upload
-
     const admin = await User.findById(adminId);
     if (!admin) {
       return res.status(404).json({ message: "Admin not found." });
     }
-    console.log(admin)
+    
     // Update fields if provided
     if (name) admin.name = name;
     if (email) admin.email = email;
@@ -48,15 +46,16 @@ router.put("/admin/profileupdate/:adminId", upload.single("image"), async (req, 
     if (age) admin.age = age;
     if (city) admin.city = city;
     if (state) admin.state = state;
-
+    
     // Handle uploaded image
     if (req.file) {
       admin.image = req.file.path; // Update the image field (based on your schema)
     }
-
+    
     await admin.save();
-
+    
     res.status(200).json({
+      success: true,
       message: "Profile updated successfully.",
       admin,
     });
