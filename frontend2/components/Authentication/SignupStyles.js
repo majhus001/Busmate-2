@@ -1,85 +1,114 @@
-import { StyleSheet } from "react-native";
-
-const Signupstyles = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#007bff",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 20,
   },
-  title: {
-    fontSize: 26,
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: "center",
+  },
+  logoContainer: {
+    alignItems: "center",
+    marginBottom: 30,
+  },
+  logoText: {
+    fontSize: 36,
     fontWeight: "bold",
     color: "#fff",
-    marginBottom: 20,
+    marginBottom: 5,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "rgba(255,255,255,0.7)",
+  },
+  formContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 25,
+    marginHorizontal: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+  },
+  icon: {
+    marginRight: 10,
   },
   input: {
-    width: "100%",
-    backgroundColor: "#fff",
-    paddingVertical: 12,
-    paddingHorizontal: 15,
-    borderRadius: 8,
-    marginBottom: 15,
+    flex: 1,
+    height: 50,
     fontSize: 16,
     color: "#333",
   },
-  roleText: {
+  eyeIcon: {
+    padding: 10,
+  },
+  signupButton: {
+    marginTop: 10,
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  gradientButton: {
+    paddingVertical: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonText: {
+    color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
-    color: "#fff",
-    marginBottom: 10,
   },
-  radioContainer: {
+  dividerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#e0e0e0",
+  },
+  dividerText: {
+    marginHorizontal: 10,
+    color: "#999",
+    fontSize: 14,
+  },
+  socialButtonsContainer: {
     flexDirection: "row",
     justifyContent: "center",
     marginBottom: 20,
   },
-  radioButton: {
-    flexDirection: "row",
+  socialButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#f5f5f5",
     alignItems: "center",
+    justifyContent: "center",
     marginHorizontal: 10,
   },
-  circle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: "#fff",
-    marginRight: 8,
-  },
-  selected: {
-    backgroundColor: "#fff",
-  },
-  radioText: {
-    fontSize: 16,
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  button: {
-    backgroundColor: "#fff",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    width: "100%",
+  loginLink: {
     alignItems: "center",
-    marginTop: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
   },
-  buttonText: {
-    fontSize: 18,
-    color: "#007bff",
+  loginText: {
+    color: "#666",
+    fontSize: 14,
+  },
+  loginLinkText: {
+    color: "#2575fc",
     fontWeight: "bold",
-  },
-  linkText: {
-    marginTop: 15,
-    fontSize: 16,
-    color: "#fff",
-    textDecorationLine: "underline",
   },
 });
 
-export default Signupstyles;
+export default Signup;
