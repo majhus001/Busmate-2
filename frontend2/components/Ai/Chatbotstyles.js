@@ -3,111 +3,79 @@ import { StyleSheet } from "react-native";
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1e1e1e", // Dark background like Copilot
+    backgroundColor: "#f4f7fa",
   },
   chatContainer: {
     flex: 1,
-    paddingHorizontal: 10,
-  },
-  chatContent: {
-    flexGrow: 1,
-    justifyContent: "flex-end", // Messages stack from bottom
-    paddingBottom: 20,
-  },
-  welcomeContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  welcomeText: {
-    color: "#aaa",
-    fontSize: 18,
-    fontStyle: "italic",
-    textAlign: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: 12,
   },
   messageBubble: {
     marginVertical: 6,
-    padding: 12,
-    borderRadius: 12,
-    maxWidth: "80%",
-    backgroundColor: "#2d2d2d", // Subtle dark gray for bubbles
+    padding: 14,
+    borderRadius: 20,
+    maxWidth: "85%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.1,
     shadowRadius: 2,
-    elevation: 2,
+    elevation: 3,
   },
   userBubble: {
-    backgroundColor: "#0078d4", // Vibrant blue for user messages
+    backgroundColor: "#0a84ff",
     alignSelf: "flex-end",
-    borderBottomRightRadius: 4,
   },
   botBubble: {
-    backgroundColor: "#333", // Slightly lighter for bot
+    backgroundColor: "#ffffff",
     alignSelf: "flex-start",
-    borderBottomLeftRadius: 4,
   },
   messageText: {
-    color: "#fff", // White text for contrast
+    color: "#000",
     fontSize: 16,
     lineHeight: 22,
   },
-  timestamp: {
-    color: "#aaa",
-    fontSize: 10,
-    marginTop: 4,
-    alignSelf: "flex-end",
-  },
   inputContainer: {
+    position: "absolute",
+    bottom: 0,
     flexDirection: "row",
     alignItems: "center",
     padding: 10,
-    backgroundColor: "#252526", // Darker input bar like Copilot
+    backgroundColor: "#fff",
     borderTopWidth: 1,
-    borderColor: "#3c3c3c",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+    borderColor: "#e1e1e1",
   },
   input: {
     flex: 1,
-    padding: 10,
-    backgroundColor: "#3c3c3c", // Darker input field
-    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 25,
     borderWidth: 1,
-    borderColor: "#555",
-    color: "#fff",
-    fontSize: 16,
+    borderColor: "#ddd",
+    marginRight: 6,
     maxHeight: 100,
-    marginRight: 10,
+    minHeight: 40,
+    textAlignVertical: "top",
+    fontSize: 16,
   },
   sendButton: {
-    backgroundColor: "#0078d4", // Copilot blue
+    backgroundColor: "#0a84ff",
     padding: 10,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 8,
+    borderRadius: 25,
   },
   stopButton: {
-    backgroundColor: "#d83b01", // Orange-red for stop
+    backgroundColor: "#ff453a",
     padding: 10,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 8,
+    borderRadius: 25,
   },
   voiceButton: {
-    backgroundColor: "#0e639c", // Muted blue for mic
+    backgroundColor: "#32d74b",
     padding: 10,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
+    borderRadius: 25,
+    marginLeft: 6,
   },
-  listening: {
-    backgroundColor: "#d83b01", // Orange when listening
+  sendText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });
