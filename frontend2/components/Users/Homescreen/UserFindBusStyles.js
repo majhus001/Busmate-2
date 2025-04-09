@@ -3,16 +3,23 @@ import { StyleSheet } from "react-native";
 export default StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#fff",
   },
   darkSafeArea: {
-    backgroundColor: "#111",
+    backgroundColor: "#121212",
   },
   container: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: 15,
+    paddingTop: 5,
     backgroundColor: "#FFFFFF",
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    padding: 5,
+  },
+  contentContainer: {
+    flex: 1,
   },
   darkContainer: {
     backgroundColor: "#111",
@@ -20,9 +27,9 @@ export default StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: "700",
-    color: "#333333",
+    color: "#007AFF",
     textAlign: "center",
-    marginBottom: 30,
+    marginBottom: 10,
   },
   darkTitle: {
     color: "#FFFFFF",
@@ -31,12 +38,13 @@ export default StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 15,
     paddingVertical: 10,
-    marginBottom: 20,
+    marginBottom: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+    position:"relative"
   },
   darkSearchSection: {
     backgroundColor: "#222",
@@ -159,7 +167,7 @@ export default StyleSheet.create({
     color: "#CCCCCC",
   },
   startButton: {
-    backgroundColor: "#3F51B5",
+    backgroundColor: "#007AFF",
     borderRadius: 30,
     height: 50,
     justifyContent: "center",
@@ -173,7 +181,7 @@ export default StyleSheet.create({
     elevation: 6,
   },
   darkStartButton: {
-    backgroundColor: "#4DA8FF",
+    backgroundColor: "#007AFF",
     shadowColor: "#4DA8FF",
   },
   buttonContent: {
@@ -190,15 +198,14 @@ export default StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-  },
-  darkLoadingContainer: {
-    backgroundColor: "#111",
+    padding: 20,
   },
   loadingText: {
     marginTop: 10,
-    fontSize: 16,
-    color: "#666666",
+    color: "#007bff",
+  },
+  darkLoadingContainer: {
+    backgroundColor: "#111",
   },
   darkLoadingText: {
     color: "#CCCCCC",
@@ -244,13 +251,13 @@ export default StyleSheet.create({
     marginBottom: 12,
   },
   busNumberContainer: {
-    backgroundColor: "#3F51B5",
+    backgroundColor: "#007AFF",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
   },
   darkBusNumberContainer: {
-    backgroundColor: "#4DA8FF",
+    backgroundColor: "#007AFF",
   },
   busNumber: {
     color: "#FFFFFF",
@@ -383,5 +390,65 @@ export default StyleSheet.create({
   },
   darkInfoText: {
     color: "#CCCCCC",
+  },
+  firstBusCard: {
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+  },
+  nextBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    zIndex: 1,
+  },
+  tomorrowBadge: {
+    backgroundColor: '#FF9800',
+  },
+  nextBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  timeBadgeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  tomorrowText: {
+    fontSize: 12,
+    color: '#FF9800',
+    marginLeft: 4,
+  },
+  darkTomorrowText: {
+    color: '#FFB74D',
+  },
+  departureSoonText: {
+    fontSize: 12,
+    color: '#4CAF50',
+    marginLeft: 4,
+  },
+  darkDepartureSoonText: {
+    color: '#81C784',
+  },
+  loadMoreButton: {
+    padding: 15,
+    backgroundColor: '#007AFF',
+    borderRadius: 8,
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  darkLoadMoreButton: {
+    backgroundColor: '#007AFF',
+  },
+  loadMoreText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  darkLoadMoreText: {
+    color: '#e8e8e8',
   },
 });

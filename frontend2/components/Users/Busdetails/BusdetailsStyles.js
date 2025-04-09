@@ -2,163 +2,157 @@ import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
   container: {
-    flexGrow: 1,
-    backgroundColor: "#EAF2F8",
-    padding: 20,
+    flex: 1,
+    backgroundColor: "#F2F2F7",
   },
   darkContainer: {
-    backgroundColor: "#111",
+    backgroundColor: '#121212', // example dark background
   },
-  // Header
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 100,
+  },
   header: {
-    backgroundColor: "#1E90FF",
-    paddingVertical: 20,
-    borderRadius: 20,
     alignItems: "center",
-    marginBottom: 30,
+    marginBottom: 24,
   },
-  darkHeader: {
-    backgroundColor: "#4DA8FF",
-  },
-  title: {
-    color: "#fff",
-    fontSize: 25,
-    fontWeight: "bold",
-  },
-  darkTitle: {
-    color: "#FFFFFF",
-  },
-  routeText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#fff",
-    marginTop: 10,
-    marginBottom: 10,
-  },
-  darkRouteText: {
-    color: "#FFFFFF",
-  },
-  // Info Section
-  infoContainer: {
-    marginBottom: 5,
-  },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  darkCard: {
-    backgroundColor: "#222",
-    shadowColor: "#000",
-  },
-  // Labels and Values
-  label: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#666",
-    marginBottom: 4,
-  },
-  darkLabel: {
-    color: "#AAAAAA",
-  },
-  value: {
-    fontSize: 15,
+  busNumber: {
+    fontSize: 28,
     fontWeight: "700",
-    color: "#1E90FF",
-    marginBottom: 12,
+    color: "#1C1C1E",
   },
-  darkValue: {
-    color: "#4DA8FF",
+  darkText: {
+    color: "#FFFFFF",
   },
-  // Status Card
-  statusCard: {
-    paddingVertical: 16,
-    borderRadius: 16,
+  route: {
+    fontSize: 16,
+    color: "#636366",
+    marginTop: 4,
+  },
+  statusBadge: {
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginTop: 12,
   },
-  active: {
-    backgroundColor: "#D1F2EB",
-    borderColor: "#2ECC71",
-    borderWidth: 2,
+  activeBadge: {
+    backgroundColor: "#34C759",
   },
-  darkActive: {
-    backgroundColor: "#1A3C34",
-    borderColor: "#2ECC71",
-  },
-  inactive: {
-    backgroundColor: "#FADBD8",
-    borderColor: "#E74C3C",
-    borderWidth: 2,
-  },
-  darkInactive: {
-    backgroundColor: "#3C1A1A",
-    borderColor: "#E74C3C",
+  inactiveBadge: {
+    backgroundColor: "#FF3B30",
   },
   statusText: {
-    fontSize: 22,
+    color: "#fff",
+    marginLeft: 6,
+    fontWeight: "500",
+  },
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  darkCard: {
+    backgroundColor: "#1C1C1E",
+    // Keep the same other properties as card
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  cardTitle: {
+    fontSize: 16,
     fontWeight: "bold",
-    color: "#333",
+    marginLeft: 8,
+    color: "#000000", // Light mode color
   },
-  darkStatusText: {
-    color: "#FFFFFF",
-  },
-  // Action Buttons
-  trackButton: {
-    backgroundColor: "#007bff",
-    paddingVertical: 16,
-    borderRadius: 16,
+  infoRow: {
+    flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
   },
-  darkTrackButton: {
-    backgroundColor: "#4DA8FF",
+  rowIcon: {
+    marginRight: 12,
   },
-  trackButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
+  rowLabel: {
+    flex: 1,
+    fontSize: 15,
+    color: "#636366",
   },
-  payButton: {
-    backgroundColor: "green", // Vibrant green for payment
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+  rowValue: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: "#1C1C1E",
+  },
+  seatGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+  seatPill: {
+    width: "48%",
+    backgroundColor: "#F2F2F7",
     borderRadius: 8,
-    alignItems: "center",
-    marginVertical: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 5,
+    padding: 12,
+    marginBottom: 12,
   },
-  darkPayButton: {
-    backgroundColor: "#2ECC71", // Slightly lighter green for dark mode
-    shadowColor: "#000",
+  darkPill: {
+    backgroundColor: '#333333', // example dark pill background
   },
-  payButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+  seatLabel: {
+    fontSize: 13,
+    color: "#636366",
   },
-  backButton: {
-    backgroundColor: "#6c757d",
-    paddingVertical: 16,
-    borderRadius: 16,
-    alignItems: "center",
-  },
-  darkBackButton: {
-    backgroundColor: "#495057",
-  },
-  backButtonText: {
-    color: "#fff",
+  seatValue: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: "600",
+    color: "#1C1C1E",
+    marginTop: 4,
+  },
+  footer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    padding: 16,
+    backgroundColor: "#F2F2F7",
+    borderTopWidth: 1,
+    borderTopColor: "#D1D1D6",
+  },
+  darkFooter: {
+    backgroundColor: "#1C1C1E",
+    borderTopColor: "#2C2C2E",
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 14,
+    borderRadius: 10,
+    marginHorizontal: 6,
+  },
+  actionButtonText: {
+    color: "#fff",
+    fontWeight: "500",
+    marginLeft: 8,
   },
 });

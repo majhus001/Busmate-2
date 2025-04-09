@@ -4,6 +4,7 @@ const Ticket = require("../Module/EtmSchema");
 const Bus = require("../Module/BusSchema");
 
 router.post("/add_ticket", async (req, res) => {
+  
   try {
     let {
       routeName,
@@ -17,7 +18,7 @@ router.post("/add_ticket", async (req, res) => {
       selectedCity,
       selectedState,
     } = req.body;
-
+    
     if (
       !routeName ||
       !busRouteNo ||
@@ -32,12 +33,12 @@ router.post("/add_ticket", async (req, res) => {
     ) {
       return res.status(400).json({ message: "All fields are required" });
     }
-
+    
     const numTickets = parseInt(ticketCount, 10); // FIXED: Using a new variable
     if (isNaN(numTickets) || numTickets <= 0) {
       return res.status(400).json({ message: "Invalid ticket count" });
     }
-
+    
     // Create and save the ticket
     const newTicket = new Ticket({
       routeName,
@@ -49,37 +50,36 @@ router.post("/add_ticket", async (req, res) => {
       paymentMethod,
       checkout: false,
     });
-
+    
     await newTicket.save();
     console.log("✅ Ticket issued successfully!");
-
+    
     const bus = await Bus.findOne({
       busRouteNo: busRouteNo,
       busNo: busplateNo,
       city: selectedCity,
       state: selectedState,
     });
-
+    
     if (!bus) {
       console.log("❌ No bus found for the given details.");
       return res
-        .status(404)
-        .json({ success: false, message: "Bus not found!" });
+      .status(404)
+      .json({ success: false, message: "Bus not found!" });
     }
-
+    
     console.log("🚍 Available Seats Before Booking:", bus.availableSeats);
-
-    // Check if enough seats are available
-    if (bus.availableSeats >= numTickets) {
+    
+    if (bus.availableSeats + 20 >= numTickets) {
       bus.availableSeats -= numTickets;
-      await bus.save();
       console.log("✅ Seats updated successfully.");
     } else {
       return res
-        .status(400)
-        .json({ success: false, message: "Not enough seats available" });
+      .status(400)
+      .json({ success: false, message: "Not enough seats available" });
     }
-
+    
+    await bus.save();
     res.status(201).json({
       success: true,
       message: "Ticket issued successfully!",
@@ -193,13 +193,12 @@ router.post("/getseats/available", async (req, res) => {
       checkout: false,
     });
 
-console.log("tot ",tickets)
-
 const checkoutseats = tickets.reduce(
   (total, ticket) => total + (ticket.ticketCount || 0),
   0
 );
-console.log("che ",checkoutseats)
+
+console.log("checking seat availability...", checkoutseats); 
 
 
     res.status(200).json({

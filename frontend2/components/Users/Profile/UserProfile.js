@@ -18,6 +18,7 @@ import { Ionicons, MaterialIcons, Feather } from "@expo/vector-icons";
 import { API_BASE_URL } from "../../../apiurl";
 import styles from "./UserProfileStyles"; // Ensure this path is correct
 import { useLanguage } from "../../../LanguageContext";
+import Footer from "../Homescreen/Footer";
 
 // Define translations for all text in the component
 const translations = {
@@ -299,6 +300,8 @@ const UserProfile = ({ navigation }) => {
   }
 
   return (
+    <>
+    
     <SafeAreaView style={[styles.safeArea, darkMode && styles.darkSafeArea]}>
       <StatusBar barStyle={darkMode ? "light-content" : "light-content"} backgroundColor={darkMode ? "#222" : "#00468b"} />
       <View style={[styles.header, darkMode && styles.darkHeader]}>
@@ -393,6 +396,8 @@ const UserProfile = ({ navigation }) => {
         </View>
       )}
     </SafeAreaView>
+    <Footer navigation={navigation} />
+    </>
   );
 };
 

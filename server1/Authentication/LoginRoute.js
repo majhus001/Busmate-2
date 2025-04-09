@@ -12,6 +12,7 @@ router.post("/login", async (req, res) => {
 
     switch (role) {
       case "Conductor":
+        console.log("fghjk");
         Model = Conductor;
         user = await Model.findOne({ Username, password });
 

@@ -15,6 +15,11 @@ import Settings from "./components/Users/Homescreen/Settings";
 import UserNotification from "./components/Users/Homescreen/UserNotification";
 import Verifyotp from "./components/Authentication/Verifyotp";
 import { LanguageProvider } from "./LanguageContext";
+import ChatBotScreen from "./components/Ai/ChatBotScreen";
+import SplashScreen from "./components/Users/Homescreen/SplashScreen";
+import Splash1 from "./components/Users/Homescreen/Splash1";
+import Splash2 from "./components/Users/Homescreen/Splash2";
+import Splash3 from "./components/Users/Homescreen/Splash3";
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -22,7 +27,7 @@ export default function App() {
     <LanguageProvider>
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="welcomepage"
+        initialRouteName="ai"
         screenOptions={{ headerShown: false }}
       >
         <Stack.Screen name="usfindbus" component={UserFindBus} />
@@ -39,6 +44,11 @@ export default function App() {
         <Stack.Screen name="UserSettings" component={Settings} />
         <Stack.Screen name="UserNoti" component={UserNotification} />
         <Stack.Screen name="Verifyotp" component={Verifyotp} />
+        <Stack.Screen name="ai" component={ChatBotScreen} />
+        <Stack.Screen name="Splash" component={SplashScreen} />
+        <Stack.Screen name="Splash1" component={Splash1} />
+        <Stack.Screen name="Splash2" component={Splash2} />
+        <Stack.Screen name="Splash3" component={Splash3} />
       </Stack.Navigator>
     </NavigationContainer>
     </LanguageProvider>

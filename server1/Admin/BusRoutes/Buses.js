@@ -221,6 +221,21 @@ router.get("/fetchAllBuses", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+router.get("/fetchBusbyId/:busId", async (req, res) => {
+  const { busId } = req.params;
+  try {
+    const bus = await Bus.findById(busId); // Fetch single bus by ID
+
+    if (!bus) {
+      return res.status(404).json({ message: "Bus not found." });
+    }
+console.log("fetchingbus...",bus.availableSeats)
+    res.json(bus);
+  } catch (error) {
+    console.error("Error fetching bus:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 router.get("/fetchBy/cities/:selectedCity", async (req, res) => {
   try {
@@ -365,14 +380,14 @@ router.put("/updatebus/:busId", async (req, res) => {
 });
 
 router.get("/seat-availability", async (req, res) => {
-  const { busplateNo, selectedBusNo } = req.query; 
-  
+  const { busplateNo, selectedBusNo } = req.query;
+
   try {
     const bus = await Bus.findOne({
       busNo: { $regex: `^${busplateNo}$`, $options: "i" },
       busRouteNo: { $regex: `^${selectedBusNo}$`, $options: "i" },
     }).lean();
- 
+
     if (!bus) {
       return res.status(404).json({ error: "Bus not found" });
     }

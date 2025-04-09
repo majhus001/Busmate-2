@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import {
   View,
   Text,
@@ -12,6 +13,7 @@ import {
 import { WebView } from "react-native-webview";
 import * as SecureStore from "expo-secure-store";
 import { API_BASE_URL } from "../../../apiurl";
+import styles from "./PaymentStyles"; // Import your styles
 import { useLanguage } from "../../../LanguageContext"; // Import the language context
 
 // Define translations for all text in the component
@@ -22,7 +24,8 @@ const translations = {
     totalAmount: "Total Amount:",
     payNow: "Pay Now",
     successTitle: "Success",
-    successMessage: (paymentId) => `Payment Successful! Payment ID: ${paymentId}`,
+    successMessage: (paymentId) =>
+      `Payment Successful! Payment ID: ${paymentId}`,
     okButton: "OK",
     cancelTitle: "Payment Cancelled",
     cancelMessage: "The payment was cancelled",
@@ -58,7 +61,8 @@ const translations = {
     totalAmount: "மொத்த தொகை:",
     payNow: "இப்போது செலுத்து",
     successTitle: "வெற்றி",
-    successMessage: (paymentId) => `பணம் செலுத்துதல் வெற்றிகரமாக முடிந்தது! பணம் செலுத்துதல் ஐடி: ${paymentId}`,
+    successMessage: (paymentId) =>
+      `பணம் செலுத்துதல் வெற்றிகரமாக முடிந்தது! பணம் செலுத்துதல் ஐடி: ${paymentId}`,
     okButton: "சரி",
     cancelTitle: "பணம் செலுத்துதல் ரத்து செய்யப்பட்டது",
     cancelMessage: "பணம் செலுத்துதல் ரத்து செய்யப்பட்டது",
@@ -67,13 +71,15 @@ const translations = {
     distanceErrorTitle: "⚠️ பிழை",
     distanceErrorMessage: "தூர தரவு தவறானது.",
     distanceRestrictedTitle: "⚠️ பணம் செலுத்துதல் தடை",
-    distanceRestrictedMessage: "நீங்கள் 1 கி.மீ.க்குள் இருக்கும்போது மட்டுமே பணம் செலுத்த முடியும்.",
+    distanceRestrictedMessage:
+      "நீங்கள் 1 கி.மீ.க்குள் இருக்கும்போது மட்டுமே பணம் செலுத்த முடியும்.",
     userIdErrorTitle: "⚠️ பிழை",
     userIdErrorMessage: "பயனர் ஐடி கிடைக்கவில்லை.",
     orderErrorMessage: "❌ ஆர்டர் உருவாக்குவதில் பிழை",
     // WebView translations
     webTitle: "உங்கள் பணம் செலுத்துதலை முடிக்கவும்",
-    webSubtitle: "உங்கள் பேருந்து டிக்கெட்டிற்கான பாதுகாப்பான பணம் செலுத்துதல் நுழைவாயில்",
+    webSubtitle:
+      "உங்கள் பேருந்து டிக்கெட்டிற்கான பாதுகாப்பான பணம் செலுத்துதல் நுழைவாயில்",
     webSecure: "பாதுகாப்பான செக்அவுட்",
     webSummary: "முன்பதிவு சுருக்கம்",
     webTicketType: "டிக்கெட் வகை",
@@ -85,7 +91,8 @@ const translations = {
     webFarePrice: "கட்டண விலை",
     webTotalAmount: "மொத்த தொகை",
     webPayButton: (amount) => `₹${amount} பாதுகாப்பாக செலுத்து`,
-    webFooter: "உங்கள் பணம் செலுத்துதல் தொழில்துறை தரமான குறியாக்கத்தால் பாதுகாக்கப்பட்டுள்ளது",
+    webFooter:
+      "உங்கள் பணம் செலுத்துதல் தொழில்துறை தரமான குறியாக்கத்தால் பாதுகாக்கப்பட்டுள்ளது",
     webGoBack: "பின்னால் செல்",
   },
   Hindi: {
@@ -103,7 +110,8 @@ const translations = {
     distanceErrorTitle: "⚠️ त्रुटि",
     distanceErrorMessage: "दूरी डेटा अमान्य है।",
     distanceRestrictedTitle: "⚠️ भुगतान प्रतिबंधित",
-    distanceRestrictedMessage: "आप केवल 1 किमी के भीतर होने पर ही भुगतान कर सकते हैं।",
+    distanceRestrictedMessage:
+      "आप केवल 1 किमी के भीतर होने पर ही भुगतान कर सकते हैं।",
     userIdErrorTitle: "⚠️ त्रुटि",
     userIdErrorMessage: "उपयोगकर्ता आईडी नहीं मिली।",
     orderErrorMessage: "❌ ऑर्डर बनाने में त्रुटि",
@@ -135,9 +143,11 @@ const Payment = ({ route, navigation }) => {
   const [storedDistance, setStoredDistance] = useState(null);
   const [seatCount, setSeatCount] = useState(1);
   const [userId, setUserId] = useState(null);
-  const fareprice = route.params?.fareprice ? parseFloat(route.params.fareprice) : 0;
+  const fareprice = route.params?.fareprice
+    ? parseFloat(route.params.fareprice)
+    : 0;
   const busno = route.params?.busno || "Unknown Bus";
-  console.log(busno);
+  const { fromLocation, toLocation } = route.params;
 
   useEffect(() => {
     const fetchDistance = async () => {
@@ -170,7 +180,10 @@ const Payment = ({ route, navigation }) => {
       return false;
     };
 
-    const backHandler = BackHandler.addEventListener("hardwareBackPress", backAction);
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
     return () => backHandler.remove();
   }, [showWebView]);
 
@@ -198,11 +211,9 @@ const Payment = ({ route, navigation }) => {
       const data = JSON.parse(event.nativeEvent.data);
       if (data.type === "paymentSuccess") {
         setShowWebView(false);
-        Alert.alert(
-          t.successTitle,
-          t.successMessage(data.paymentId),
-          [{ text: t.okButton, onPress: () => navigation.navigate("Home") }]
-        );
+        Alert.alert(t.successTitle, t.successMessage(data.paymentId), [
+          { text: t.okButton, onPress: () => navigation.navigate("Home") },
+        ]);
       } else if (data.type === "paymentCancelled") {
         setShowWebView(false);
         Alert.alert(t.cancelTitle, t.cancelMessage);
@@ -265,16 +276,30 @@ const Payment = ({ route, navigation }) => {
 
       const { id, amount, currency } = data.order;
       const now = new Date();
-      const formattedDate = now.toLocaleDateString(language === "English" ? "en-IN" : language === "Tamil" ? "ta-IN" : "hi-IN", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
-      const formattedTime = now.toLocaleTimeString(language === "English" ? "en-IN" : language === "Tamil" ? "ta-IN" : "hi-IN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
+      const formattedDate = now.toLocaleDateString(
+        language === "English"
+          ? "en-IN"
+          : language === "Tamil"
+          ? "ta-IN"
+          : "hi-IN",
+        {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }
+      );
+      const formattedTime = now.toLocaleTimeString(
+        language === "English"
+          ? "en-IN"
+          : language === "Tamil"
+          ? "ta-IN"
+          : "hi-IN",
+        {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }
+      );
 
       const htmlContent = `
       <!DOCTYPE html>
@@ -286,28 +311,34 @@ const Payment = ({ route, navigation }) => {
         <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
         <style>
           :root {
-            --primary: ${darkMode ? '#4DA8FF' : '#3a86ff'};
-            --primary-dark: ${darkMode ? '#2B6BE0' : '#2b6be0'};
-            --text-dark: ${darkMode ? '#FFFFFF' : '#2d3748'};
-            --text-light: ${darkMode ? '#AAAAAA' : '#4a5568'};
-            --text-muted: ${darkMode ? '#666' : '#718096'};
-            --gray-light: ${darkMode ? '#333' : '#f7fafc'};
-            --gray-lighter: ${darkMode ? '#222' : '#edf2f7'};
-            --white: ${darkMode ? '#111' : '#ffffff'};
+            --primary: ${darkMode ? "#4DA8FF" : "#3a86ff"};
+            --primary-dark: ${darkMode ? "#2B6BE0" : "#2b6be0"};
+            --text-dark: ${darkMode ? "#FFFFFF" : "#2d3748"};
+            --text-light: ${darkMode ? "#AAAAAA" : "#4a5568"};
+            --text-muted: ${darkMode ? "#666" : "#718096"};
+            --gray-light: ${darkMode ? "#333" : "#f7fafc"};
+            --gray-lighter: ${darkMode ? "#222" : "#edf2f7"};
+            --white: ${darkMode ? "#111" : "#ffffff"};
             --success: #10b981;
-            --shadow: 0 4px 6px ${darkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(0, 0, 0, 0.07)'};
+            --shadow: 0 4px 6px ${
+              darkMode ? "rgba(255, 255, 255, 0.07)" : "rgba(0, 0, 0, 0.07)"
+            };
             --radius: 8px;
           }
-          
+
           * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
           }
-          
+
           body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: ${darkMode ? 'linear-gradient(135deg, #111, #222)' : 'linear-gradient(135deg, #f6f9fc, #edf2f7)'};
+            background: ${
+              darkMode
+                ? "linear-gradient(135deg, #111, #222)"
+                : "linear-gradient(135deg, #f6f9fc, #edf2f7)"
+            };
             color: var(--text-dark);
             min-height: 100vh;
             display: flex;
@@ -315,7 +346,7 @@ const Payment = ({ route, navigation }) => {
             justify-content: center;
             padding: 20px;
           }
-          
+
           .payment-card {
             background: var(--white);
             border-radius: var(--radius);
@@ -325,51 +356,51 @@ const Payment = ({ route, navigation }) => {
             max-width: 450px;
             overflow: hidden;
           }
-          
+
           .payment-header {
             background: var(--primary);
             color: var(--white);
             padding: 22px 30px;
             position: relative;
           }
-          
+
           .payment-header h1 {
             font-size: 22px;
             font-weight: 600;
             margin-bottom: 5px;
           }
-          
+
           .payment-header p {
             font-size: 14px;
             opacity: 0.9;
           }
-          
+
           .secure-badge {
             display: flex;
             align-items: center;
             font-size: 12px;
             margin-top: 8px;
           }
-          
+
           .secure-badge svg {
             margin-right: 5px;
           }
-          
+
           .payment-body {
             padding: 30px;
           }
-          
+
           .payment-info {
             margin-bottom: 25px;
           }
-          
+
           .payment-info h2 {
             font-size: 18px;
             margin-bottom: 15px;
             color: var(--text-dark);
             font-weight: 600;
           }
-          
+
           .ticket-details {
             background: var(--gray-lighter);
             border-radius: var(--radius);
@@ -377,28 +408,32 @@ const Payment = ({ route, navigation }) => {
             position: relative;
             overflow: hidden;
           }
-          
+
           .detail-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
             font-size: 14px;
             padding: 10px 0;
-            border-bottom: 1px solid rgba(${darkMode ? '255,255,255' : '0,0,0'},0.05);
+            border-bottom: 1px solid rgba(${
+              darkMode ? "255,255,255" : "0,0,0"
+            },0.05);
           }
-          
+
           .detail-row:last-child {
             border-bottom: none;
             padding-top: 15px;
             margin-top: 5px;
-            border-top: 1px dashed rgba(${darkMode ? '255,255,255' : '0,0,0'},0.1);
+            border-top: 1px dashed rgba(${
+              darkMode ? "255,255,255" : "0,0,0"
+            },0.1);
           }
-          
+
           .detail-row:last-child span {
             font-weight: 600;
             font-size: 16px;
           }
-          
+
           .ticket-punch {
             position: absolute;
             width: 20px;
@@ -408,7 +443,7 @@ const Payment = ({ route, navigation }) => {
             left: -10px;
             top: 50%;
           }
-          
+
           .ticket-punch-right {
             position: absolute;
             width: 20px;
@@ -418,7 +453,7 @@ const Payment = ({ route, navigation }) => {
             right: -10px;
             top: 50%;
           }
-          
+
           .payment-btn {
             background: var(--primary);
             color: white;
@@ -434,37 +469,39 @@ const Payment = ({ route, navigation }) => {
             justify-content: center;
             align-items: center;
           }
-          
+
           .payment-btn:hover {
             background: var(--primary-dark);
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(58, 134, 255, 0.3);
           }
-          
+
           .payment-btn svg {
             margin-right: 8px;
           }
-          
+
           .payment-footer {
             text-align: center;
             padding: 15px 30px;
-            border-top: 1px solid rgba(${darkMode ? '255,255,255' : '0,0,0'},0.05);
+            border-top: 1px solid rgba(${
+              darkMode ? "255,255,255" : "0,0,0"
+            },0.05);
             font-size: 12px;
             color: var(--text-light);
             background: var(--gray-lighter);
           }
-          
+
           .payment-methods {
             display: flex;
             justify-content: center;
             margin-top: 10px;
           }
-          
+
           .payment-methods img {
             height: 20px;
             margin: 0 5px;
           }
-          
+
           .go-back-btn {
             margin-top: 25px;
             color: var(--primary);
@@ -473,7 +510,7 @@ const Payment = ({ route, navigation }) => {
             font-weight: 600;
             text-decoration: underline;
           }
-          
+
           .go-back-btn:hover {
             color: var(--primary-dark);
           }
@@ -492,14 +529,14 @@ const Payment = ({ route, navigation }) => {
               ${t.webSecure}
             </div>
           </div>
-          
+
           <div class="payment-body">
             <div class="payment-info">
               <h2>${t.webSummary}</h2>
               <div class="ticket-details">
                 <div class="ticket-punch"></div>
                 <div class="ticket-punch-right"></div>
-                
+
                 <div class="detail-row">
                   <span>${t.webTicketType}</span>
                   <span>${t.webTicketValue}</span>
@@ -526,7 +563,7 @@ const Payment = ({ route, navigation }) => {
                 </div>
               </div>
             </div>
-            
+
             <button id="payBtn" class="payment-btn">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
@@ -535,7 +572,7 @@ const Payment = ({ route, navigation }) => {
               ${t.webPayButton((fareprice * seatCount).toFixed(2))}
             </button>
           </div>
-          
+
           <div class="payment-footer">
             <p>${t.webFooter}</p>
             <div class="payment-methods">
@@ -547,7 +584,7 @@ const Payment = ({ route, navigation }) => {
             <div id="goBackBtn" class="go-back-btn">${t.webGoBack}</div>
           </div>
         </div>
-        
+
         <script>
           document.getElementById("payBtn").addEventListener("click", function () {
             var options = {
@@ -574,12 +611,12 @@ const Payment = ({ route, navigation }) => {
                 "email": "customer@example.com",
                 "contact": "9999999999"
               },
-              "theme": { "color": "${darkMode ? '#4DA8FF' : '#3a86ff'}" }
+              "theme": { "color": "${darkMode ? "#4DA8FF" : "#3a86ff"}" }
             };
             var rzp1 = new Razorpay(options);
             rzp1.open();
           });
-      
+
           document.getElementById("goBackBtn").addEventListener("click", function() {
             window.ReactNativeWebView.postMessage(JSON.stringify({
               type: 'goBack'
@@ -590,7 +627,9 @@ const Payment = ({ route, navigation }) => {
       </html>
       `;
 
-      setPaymentUrl(`data:text/html,${encodeURIComponent(htmlContent)}`);
+      setPaymentUrl(
+        `data:text/html,${encodeURIComponent(htmlContent)}`
+      );
       setShowWebView(true);
     } catch (err) {
       console.error("❌ Payment API Error:", err);
@@ -600,38 +639,169 @@ const Payment = ({ route, navigation }) => {
 
   return (
     <View style={[styles.container, darkMode && styles.darkContainer]}>
-      <Text style={[styles.text, darkMode && styles.darkText]}>
-        {t.distance} {storedDistance ? `${storedDistance.toFixed(2)} km` : t.fetching}
-      </Text>
-      <Text style={[styles.text, darkMode && styles.darkText]}>
-        {t.totalAmount} ₹{(fareprice * seatCount).toFixed(2)}
-      </Text>
+      <View style={styles.header}>
+        <Text style={[styles.title, darkMode && styles.darkTitle]}>
+          {t.webTitle}
+        </Text>
+        <Text style={[styles.subtitle, darkMode && styles.darkSubtitle]}>
+          {t.webSubtitle}
+        </Text>
+      </View>
 
-      <View style={styles.seatContainer}>
-        <TouchableOpacity
-          onPress={() => setSeatCount(Math.max(1, seatCount - 1))}
-          style={[styles.seatButton, darkMode && styles.darkSeatButton]}
+      {/* Route Display with Icons */}
+      <View style={styles.routeContainer}>
+        <MaterialIcons
+          name="location-on"
+          size={24}
+          color={darkMode ? "#3B82F6" : "#2563EB"}
+        />
+        <Text
+          style={[styles.locationText, darkMode && styles.darkLocationText]}
         >
-          <Text style={[styles.buttonText, darkMode && styles.darkButtonText]}>-</Text>
-        </TouchableOpacity>
-        <Text style={[styles.text, darkMode && styles.darkText]}>{seatCount}</Text>
-        <TouchableOpacity
-          onPress={() => setSeatCount(seatCount + 1)}
-          style={[styles.seatButton, darkMode && styles.darkSeatButton]}
+          {fromLocation}
+        </Text>
+        <MaterialIcons
+          name="arrow-forward"
+          size={20}
+          color={darkMode ? "#94A3B8" : "#64748B"}
+          style={styles.arrowIcon}
+        />
+        <MaterialIcons
+          name="location-pin"
+          size={24}
+          color={darkMode ? "#EF4444" : "#DC2626"}
+        />
+        <Text
+          style={[styles.locationText, darkMode && styles.darkLocationText]}
         >
-          <Text style={[styles.buttonText, darkMode && styles.darkButtonText]}>+</Text>
-        </TouchableOpacity>
+          {toLocation}
+        </Text>
+      </View>
+
+      <View style={[styles.card, darkMode && styles.darkCard]}>
+        <View style={styles.infoRow}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Ionicons
+              name="bus"
+              size={20}
+              color={darkMode ? "#3B82F6" : "#2563EB"}
+              style={{ marginRight: 8 }}
+            />
+            <Text style={[styles.infoLabel, darkMode && styles.darkInfoLabel]}>
+              {t.webBusNumber}
+            </Text>
+          </View>
+          <Text style={[styles.infoValue, darkMode && styles.darkInfoValue]}>
+            {busno}
+          </Text>
+        </View>
+
+        <View style={[styles.divider, darkMode && styles.darkDivider]} />
+
+        <View style={styles.infoRow}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Ionicons
+              name="speedometer"
+              size={20}
+              color={darkMode ? "#3B82F6" : "#2563EB"}
+              style={{ marginRight: 8 }}
+            />
+            <Text style={[styles.infoLabel, darkMode && styles.darkInfoLabel]}>
+              {t.distance}
+            </Text>
+          </View>
+          <Text style={[styles.infoValue, darkMode && styles.darkInfoValue]}>
+            {storedDistance ? `${storedDistance.toFixed(2)} km` : t.fetching}
+          </Text>
+        </View>
+      </View>
+
+      <View
+        style={[styles.highlightCard, darkMode && styles.darkHighlightCard]}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Ionicons
+            name="wallet"
+            size={24}
+            color="#FFFFFF"
+            style={{ marginRight: 8 }}
+          />
+          <Text style={[styles.amountText, darkMode && styles.darkAmountText]}>
+            {t.totalAmount} ₹{(fareprice * seatCount).toFixed(2)}
+          </Text>
+        </View>
+      </View>
+
+      <View style={[styles.card, darkMode && styles.darkCard]}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginBottom: 16,
+          }}
+        >
+          <Ionicons
+            name="people"
+            size={20}
+            color={darkMode ? "#3B82F6" : "#2563EB"}
+            style={{ marginRight: 8 }}
+          />
+          <Text style={[styles.infoLabel, darkMode && styles.darkInfoLabel]}>
+            {t.webSeats}
+          </Text>
+        </View>
+
+        <View style={styles.seatContainer}>
+          <TouchableOpacity
+            onPress={() => setSeatCount(Math.max(1, seatCount - 1))}
+            style={[styles.seatButton, darkMode && styles.darkSeatButton]}
+          >
+            <Ionicons
+              name="remove"
+              size={20}
+              color={darkMode ? "#F8FAFC" : "#1E293B"}
+            />
+          </TouchableOpacity>
+          <Text style={[styles.seatCount, darkMode && styles.darkSeatCount]}>
+            {seatCount}
+          </Text>
+          <TouchableOpacity
+            onPress={() => setSeatCount(seatCount + 1)}
+            style={[styles.seatButton, darkMode && styles.darkSeatButton]}
+          >
+            <Ionicons
+              name="add"
+              size={20}
+              color={darkMode ? "#F8FAFC" : "#1E293B"}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <TouchableOpacity
         style={[styles.button, darkMode && styles.darkButton]}
         onPress={handlePayment}
       >
-        <Text style={[styles.buttonText, darkMode && styles.darkButtonText]}>{t.payNow}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Ionicons
+            name="card"
+            size={20}
+            color="#FFFFFF"
+            style={{ marginRight: 8 }}
+          />
+          <Text style={styles.buttonText}>
+            {t.webPayButton((fareprice * seatCount).toFixed(2))}
+          </Text>
+        </View>
       </TouchableOpacity>
 
       <Modal visible={showWebView} transparent animationType="slide">
-        <View style={[styles.webViewContainer, darkMode && styles.darkWebViewContainer]}>
+        <View
+          style={[
+            styles.webViewContainer,
+            darkMode && styles.darkWebViewContainer,
+          ]}
+        >
           {paymentUrl ? (
             <WebView
               source={{ uri: paymentUrl }}
@@ -640,82 +810,15 @@ const Payment = ({ route, navigation }) => {
               onMessage={onMessage}
             />
           ) : (
-            <ActivityIndicator size="large" color={darkMode ? "#4DA8FF" : "#0000ff"} />
+            <ActivityIndicator
+              size="large"
+              color={darkMode ? "#3B82F6" : "#2563EB"}
+            />
           )}
         </View>
       </Modal>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f8f9fa",
-  },
-  darkContainer: {
-    backgroundColor: "#111",
-  },
-  text: {
-    fontSize: 20,
-    marginBottom: 10,
-    color: "#2d3748",
-  },
-  darkText: {
-    color: "#FFFFFF",
-  },
-  button: {
-    backgroundColor: "#3399cc",
-    padding: 15,
-    borderRadius: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  darkButton: {
-    backgroundColor: "#4DA8FF",
-    shadowColor: "#000",
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  darkButtonText: {
-    color: "#FFFFFF",
-  },
-  seatContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  seatButton: {
-    backgroundColor: "#3399cc",
-    padding: 10,
-    borderRadius: 5,
-    marginHorizontal: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  darkSeatButton: {
-    backgroundColor: "#4DA8FF",
-    shadowColor: "#000",
-  },
-  webViewContainer: {
-    flex: 1,
-    backgroundColor: "#fff",
-    marginTop: 50,
-  },
-  darkWebViewContainer: {
-    backgroundColor: "#111",
-  },
-});
 
 export default Payment;
