@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  Alert,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import { Picker } from "@react-native-picker/picker";
 import styles from "./AdbusesStyles";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
@@ -17,10 +17,7 @@ import axios from "axios";
 
 const AdBuses = ({ navigation, route }) => {
   const { adminData } = route.params || {};
-  useLayoutEffect(() => {
-    navigation.setOptions({ headerShown: false });
-  }, [navigation]);
-
+  const [activeTab, setActiveTab] = useState("basic");
   const [busRouteNo, setBusRouteNo] = useState("");
   const [busNo, setBusNo] = useState("");
   const [busPassword, setBusPassword] = useState("");
@@ -42,21 +39,25 @@ const AdBuses = ({ navigation, route }) => {
   const [currentStage, setCurrentStage] = useState("");
 
   const busTypes = ["AC", "Non-AC"];
-  
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ headerShown: false });
+  }, [navigation]);
 
   useEffect(() => {
     const fetchStates = async () => {
       try {
-        const statesres = await axios.get(`${API_BASE_URL}/api/busroutes/getstates`);
+        const statesres = await axios.get(
+          `${API_BASE_URL}/api/busroutes/getstates`
+        );
         setStates(statesres.data.states);
       } catch (error) {
         console.error("Error fetching states:", error);
       }
     };
-  
     fetchStates();
   }, []);
-  
+
   const handleStateChange = async (selectedState) => {
     setState(selectedState);
     setCity(""); // Reset city selection
@@ -68,7 +69,7 @@ const AdBuses = ({ navigation, route }) => {
         `${API_BASE_URL}/api/busroutes/getcities/${selectedState}`
       );
       if (response.data.success) {
-        setCities(response.data.cities); 
+        setCities(response.data.cities);
       } else {
         Alert.alert("No Cities Found", response.data.message);
       }
@@ -114,24 +115,77 @@ const AdBuses = ({ navigation, route }) => {
   };
 
   const handleAddBus = async () => {
-    if (
-      !busRouteNo ||
-      !busNo ||
-      !busPassword ||
-      !totalShifts ||
-      !totalSeats ||
-      !availableSeats ||
-      !busType ||
-      !state ||
-      !city ||
-      !fromStage ||
-      !toStage ||
-      filteredStages().length === 0
-    ) {
-      alert("Please fill all the fields correctly.");
+    const requiredFields = {
+      "Bus Route No": busRouteNo,
+      "Bus Number": busNo,
+      "Bus Password": busPassword,
+      "Total Shifts": totalShifts,
+      "Total Seats": totalSeats,
+      "Available Seats": availableSeats,
+      "Bus Type": busType,
+      State: state,
+      City: city,
+      "From Stage": fromStage,
+      "To Stage": toStage,
+    };
+
+    // Check for empty fields
+    const missingFields = Object.entries(requiredFields)
+      .filter(([_, value]) => !value)
+      .map(([field]) => field);
+
+    // Check if we have stages for pricing/schedule
+    const hasStages = filteredStages().length > 0;
+
+    if (missingFields.length > 0) {
+      console.log("tttg");
+      const errorMessage = `Please fill in the following fields:\n${missingFields.join(
+        "\n"
+      )}`;
+      Alert.alert("Missing Information", errorMessage);
       return;
     }
 
+    if (!hasStages) {
+      console.log("jjjjj");
+      Alert.alert("Route Error", "Please select valid From and To stages");
+      return;
+    }
+    
+    // Check if all timings are set
+    const missingTimings = filteredStages()
+    .filter((stage) => !timings[stage])
+    .map((stage) => `Timing for ${stage}`);
+    
+    if (missingTimings.length > 0) {
+      Alert.alert(
+        "Missing Timings",
+        `Please set timings for:\n${missingTimings.join("\n")}`
+      );
+      return;
+    }
+    
+    // Check if all required prices are set
+    const missingPrices = [];
+    filteredStages().forEach((from, i) => {
+      filteredStages()
+      .slice(i + 1)
+      .forEach((to) => {
+        if (!prices[`${from}-${to}`]) {
+          missingPrices.push(`Price from ${from} to ${to}`);
+        }
+      });
+    });
+    
+    if (missingPrices.length > 0) {
+      Alert.alert(
+        "Missing Prices",
+        `Please set prices for:\n${missingPrices.join("\n")}`
+      );
+      return;
+    }
+    
+    // All validations passed - proceed with submission
     const busData = {
       busRouteNo,
       busNo,
@@ -148,27 +202,31 @@ const AdBuses = ({ navigation, route }) => {
       timings,
       adminId: adminData._id,
     };
-
+    console.log("kkkkk");
+    
+    setLoading(true);
     try {
+      console.log(busData)
       const response = await axios.post(
         `${API_BASE_URL}/api/Admin/buses/add`,
         busData,
-        {
-          headers: { "Content-Type": "application/json" },
-        }
+        { headers: { "Content-Type": "application/json" } }
       );
 
       if (response.status === 201) {
-        alert("Bus added successfully!");
+        Alert.alert("Success", "Bus added successfully!");
         resetForm();
       } else {
-        alert("Failed to add bus: " + response.data.message);
+        Alert.alert("Error", response.data.message || "Failed to add bus");
       }
     } catch (error) {
       console.error("Error adding bus:", error);
-      alert(
-        "Error adding bus: " + (error.response?.data.message || error.message)
+      Alert.alert(
+        "Error",
+        error.response?.data.message || error.message || "Failed to add bus"
       );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -218,157 +276,288 @@ const AdBuses = ({ navigation, route }) => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Add Bus Details</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Add New Bus</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Bus Route No"
-        value={busRouteNo}
-        onChangeText={setBusRouteNo}
-        keyboardType="text"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Bus No"
-        value={busNo}
-        onChangeText={setBusNo}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Bus Password"
-        value={busPassword}
-        onChangeText={setBusPassword}
-        secureTextEntry
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Total No of Shifts"
-        value={totalShifts}
-        onChangeText={setTotalShifts}
-        keyboardType="numeric"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Total Seats"
-        value={totalSeats}
-        onChangeText={setTotalSeats}
-        keyboardType="numeric"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Available Seats"
-        value={availableSeats}
-        onChangeText={setAvailableSeats}
-        keyboardType="numeric"
-      />
-
-      <Picker
-        selectedValue={busType}
-        onValueChange={setBusType}
-        style={styles.picker}
-      >
-        {busTypes.map((type, index) => (
-          <Picker.Item key={index} label={type} value={type} />
-        ))}
-      </Picker>
-
-      <Picker
-        selectedValue={state}
-        onValueChange={handleStateChange}
-        style={styles.picker}
-      >
-        {states.map((s, index) => (
-          <Picker.Item key={index} label={s} value={s} />
-        ))}
-      </Picker>
-
-      {loading && <ActivityIndicator size="large" color="#007bff" />}
-
-      {state && cities.length > 0 && (
-        <Picker
-          selectedValue={city}
-          onValueChange={handleCityChange}
-          style={styles.picker}
+      {/* Tab Navigation */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === "route" && styles.activeTab]}
+          onPress={() => setActiveTab("route")}
         >
-          {cities.map((c, index) => (
-            <Picker.Item key={index} label={c} value={c} />
-          ))}
-        </Picker>
-      )}
-
-      {city && (
-        <View>
-          <Text style={styles.subtitle}>Select Stages</Text>
-          <Picker
-            selectedValue={fromStage}
-            onValueChange={setFromStage}
-            style={styles.picker}
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "route" && styles.activeTabText,
+            ]}
           >
-            {stages.map((stage, index) => (
-              <Picker.Item key={index} label={stage} value={stage} />
-            ))}
-          </Picker>
-          <Picker
-            selectedValue={toStage}
-            onValueChange={setToStage}
-            style={styles.picker}
+            Route Details
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === "basic" && styles.activeTab]}
+          onPress={() => setActiveTab("basic")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "basic" && styles.activeTabText,
+            ]}
           >
-            {stages.map((stage, index) => (
-              <Picker.Item key={index} label={stage} value={stage} />
-            ))}
-          </Picker>
+            Basic Info
+          </Text>
+        </TouchableOpacity>
 
-          <Text style={styles.subtitle}>Set Timings for Selected Stages</Text>
-          {filteredStages().map((stage) => (
-            <View key={stage} style={styles.row}>
-              <Text>{stage}:</Text>
-              <TouchableOpacity onPress={() => showTimePicker(stage)}>
-                <Text style={styles.timeText}>
-                  {timings[stage] || "Select Time"}
-                </Text>
-              </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            activeTab === "schedule" && styles.activeTab,
+          ]}
+          onPress={() => setActiveTab("schedule")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "schedule" && styles.activeTabText,
+            ]}
+          >
+            Schedule
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* Basic Info Tab */}
+        {activeTab === "basic" && (
+          <View style={styles.tabContent}>
+            <Text style={styles.sectionTitle}>Basic Information</Text>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Bus Route No</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter route number"
+                value={busRouteNo}
+                onChangeText={setBusRouteNo}
+              />
             </View>
-          ))}
 
-          <DateTimePickerModal
-            isVisible={isTimePickerVisible}
-            mode="time"
-            onConfirm={handleConfirmTime}
-            onCancel={hideTimePicker}
-          />
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Bus Number</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter bus number"
+                value={busNo}
+                onChangeText={setBusNo}
+              />
+            </View>
 
-          <Text style={styles.subtitle}>Set Prices for Selected Stages</Text>
-          {filteredStages().map((from, i) =>
-            filteredStages()
-              .slice(i + 1)
-              .map((to) => (
-                <View key={`${from}-${to}`} style={styles.row}>
-                  <Text>
-                    {from} to {to}:
-                  </Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter Price"
-                    keyboardType="numeric"
-                    value={prices[`${from}-${to}`] || ""}
-                    onChangeText={(value) => handlePriceChange(from, to, value)}
-                  />
-                </View>
-              ))
-          )}
-        </View>
-      )}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Bus Password</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Set password"
+                value={busPassword}
+                onChangeText={setBusPassword}
+                secureTextEntry
+              />
+            </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleAddBus}>
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Add Bus</Text>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Bus Type</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={busType}
+                  onValueChange={setBusType}
+                  style={styles.picker}
+                >
+                  {busTypes.map((type, index) => (
+                    <Picker.Item key={index} label={type} value={type} />
+                  ))}
+                </Picker>
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Total Seats</Text>
+              <TextInput
+                keyboardType="numeric"
+                style={styles.input}
+                placeholder="Set Total Seats"
+                value={totalSeats}
+                onChangeText={setTotalSeats}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Available seats</Text>
+              <TextInput
+                style={styles.input}
+                placeholder=" Set Available seats"
+                value={availableSeats}
+                onChangeText={setAvailableSeats}
+                keyboardType="numeric"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Total Shifts</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Set Total Shifts"
+                value={totalShifts}
+                onChangeText={setTotalShifts}
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
         )}
-      </TouchableOpacity>
-    </ScrollView>
+
+        {/* Route Details Tab */}
+        {activeTab === "route" && (
+          <View style={styles.tabContent}>
+            <Text style={styles.sectionTitle}>Route Information</Text>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>State</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={state}
+                  onValueChange={handleStateChange}
+                  style={styles.picker}
+                >
+                  {states.map((s, index) => (
+                    <Picker.Item key={index} label={s} value={s} />
+                  ))}
+                </Picker>
+              </View>
+            </View>
+
+            {state && (
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>City</Text>
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={city}
+                    onValueChange={handleCityChange}
+                    style={styles.picker}
+                  >
+                    {cities.map((c, index) => (
+                      <Picker.Item key={index} label={c} value={c} />
+                    ))}
+                  </Picker>
+                </View>
+              </View>
+            )}
+
+            {city && (
+              <>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>From Stage</Text>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={fromStage}
+                      onValueChange={setFromStage}
+                      style={styles.picker}
+                    >
+                      {stages.map((stage, index) => (
+                        <Picker.Item key={index} label={stage} value={stage} />
+                      ))}
+                    </Picker>
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>To Stage</Text>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={toStage}
+                      onValueChange={setToStage}
+                      style={styles.picker}
+                    >
+                      {stages.map((stage, index) => (
+                        <Picker.Item key={index} label={stage} value={stage} />
+                      ))}
+                    </Picker>
+                  </View>
+                </View>
+              </>
+            )}
+          </View>
+        )}
+
+        {/* Schedule Tab */}
+        {activeTab === "schedule" && (
+          <View style={styles.tabContent}>
+            <Text style={styles.sectionTitle}>Schedule & Pricing</Text>
+
+            {filteredStages().length > 0 && (
+              <>
+                <Text style={styles.subtitle}>Set Timings</Text>
+                {filteredStages().map((stage) => (
+                  <View key={stage} style={styles.timeInputGroup}>
+                    <Text style={styles.stageLabel}>{stage}</Text>
+                    <TouchableOpacity
+                      style={styles.timeButton}
+                      onPress={() => showTimePicker(stage)}
+                    >
+                      <Text style={styles.timeButtonText}>
+                        {timings[stage] || "Select Time"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+
+                <Text style={styles.subtitle}>Set Prices</Text>
+                {filteredStages().map((from, i) =>
+                  filteredStages()
+                    .slice(i + 1)
+                    .map((to) => (
+                      <View
+                        key={`${from}-${to}`}
+                        style={styles.priceInputGroup}
+                      >
+                        <Text style={styles.routeLabel}>
+                          {from} to {to}
+                        </Text>
+                        <TextInput
+                          style={styles.priceInput}
+                          placeholder="Enter price"
+                          keyboardType="numeric"
+                          value={prices[`${from}-${to}`] || ""}
+                          onChangeText={(value) =>
+                            handlePriceChange(from, to, value)
+                          }
+                        />
+                      </View>
+                    ))
+                )}
+              </>
+            )}
+          </View>
+        )}
+
+        <DateTimePickerModal
+          isVisible={isTimePickerVisible}
+          mode="time"
+          onConfirm={handleConfirmTime}
+          onCancel={hideTimePicker}
+        />
+
+        {activeTab === "schedule" && (
+          <TouchableOpacity
+            style={styles.submitButton}
+            onPress={handleAddBus}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.submitButtonText}>Add Bus</Text>
+            )}
+          </TouchableOpacity>
+        )}
+      </ScrollView>
+    </View>
   );
 };
-
 export default AdBuses;
