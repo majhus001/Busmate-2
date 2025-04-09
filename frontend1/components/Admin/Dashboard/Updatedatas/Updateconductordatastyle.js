@@ -1,60 +1,156 @@
-import { StyleSheet } from "react-native";
+// Updateconductordatastyle.js
+import { StyleSheet, Platform } from "react-native";
 
-const styles = StyleSheet.create({
-  Admincontainer: {
-    flex: 1,
-    backgroundColor: "#f5f9ff", // Light blue background
+export default StyleSheet.create({
+  container: {
+    flexGrow: 1,
+    backgroundColor: 'transparent',
+    paddingBottom: 40,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     padding: 20,
+    paddingTop: Platform.OS === 'ios' ? 50 : 30,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e8e8e8',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    zIndex: 10,
   },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#004aad", // Dark blue header
-    textAlign: "center",
-    marginBottom: 15,
+  backButton: {
+    padding: 5,
   },
-  inputLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#003366", // Deep blue labels
-    marginBottom: 5,
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#007AFF',
+  },
+  profileSection: {
+    alignItems: 'center',
+    marginVertical: 25,
+  },
+  profileImageContainer: {
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    backgroundColor: '#f0f4ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  profileImage: {
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    borderWidth: 3,
+    borderColor: '#fff',
+  },
+  editIcon: {
+    position: 'absolute',
+    bottom: 5,
+    right: 5,
+    backgroundColor: '#007AFF',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  formSection: {
+    paddingHorizontal: 30,
+    marginBottom: 20,
   },
   inputField: {
-    backgroundColor: "#ffffff",
+    marginBottom: 22,
+  },
+  label: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#444',
+    marginBottom: 10,
+    marginLeft: 8,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: "#007bff", // Blue border
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    borderColor: '#e0e6ff',
+    borderRadius: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  fieldIcon: {
+    marginRight: 12,
+    color: '#007AFF',
+  },
+  input: {
+    flex: 1,
     fontSize: 16,
-    borderRadius: 8,
-    color: "#333",
-    marginBottom: 15,
+    color: '#333',
+    paddingVertical: 0,
+  },
+  pickerContainer: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e0e6ff',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  buttonContainer: {
+    paddingHorizontal: 30,
+    marginTop: 20,
+  },
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   updateButton: {
-    backgroundColor: "#007bff", // Primary blue button
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+    backgroundColor: '#007AFF',
   },
   deleteButton: {
-    backgroundColor: "red", // Red color for delete action
-    paddingVertical: 12, // Adds vertical padding
-    paddingHorizontal: 20, // Adds horizontal padding
-    borderRadius: 8, // Rounded corners
-    alignItems: "center", // Centers text inside the button
-    marginTop: 10, // Adds space above the button
+    backgroundColor: '#ff453a',
   },
   buttonText: {
-    color: "white", // White text color
-    fontSize: 16, // Medium font size
-    fontWeight: "bold", // Bold text
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '600',
+    marginLeft: 10,
   },
 });
-
-export default styles;

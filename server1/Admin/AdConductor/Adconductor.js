@@ -148,6 +148,7 @@ router.delete("/delete/:id", async (req, res) => {
  */
 router.put("/update/:id", upload.single("image"), async (req, res) => {
   try {
+    
     const conductorId = req.params.id;
     const updatedData = req.body;
 

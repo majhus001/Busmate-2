@@ -8,6 +8,7 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
+  Platform,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
@@ -15,8 +16,8 @@ import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { LinearGradient } from "expo-linear-gradient";
-import styles from "./AdminProfileStyles";
 import { API_BASE_URL } from "../../../apiurl";
+import styles from "./AdminProfileStyles"
 
 const AdminProfile = ({ navigation }) => {
   const [adminData, setAdminData] = useState(null);
@@ -28,9 +29,7 @@ const AdminProfile = ({ navigation }) => {
     city: "",
     state: "",
   });
-  const [profileImage, setProfileImage] = useState(
-    "https://via.placeholder.com/150"
-  );
+  const [profileImage, setProfileImage] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -40,7 +39,9 @@ const AdminProfile = ({ navigation }) => {
         try {
           const storedData = await SecureStore.getItemAsync("currentUserData");
           if (storedData) {
-            setAdminData(JSON.parse(storedData));
+            const data = JSON.parse(storedData);
+            setAdminData(data);
+            setProfileImage(data.image || null);
           }
         } catch (error) {
           console.error("Error fetching admin data:", error);
@@ -60,49 +61,47 @@ const AdminProfile = ({ navigation }) => {
         city: adminData.city || "",
         state: adminData.state || "",
       });
-      setProfileImage(adminData.image || "https://via.placeholder.com/150");
     }
   }, [adminData]);
 
-  useEffect(() => {
-    const requestPermission = async () => {
-      const { status } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(
-          "Permission required",
-          "We need access to your photo library to change the profile image."
-        );
-      }
-    };
-    requestPermission();
-  }, []);
-
   const pickImage = async () => {
     if (!isEditing) return;
+    
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission required", "We need access to your photos to change your profile picture.");
+      return;
+    }
+
     setLoading(true);
-    const result = await ImagePicker.launchImageLibraryAsync({
-      allowsEditing: true,
-      aspect: [4, 4],
-      quality: 1,
-    });
-    setLoading(false);
-    if (!result.canceled) {
-      setProfileImage(result.assets[0].uri);
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets?.length > 0) {
+        setProfileImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleChange = (field, value) => {
-    setUser((prevUser) => ({ ...prevUser, [field]: value }));
+    setUser(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleEdit = () => setIsEditing(true);
-
   const handleSave = async () => {
-    if (!user.name.trim() || !user.age.trim() || !user.city.trim() || !user.state.trim()) {
-      Alert.alert("Error", "All fields must be filled!");
+    if (!user.name.trim()) {
+      Alert.alert("Validation Error", "Please enter your name");
       return;
     }
+
     setLoading(true);
     try {
       const formData = new FormData();
@@ -112,7 +111,8 @@ const AdminProfile = ({ navigation }) => {
       formData.append("age", user.age);
       formData.append("city", user.city);
       formData.append("state", user.state);
-      if (profileImage !== "https://via.placeholder.com/150") {
+
+      if (profileImage && !profileImage.startsWith("http")) {
         const uriParts = profileImage.split(".");
         const fileType = uriParts[uriParts.length - 1];
         formData.append("image", {
@@ -121,78 +121,147 @@ const AdminProfile = ({ navigation }) => {
           type: `image/${fileType}`,
         });
       }
-      if (!adminData?._id) {
-        Alert.alert("Error", "Admin ID not found.");
-        return;
-      }
+
       const response = await axios.put(
         `${API_BASE_URL}/api/userdata/admin/profileupdate/${adminData._id}`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
-      if (response.status === 200) {
-        Alert.alert("Success", "Profile updated successfully!");
-        setIsEditing(false);
+
+      if (response.data.success) {
         await SecureStore.setItemAsync("currentUserData", JSON.stringify(response.data.admin));
+        setIsEditing(false);
+        Alert.alert("Success", "Profile updated successfully");
       }
     } catch (error) {
-      Alert.alert("Error", "Failed to update profile.");
+      console.error("Update error:", error);
+      Alert.alert("Error", "Failed to update profile. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <LinearGradient colors={["#4facfe", "#00f2fe"]} style={styles.gradient}>
-      <ScrollView>
-        <View style={styles.container}>
-          <Text style={styles.title}>Admin Profile</Text>
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity 
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        >
+          <Icon name="arrow-back" size={24} color="#007AFF" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Admin Profile</Text>
+        <View style={{ width: 24 }} />
+      </View>
 
-          <TouchableOpacity onPress={pickImage} disabled={!isEditing} style={styles.profileContainer}>
-            <Image source={{ uri: profileImage }} style={styles.profileImage} />
-            {isEditing && <Icon name="photo-camera" size={24} color="white" style={styles.cameraIcon} />}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* Profile Picture Section */}
+        <View style={styles.profileSection}>
+          <TouchableOpacity 
+            onPress={pickImage} 
+            disabled={!isEditing}
+            activeOpacity={0.8}
+          >
+            <View style={styles.profileImageContainer}>
+              <Image
+                source={{
+                  uri: profileImage || "https://i.imgur.com/Td9XQYX.png",
+                }}
+                style={styles.profileImage}
+              />
+              {isEditing && (
+                <View style={styles.editIcon}>
+                  <Icon name="edit" size={18} color="white" />
+                </View>
+              )}
+            </View>
           </TouchableOpacity>
+        </View>
 
-          {loading && <ActivityIndicator size="large" color="#lightblue" style={styles.loader} />}
-
-          <View style={styles.form}>
-            {[
-              { label: "Name", field: "name", icon: "person" },
-              { label: "Email", field: "email", icon: "email", editable: false },
-              { label: "Password", field: "password", icon: "lock" },
-              { label: "Age", field: "age", icon: "calendar-today", keyboardType: "numeric" },
-              { label: "City", field: "city", icon: "location-city" },
-              { label: "State", field: "state", icon: "place" },
-            ].map(({ label, field, icon, keyboardType, editable = true }) => (
-              <View key={field} style={styles.inputContainer}>
-                <Icon name={icon} size={20} style={styles.inputIcon} />
+        {/* Form Section */}
+        <View style={styles.formContainer}>
+          {[
+            { label: "Full Name", field: "name", icon: "person", required: true },
+            { label: "Email", field: "email", icon: "email", editable: false },
+            { label: "Password", field: "password", icon: "lock", secure: true },
+            { label: "Age", field: "age", icon: "cake", keyboardType: "numeric" },
+            { label: "City", field: "city", icon: "location-city" },
+            { label: "State", field: "state", icon: "map" },
+          ].map((item) => (
+            <View key={item.field} style={styles.inputField}>
+              <Text style={styles.inputLabel}>
+                {item.label}
+                {item.required && <Text style={{ color: '#FF3B30' }}> *</Text>}
+              </Text>
+              <View style={styles.inputContainer}>
+                <Icon
+                  name={item.icon}
+                  size={20}
+                  color="#007AFF"
+                  style={styles.inputIcon}
+                />
                 <TextInput
-                  style={[styles.input, !editable && styles.disabledInput]}
-                  value={user[field]}
-                  onChangeText={(text) => handleChange(field, text)}
-                  editable={isEditing && editable}
-                  keyboardType={keyboardType}
+                  style={[
+                    styles.input,
+                    !isEditing && styles.inputDisabled,
+                    item.editable === false && styles.inputDisabled
+                  ]}
+                  value={user[item.field]}
+                  onChangeText={(text) => handleChange(item.field, text)}
+                  editable={isEditing && (item.editable !== false)}
+                  secureTextEntry={item.secure}
+                  keyboardType={item.keyboardType}
+                  placeholder={`Enter ${item.label.toLowerCase()}`}
+                  placeholderTextColor="#999"
                 />
               </View>
-            ))}
-          </View>
+            </View>
+          ))}
+        </View>
 
-          <View style={styles.buttonContainer}>
-            {!isEditing ? (
-              <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
-                <Icon name="edit" size={20} color="#fff" />
-                <Text style={styles.editButtonText}>Edit</Text>
+        {/* Action Buttons */}
+        <View style={styles.buttonContainer}>
+          {!isEditing ? (
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => setIsEditing(true)}
+              activeOpacity={0.8}
+            >
+              <Icon name="edit" size={20} color="white" />
+              <Text style={styles.buttonText}>Edit Profile</Text>
+            </TouchableOpacity>
+          ) : (
+            <>
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleSave}
+                disabled={loading}
+                activeOpacity={0.8}
+              >
+                {loading ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <>
+                    <Icon name="save" size={20} color="white" />
+                    <Text style={styles.buttonText}>Save Changes</Text>
+                  </>
+                )}
               </TouchableOpacity>
-            ) : (
-              <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                <Icon name="save" size={20} color="#fff" />
-                <Text style={styles.saveButtonText}>Save</Text>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setIsEditing(false)}
+                disabled={loading}
+                activeOpacity={0.8}
+              >
+                <Icon name="close" size={20} color="#007AFF" />
+                <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
-            )}
-          </View>
+            </>
+          )}
         </View>
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 };
 

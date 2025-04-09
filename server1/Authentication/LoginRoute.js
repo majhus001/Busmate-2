@@ -5,17 +5,18 @@ const Conductor = require("../Module/Conductor_sc");
 
 router.post("/login", async (req, res) => {
   const { Username, password, role } = req.body; // Changed from userName to Username
-
+  
   try {
     let user;
     let Model;
-
+    
     switch (role) {
       case "Conductor":
         console.log("fghjk");
         Model = Conductor;
         user = await Model.findOne({ Username, password });
-
+        
+        console.log(user)
         if (user) {
           user.LoggedIn = true;
           await user.save();
@@ -42,6 +43,7 @@ router.post("/login", async (req, res) => {
           message: "Login successful!",
           user,
         };
+        console.log("Login success..")
         
     res.json(userResponse);
   } catch (error) {

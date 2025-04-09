@@ -1,0 +1,252 @@
+import { StyleSheet } from "react-native";
+
+export default StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    padding: 16,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+    marginTop: 20,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  addButton: {
+    backgroundColor: "#007AFF",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 2,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    marginBottom: 20,
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: "#000",
+  },
+  statsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  statCard: {
+    width: "30%",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  statNumber: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#007AFF",
+  },
+  statLabel: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 4,
+  },
+  loader: {
+    marginTop: 40,
+  },
+  busCard: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    marginBottom: 16,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  busHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    justifyContent: "space-between",
+  },
+  busNumberContainer: {
+    backgroundColor: "#007AFF",
+    borderRadius: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  busNumber: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  busInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  routeText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#000",
+  },
+  routeNumber: {
+    fontSize: 14,
+    color: "#666",
+  },
+  statusIndicator: {
+    borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    marginRight: 10,
+  },
+  active: {
+    backgroundColor: "rgba(0, 122, 255, 0.1)",
+  },
+  inactive: {
+    backgroundColor: "rgba(255, 59, 48, 0.1)",
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  expandedContent: {
+    padding: 16,
+    paddingTop: 0,
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  infoText: {
+    marginLeft: 10,
+    fontSize: 15,
+    color: "#333",
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#007AFF",
+    marginTop: 12,
+    marginBottom: 10,
+  },
+  timingRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  timingStage: {
+    fontSize: 14,
+    color: "#333",
+  },
+  timeBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    borderRadius: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  timingText: {
+    marginLeft: 4,
+    fontSize: 14,
+    color: "#333",
+  },
+  priceRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  priceRoute: {
+    fontSize: 14,
+    color: "#333",
+  },
+  priceBadge: {
+    backgroundColor: "rgba(0, 122, 255, 0.1)",
+    borderRadius: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  priceText: {
+    fontSize: 14,
+    color: "#007AFF",
+    fontWeight: "600",
+  },
+  noDataText: {
+    fontSize: 14,
+    color: "#999",
+    fontStyle: "italic",
+  },
+  editButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#007AFF",
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 16,
+  },
+  buttonText: {
+    marginLeft: 8,
+    color: "#fff",
+    fontWeight: "500",
+  },
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 40,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: "#999",
+    marginTop: 16,
+  },
+  clearSearch: {
+    color: "#007AFF",
+    marginTop: 8,
+    textDecorationLine: "underline",
+  },
+  pagination: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginVertical: 20,
+  },
+  paginationButton: {
+    padding: 10,
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  pageText: {
+    marginHorizontal: 16,
+    color: "#666",
+  },
+});

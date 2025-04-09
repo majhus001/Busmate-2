@@ -1,95 +1,160 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
   container: {
     flexGrow: 1,
-    padding: 20,
-    backgroundColor: "#f4f6f8",
+    backgroundColor: '#F8F9FA',
+    padding: 16,
+    paddingBottom: 32,
   },
-
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
   title: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "#003366",
-    marginBottom: 20,
-    textAlign: "center",
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1C1C1E',
   },
-
-  profileContainer: {
-    alignItems: "center",
-    marginBottom: 20,
+  notificationIcon: {
+    position: 'relative',
+    padding: 8,
   },
-
-  dashheader: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    padding: 10,
+  notificationBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: '#FF3B30',
     borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    width:"100%",
-    height:150,
-    marginVertical: 25,
-    gap:10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderColor: "#0056b3",
-    borderWidth: 2,
-    marginRight: 12,
+  notificationText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
-
-  welcomeText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
-  },
-
-  gridContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-
-  card: {
-    width: "48%",
-    backgroundColor: "#007bff",
-    padding: 20,
+  profileCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
     borderRadius: 12,
-    marginBottom: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
+    padding: 16,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
-    elevation: 5,
-    alignItems: "center",
+    elevation: 3,
   },
-
+  profileImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginRight: 16,
+  },
+  profileTextContainer: {
+    flex: 1,
+  },
+  welcomeText: {
+    fontSize: 14,
+    color: '#8E8E93',
+  },
+  adminName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    marginVertical: 4,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  locationText: {
+    fontSize: 13,
+    color: '#8E8E93',
+    marginLeft: 4,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statDivider: {
+    width: 1,
+    backgroundColor: '#F0F0F0',
+  },
+  statNumber: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#007AFF',
+    marginVertical: 4,
+  },
+  statLabel: {
+    fontSize: 13,
+    color: '#8E8E93',
+  },
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  card: {
+    width: '48%',
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderTopWidth: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
   cardTitle: {
-    fontSize: 16,
-    color: "#fff",
-    marginBottom: 8,
-    fontWeight: "bold",
-    textAlign: "center",
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#8E8E93',
+    flexShrink: 1, // Allows text to wrap if needed
   },
-
   cardValue: {
     fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
-    textAlign: "center",
+    fontWeight: '700',
+    color: '#007AFF',
+    marginLeft: 46, // Matches icon container width + margin
   },
-
   loader: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    marginTop: 40,
   },
 });
