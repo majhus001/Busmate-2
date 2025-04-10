@@ -8,15 +8,17 @@ const User = require("../Module/User");
 const otpStore = {};
 
 // OTP utils
-
 const generateOTP = () => crypto.randomInt(1000, 10000).toString(); // 4-digit OTP
 const setOTP = (email, otp) => { otpStore[email] = otp; };
-const verifyOTP = (email, otp) => otpStore[email] === otp;
+const verifyOTP = (email, otp) => {
+  const storedOTP = otpStore[email];
+  return storedOTP && storedOTP === otp.trim(); // Ensure comparison is safe and trimmed
+};
 const clearOTP = (email) => { delete otpStore[email]; };
 
 // Nodemailer setup
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: "gmail",
   auth: {
     user: process.env.MAIL_USER,
     pass: process.env.MAIL_PASS,
@@ -36,7 +38,7 @@ const sendOTP = async (email, otp) => {
 // 1. Send OTP
 router.post("/signup", async (req, res) => {
   try {
-    const { Username, email, password, role, city, state } = req.body;
+    const { username, email, password, role, city, state } = req.body; // Changed Username to username
     console.log("Received Data:", req.body);
 
     const existingUser = await User.findOne({ email });
@@ -54,7 +56,7 @@ router.post("/signup", async (req, res) => {
 
     res.status(200).json({
       message: "OTP sent to email. Please verify to complete signup.",
-      userData: { Username, email, password, role, city, state },
+      userData: { username, email, password, role, city, state }, // Changed Username to username
     });
   } catch (error) {
     console.error("Signup Error:", error);
@@ -63,21 +65,20 @@ router.post("/signup", async (req, res) => {
 });
 
 // 2. Verify OTP & Register
-// 2. Verify OTP & Register
 router.post("/verify-otp", async (req, res) => {
   try {
-    const { Username, email, password, role, city, state, otp } = req.body;
+    const { username, email, password, role, city, state, otp } = req.body; // Changed Username to username
 
     console.log("Verifying OTP for:", email);
-    console.log("Received OTP:", otp);
-    console.log("Stored OTP:", otpStore[email]);
+    console.log("Received OTP:", otp, typeof otp); // Log type for debugging
+    console.log("Stored OTP:", otpStore[email], typeof otpStore[email]);
 
-    if (!verifyOTP(email, otp.trim())) {
+    if (!verifyOTP(email, otp)) {
       return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
     const user = new User({
-      Username,
+      Username: username, // Mongoose schema expects Username with capital 'U'
       email,
       password,
       role,
@@ -86,13 +87,13 @@ router.post("/verify-otp", async (req, res) => {
     });
 
     await user.save();
-    clearOTP(email); // remove from memory
+    clearOTP(email); // Remove from memory
 
     res.status(201).json({
       message: "User registered successfully!",
       user: {
-        _id: user._id, // ✅ important!
-        userName: user.Username,
+        _id: user._id,
+        userName: user.Username, // Match schema field name
         email: user.email,
         role: user.role,
       },
@@ -102,7 +103,5 @@ router.post("/verify-otp", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
-
 
 module.exports = router;

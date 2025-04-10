@@ -123,7 +123,7 @@ const Settings = ({navigation}) => {
   const handleLogout = () => {
     Alert.alert(t.logout, t.logoutConfirm, [
       { text: "Cancel", style: "cancel" },
-      { text: t.logout, onPress: () => navigation.replace('welcomepage') }
+      { text: t.logout, onPress: () => navigation.replace('Splash') }
     ]);
   };
 
