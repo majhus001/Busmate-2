@@ -8,6 +8,8 @@ import {
   Image,
   ScrollView,
   TextInput,
+  RefreshControl,
+  ToastAndroid,
 } from "react-native";
 import axios from "axios";
 import Icon from "react-native-vector-icons/Ionicons";
@@ -25,61 +27,70 @@ const AdminHome = ({ navigation, route }) => {
   const [selectedTab, setSelectedTab] = useState("Buses");
   const [expandedConductor, setExpandedConductor] = useState(null);
   const [complaints, setComplaints] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
   const busesPerPage = 5;
   const conductorsPerPage = 10;
 
   const [adminData, setAdminData] = useState(null);
 
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const storedData = await SecureStore.getItemAsync("currentUserData");
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        setAdminData(parsedData);
+        const adminId = parsedData._id;
+        const [busResponse, conductorResponse] = await Promise.all([
+          axios.get(`${API_BASE_URL}/api/Admin/buses/fetchbus/${adminId}`),
+          axios.get(
+            `${API_BASE_URL}/api/Admin/conductor/fetchconductor/${adminId}`
+          ),
+        ]);
+
+        setBuses(
+          busResponse.data.data.map((bus) => ({ ...bus, expanded: false }))
+        );
+        setConductors(conductorResponse.data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching data:", err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const fetchComplaints = async () => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/api/Conductor/complaints`
+      );
+      const unresolvedComplaints = response.data.filter(
+        (item) => item.status === false
+      );
+      setComplaints(unresolvedComplaints); // Store unresolved complaints
+    } catch (error) {
+      Alert.alert("Error", "Failed to load complaints.");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+      
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
-      const fetchData = async () => {
-        setLoading(true);
-        try {
-          const storedData = await SecureStore.getItemAsync("currentUserData");
-          if (storedData) {
-            const parsedData = JSON.parse(storedData);
-            setAdminData(parsedData);
-            console.log(parsedData);
-            const adminId = parsedData._id;
-            const [busResponse, conductorResponse] = await Promise.all([
-              axios.get(`${API_BASE_URL}/api/Admin/buses/fetchbus/${adminId}`),
-              axios.get(
-                `${API_BASE_URL}/api/Admin/conductor/fetchconductor/${adminId}`
-              ),
-            ]);
-
-            setBuses(
-              busResponse.data.data.map((bus) => ({ ...bus, expanded: false }))
-            );
-            setConductors(conductorResponse.data.data);
-          }
-        } catch (err) {
-          console.error("Error fetching data:", err);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      const fetchComplaints = async () => {
-        try {
-          const response = await axios.get(
-            `${API_BASE_URL}/api/Conductor/complaints`
-          );
-          const unresolvedComplaints = response.data.filter(
-            (item) => item.status === false
-          );
-          setComplaints(unresolvedComplaints); // Store unresolved complaints
-        } catch (error) {
-          Alert.alert("Error", "Failed to load complaints.");
-        } finally {
-          setLoading(false);
-        }
-      };
-
       fetchData();
       fetchComplaints();
     }, [])
   );
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchData();
+    ToastAndroid.show("Data refreshed ", ToastAndroid.SHORT);
+  };
 
   if (!buses || !conductors) {
     return (
@@ -161,6 +172,14 @@ const AdminHome = ({ navigation, route }) => {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor="#007AFF"
+        />
+      }
     >
       {/* Header Section */}
       <View style={styles.headerContainer}>
@@ -224,7 +243,7 @@ const AdminHome = ({ navigation, route }) => {
       <View style={styles.actionsContainer}>
         <TouchableOpacity
           style={styles.actionButton}
-          onPress={() => navigation.navigate("AddBuses")}
+          onPress={() => navigation.navigate("AddBuses", { adminData })}
         >
           <Icon name="add-circle" size={24} color="#007AFF" />
           <Text style={styles.actionText}>Add Bus</Text>

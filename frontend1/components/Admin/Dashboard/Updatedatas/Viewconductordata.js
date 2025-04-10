@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  ToastAndroid,
 } from "react-native";
 import axios from "axios";
 import { LinearGradient } from "expo-linear-gradient";
@@ -56,6 +57,8 @@ const Viewconductordata = ({ navigation }) => {
   const onRefresh = () => {
     setRefreshing(true);
     fetchData();
+    ToastAndroid.show('Conductors refreshed ', ToastAndroid.SHORT);
+    
   };
 
   const toggleDropdown = (id) => {

@@ -9,6 +9,7 @@ const UserSchema = new mongoose.Schema({
   city: { type: String, required: true },
   state: { type: String, required: true },
   image: { type: String, default: null },
+  LoggedIn: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });
 

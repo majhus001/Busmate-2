@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Image, ScrollView, TouchableOpacity, Alert } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  RefreshControl,
+  ToastAndroid,
+} from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 import styles from "./AdDashStyles";
 import { useFocusEffect } from "@react-navigation/native";
@@ -15,44 +24,55 @@ const AdDash = ({ navigation, route }) => {
   const [adminData, setAdminData] = useState(null);
   const [complaints, setComplaints] = useState([]);
   const [alertsCount, setAlertsCount] = useState(0);
-    
+  const [refreshing, setRefreshing] = useState(false);
+  const fetchAdminData = async () => {
+    try {
+      const storedData = await SecureStore.getItemAsync("currentUserData");
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        setAdminData(parsedData);
+      }
+    } catch (error) {
+      console.error("Error fetching admin data:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const fetchComplaints = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `${API_BASE_URL}/api/Conductor/complaints`
+      );
+      const unresolvedComplaints = response.data.filter(
+        (item) => item.status === false
+      );
+      setComplaints(unresolvedComplaints);
+      setAlertsCount(unresolvedComplaints.length);
+    } catch (error) {
+      Alert.alert("Error", "Failed to load complaints.");
+      console.error("Error fetching complaints:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
-      const fetchAdminData = async () => {
-        try {
-          const storedData = await SecureStore.getItemAsync("currentUserData");
-          if (storedData) {
-            const parsedData = JSON.parse(storedData);
-            setAdminData(parsedData);
-          }
-        } catch (error) {
-          console.error("Error fetching admin data:", error);
-        }
-      };
-
-      const fetchComplaints = async () => {
-        try {
-          setLoading(true);
-          const response = await axios.get(
-            `${API_BASE_URL}/api/Conductor/complaints`
-          );
-          const unresolvedComplaints = response.data.filter(
-            (item) => item.status === false
-          );
-          setComplaints(unresolvedComplaints);
-          setAlertsCount(unresolvedComplaints.length);
-        } catch (error) {
-          Alert.alert("Error", "Failed to load complaints.");
-          console.error("Error fetching complaints:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
-
       fetchAdminData();
       fetchComplaints();
     }, [])
   );
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchAdminData();
+    fetchComplaints();
+    ToastAndroid.show("Dashboard refreshed ", ToastAndroid.SHORT);
+  };
 
   const activeBusesCount = buses.filter((bus) => bus.LoggedIn).length;
   const inactiveBusesCount = buses.length - activeBusesCount;
@@ -118,19 +138,29 @@ const AdDash = ({ navigation, route }) => {
       value: "10+",
       icon: "document-text-outline",
       color: "#AF52DE",
-      onPress: () => navigation.navigate("Reports"),
+      onPress: () => navigation.navigate("adreports"),
     },
     {
       title: "Alerts",
       value: alertsCount > 0 ? `${alertsCount}+` : "0",
       icon: "alert-circle-outline",
       color: "#FF3B30",
-      onPress: () => navigation.navigate("Alerts", { complaints }),
+      onPress: () => navigation.navigate("statuscomplient", { complaints }),
     },
   ];
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor="#007AFF"
+        />
+      }
+    >
       {/* Header Section */}
       <View style={styles.header}>
         <Text style={styles.title}>Admin Dashboard</Text>

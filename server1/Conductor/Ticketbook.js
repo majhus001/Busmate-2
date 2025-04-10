@@ -4,7 +4,6 @@ const Ticket = require("../Module/EtmSchema");
 const Bus = require("../Module/BusSchema");
 
 router.post("/add_ticket", async (req, res) => {
-  
   try {
     let {
       routeName,
@@ -17,8 +16,9 @@ router.post("/add_ticket", async (req, res) => {
       paymentMethod,
       selectedCity,
       selectedState,
+      busId,
     } = req.body;
-    
+
     if (
       !routeName ||
       !busRouteNo ||
@@ -33,12 +33,12 @@ router.post("/add_ticket", async (req, res) => {
     ) {
       return res.status(400).json({ message: "All fields are required" });
     }
-    
+
     const numTickets = parseInt(ticketCount, 10); // FIXED: Using a new variable
     if (isNaN(numTickets) || numTickets <= 0) {
       return res.status(400).json({ message: "Invalid ticket count" });
     }
-    
+
     // Create and save the ticket
     const newTicket = new Ticket({
       routeName,
@@ -48,37 +48,38 @@ router.post("/add_ticket", async (req, res) => {
       ticketCount: numTickets,
       ticketPrice,
       paymentMethod,
+      busId,
       checkout: false,
     });
-    
+
     await newTicket.save();
     console.log("✅ Ticket issued successfully!");
-    
+
     const bus = await Bus.findOne({
       busRouteNo: busRouteNo,
       busNo: busplateNo,
       city: selectedCity,
       state: selectedState,
     });
-    
+
     if (!bus) {
       console.log("❌ No bus found for the given details.");
       return res
-      .status(404)
-      .json({ success: false, message: "Bus not found!" });
+        .status(404)
+        .json({ success: false, message: "Bus not found!" });
     }
-    
+
     console.log("🚍 Available Seats Before Booking:", bus.availableSeats);
-    
+
     if (bus.availableSeats + 20 >= numTickets) {
       bus.availableSeats -= numTickets;
       console.log("✅ Seats updated successfully.");
     } else {
       return res
-      .status(400)
-      .json({ success: false, message: "Not enough seats available" });
+        .status(400)
+        .json({ success: false, message: "Not enough seats available" });
     }
-    
+
     await bus.save();
     res.status(201).json({
       success: true,
@@ -185,7 +186,7 @@ router.put("/update/seats", async (req, res) => {
 
 router.post("/getseats/available", async (req, res) => {
   const { boardingPoint, busRouteNo } = req.body;
-  
+
   try {
     const tickets = await Ticket.find({
       busRouteNo: busRouteNo,
@@ -193,20 +194,39 @@ router.post("/getseats/available", async (req, res) => {
       checkout: false,
     });
 
-const checkoutseats = tickets.reduce(
-  (total, ticket) => total + (ticket.ticketCount || 0),
-  0
-);
+    const checkoutseats = tickets.reduce(
+      (total, ticket) => total + (ticket.ticketCount || 0),
+      0
+    );
 
-console.log("checking seat availability...", checkoutseats); 
-
+    console.log("checking seat availability...", checkoutseats);
 
     res.status(200).json({
-      checkoutseats
+      checkoutseats,
     });
   } catch (error) {
     console.error("Error fetching seats:", error);
     res.status(500).json({ message: "Server error fetching seats" });
+  }
+});
+
+router.get("/genrevenue/all/:adminId", async (req, res) => {
+  const { adminId } = req.params;
+
+  try {
+    const buses = await Bus.find({ adminId: adminId });
+
+    const allTickets = await Promise.all(
+      buses.map((bus) => Ticket.find({ busId: bus._id }))
+    );
+
+    // Flatten the nested array
+    const tickets = allTickets.flat();
+
+    res.status(200).json(tickets);
+  } catch (error) {
+    console.error("Error fetching tickets:", error);
+    res.status(500).json({ message: "Server error fetching tickets" });
   }
 });
 

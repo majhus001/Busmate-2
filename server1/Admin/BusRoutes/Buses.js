@@ -65,6 +65,7 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Bus Plate No and Password are required",
+        
       });
     }
 
@@ -102,8 +103,6 @@ router.get("/fetchbus/:adminId", async (req, res) => {
 
   try {
     const buses = await Bus.find({ adminId });
-
-    console.log(buses);
     res.json({ data: buses });
   } catch (error) {
     res.status(500).json({ error: error.message });

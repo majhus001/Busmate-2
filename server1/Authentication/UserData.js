@@ -28,79 +28,86 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage });
 
 // Profile Update Route
-router.put("/admin/profileupdate/:adminId", upload.single("image"), async (req, res) => {
-  
-  try {
-    const { name, email, password, age, city, state } = req.body;
-    const { adminId } = req.params;
+router.put(
+  "/admin/profileupdate/:adminId",
+  upload.single("image"),
+  async (req, res) => {
+    try {
+      const { name, email, password, age, city, state } = req.body;
+      const { adminId } = req.params;
 
-    const admin = await User.findById(adminId);
-    if (!admin) {
-      return res.status(404).json({ message: "Admin not found." });
+      const admin = await User.findById(adminId);
+      if (!admin) {
+        return res.status(404).json({ message: "Admin not found." });
+      }
+
+      // Update fields if provided
+      if (name) admin.name = name;
+      if (email) admin.email = email;
+      if (password) admin.password = password;
+      if (age) admin.age = age;
+      if (city) admin.city = city;
+      if (state) admin.state = state;
+
+      // Handle uploaded image
+      if (req.file) {
+        admin.image = req.file.path; // Update the image field (based on your schema)
+      }
+
+      await admin.save();
+
+      res.status(200).json({
+        success: true,
+        message: "Profile updated successfully.",
+        admin,
+      });
+    } catch (error) {
+      console.error("Profile Update Error:", error);
+      res.status(500).json({ message: "Internal server error." });
     }
-    
-    // Update fields if provided
-    if (name) admin.name = name;
-    if (email) admin.email = email;
-    if (password) admin.password = password;
-    if (age) admin.age = age;
-    if (city) admin.city = city;
-    if (state) admin.state = state;
-    
-    // Handle uploaded image
-    if (req.file) {
-      admin.image = req.file.path; // Update the image field (based on your schema)
-    }
-    
-    await admin.save();
-    
-    res.status(200).json({
-      success: true,
-      message: "Profile updated successfully.",
-      admin,
-    });
-  } catch (error) {
-    console.error("Profile Update Error:", error);
-    res.status(500).json({ message: "Internal server error." });
   }
-});
-router.put("/user/profileupdate/:userId", upload.single("image"), async (req, res) => {
-  try {
-    const { name, email, password, age, city, state } = req.body;
-    const { userId } = req.params;
+);
 
-    console.log("Received Image:", req.file); // Debugging Image Upload
+router.put(
+  "/user/profileupdate/:userId",
+  upload.single("image"),
+  async (req, res) => {
+    try {
+      const { name, email, password, age, city, state } = req.body;
+      const { userId } = req.params;
 
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
+      console.log("Received Image:", req.file); // Debugging Image Upload
+
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found." });
+      }
+
+      // Update fields if provided
+      if (name) user.Username = name;
+      if (email) user.email = email;
+      if (password) user.password = password;
+      if (age) user.age = age;
+      if (city) user.city = city;
+      if (state) user.state = state;
+
+      // Handle uploaded image
+      if (req.file) {
+        user.image = req.file.path; // Save image path
+      }
+
+      await user.save();
+
+      res.status(200).json({
+        message: "Profile updated successfully.",
+        user,
+      });
+    } catch (error) {
+      console.error("Profile Update Error:", error);
+      res.status(500).json({ message: "Internal server error." });
     }
-
-    // Update fields if provided
-    if (name) user.Username = name;
-    if (email) user.email = email;
-    if (password) user.password = password;
-    if (age) user.age = age;
-    if (city) user.city = city;
-    if (state) user.state = state;
-
-    // Handle uploaded image
-    if (req.file) {
-      user.image = req.file.path; // Save image path
-    }
-
-    await user.save();
-
-    res.status(200).json({
-      message: "Profile updated successfully.",
-      user,
-    });
-  } catch (error) {
-    console.error("Profile Update Error:", error);
-    res.status(500).json({ message: "Internal server error." });
   }
-});
-
+);
 
 router.post("/admin/profile", async (req, res) => {
   try {
@@ -114,6 +121,25 @@ router.post("/admin/profile", async (req, res) => {
   } catch (error) {
     console.error("Error fetching user data:", error);
     res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.get("/admin/fetch/users/:city", async (req, res) => {
+  try {
+    const { city } = req.params;
+    console.log(city)
+    const users = await User.find({ city: city });
+    if (!users || users.length === 0) {
+      return res.status(404).json({ message: "Users not found." });
+    }
+    
+    res.status(200).json({
+      success: true,
+      users,
+    });
+  } catch (error) {
+    console.error("Profile Update Error:", error);
+    res.status(500).json({ message: "Internal server error." });
   }
 });
 

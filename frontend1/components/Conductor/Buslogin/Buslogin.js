@@ -37,7 +37,7 @@ const Buslogin = ({ route, navigation }) => {
 
       if (response.data.success) {
         Alert.alert("Success", "Login Successful");
-
+        const BusData = response.data.busDetails; 
         navigation.navigate("taketicket", {
           selectedFrom,
           selectedTo,
@@ -45,6 +45,7 @@ const Buslogin = ({ route, navigation }) => {
           busplateNo,
           selectedCity,
           selectedState,
+          BusData
         });
       } else {
         Alert.alert("Error", response.data.message || "Invalid Credentials");
