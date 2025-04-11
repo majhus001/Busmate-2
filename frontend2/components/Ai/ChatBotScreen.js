@@ -14,6 +14,7 @@ import { WebView } from "react-native-webview";
 import axios from "axios";
 import * as Speech from "expo-speech";
 import { Audio } from "expo-av";
+import styles from "./Chatbotstyles"
 import * as SecureStore from "expo-secure-store";
 import { API_BASE2 } from "../../apiurl";
 import { debounce } from "lodash"; 

@@ -1,24 +1,37 @@
-import React, { useState, useRef, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from "react-native";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Alert, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Audio } from "expo-av";
 import * as Speech from "expo-speech";
 import axios from "axios";
 import { WebView } from "react-native-webview";
 import * as SecureStore from "expo-secure-store";
-import { API_BASE2 } from "../../../apiurl";
+import { API_BASE2, API_BASE_URL } from "../../../apiurl";
+import debounce from "lodash.debounce";
 
-const BACKEND_URL = `${API_BASE2}`;
+const BACKEND_URL = API_BASE2;
 
 const Footer = ({ navigation }) => {
+  // State management
   const [activeTab, setActiveTab] = useState("home");
   const [showAIMenu, setShowAIMenu] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [hasMicPermission, setHasMicPermission] = useState(null);
+  const [shouldContinueListening, setShouldContinueListening] = useState(false);
+  const [Price, setPrices] = useState("");
+  const [busno, setbusno] = useState("");
+  const [fromstage2, setfromstage2] = useState("");
+  const [tostage2, settostage2] = useState("");
+  const [busno2, setbusno2] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Refs
   const webviewRef = useRef(null);
+  const soundRef = useRef(null);
+  const speechTimeoutRef = useRef(null);
 
-  // Animation states
+  // Animations
   const [scaleAnims] = useState({
     home: new Animated.Value(1),
     ticket: new Animated.Value(1),
@@ -26,6 +39,7 @@ const Footer = ({ navigation }) => {
     place: new Animated.Value(1),
     profile: new Animated.Value(1),
   });
+  
   const [translateYAnims] = useState({
     home: new Animated.Value(0),
     ticket: new Animated.Value(0),
@@ -34,160 +48,269 @@ const Footer = ({ navigation }) => {
     profile: new Animated.Value(0),
   });
 
-  // Check/request microphone permission on mount
+  // Cleanup effects
   useEffect(() => {
     checkMicrophonePermission();
+    
+    return () => {
+      // Cleanup speech and audio
+      if (soundRef.current) {
+        soundRef.current.unloadAsync();
+      }
+      Speech.stop();
+      clearTimeout(speechTimeoutRef.current);
+    };
   }, []);
 
+  // Microphone permission check
   const checkMicrophonePermission = async () => {
-    const { status } = await Audio.getPermissionsAsync();
-    console.log("Initial microphone permission status:", status);
-    if (status === "granted") {
-      setHasMicPermission(true);
-    } else {
-      const { status: newStatus } = await Audio.requestPermissionsAsync();
-      console.log("Requested microphone permission status:", newStatus);
-      if (newStatus === "granted") {
+    try {
+      const { status } = await Audio.getPermissionsAsync();
+      console.log("Microphone permission status:", status);
+      
+      if (status === "granted") {
         setHasMicPermission(true);
       } else {
-        setHasMicPermission(false);
+        const { status: newStatus } = await Audio.requestPermissionsAsync();
+        setHasMicPermission(newStatus === "granted");
       }
+    } catch (error) {
+      console.error("Error checking microphone permission:", error);
+      setHasMicPermission(false);
     }
   };
 
-  const startListening = async () => {
-    if (isListening || isSpeaking) {
-      stopListening();
+  // Speech recognition handlers
+  const startListening = useCallback(async () => {
+    if (isListening || isProcessing) return;
+    
+    if (isSpeaking) {
       stopSpeaking();
+    }
+
+    if (hasMicPermission === false) {
+      Alert.alert(
+        "Permission Required",
+        "Microphone access is needed for voice commands. Please enable it in settings.",
+        [{ text: "OK" }]
+      );
       return;
     }
 
-    if (hasMicPermission === null) return;
-
-    if (!hasMicPermission) {
-      const { status } = await Audio.requestPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(
-          "Permission Denied",
-          "Microphone access is required for voice recognition. Please enable it in settings.",
-          [{ text: "OK" }]
-        );
-        return;
-      }
-      setHasMicPermission(true);
-    }
-
+    console.log("Starting voice recognition...");
     setIsListening(true);
-    webviewRef.current.injectJavaScript(`
-      try {
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'en-IN';
-        recognition.interimResults = false;
-        recognition.maxAlternatives = 1;
+    setIsProcessing(true);
+    setShouldContinueListening(true);
+    
+    try {
+      webviewRef.current.injectJavaScript(`
+        try {
+          const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+          recognition.lang = 'en-IN';
+          recognition.interimResults = false;
+          recognition.maxAlternatives = 1;
+          recognition.continuous = ${shouldContinueListening};
 
-        recognition.onstart = () => {
-          console.log("Speech recognition started");
-        };
-        recognition.onresult = (event) => {
-          const transcript = event.results[0][0].transcript;
-          console.log("Transcript:", transcript);
-          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'speech', text: transcript }));
-        };
-        recognition.onerror = (event) => {
-          console.error("Speech error:", event.error);
-          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'error', error: event.error }));
-        };
-        recognition.onend = () => {
-          console.log("Speech recognition ended");
-          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'end' }));
-        };
+          recognition.onstart = () => {
+            console.log("Speech recognition started");
+          };
+          
+          recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            console.log("Transcript:", transcript);
+            window.ReactNativeWebView.postMessage(JSON.stringify({ 
+              type: 'speech', 
+              text: transcript 
+            }));
+          };
+          
+          recognition.onerror = (event) => {
+            console.error("Speech error:", event.error);
+            window.ReactNativeWebView.postMessage(JSON.stringify({ 
+              type: 'error', 
+              error: event.error 
+            }));
+          };
+          
+          recognition.onend = () => {
+            console.log("Speech recognition ended");
+            window.ReactNativeWebView.postMessage(JSON.stringify({ 
+              type: 'end' 
+            }));
+          };
 
-        recognition.start();
-      } catch (e) {
-        console.error("Speech init error:", e.message);
-        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'error', error: e.message }));
-      }
-    `);
-  };
+          recognition.start();
+        } catch (e) {
+          console.error("Speech init error:", e);
+          window.ReactNativeWebView.postMessage(JSON.stringify({ 
+            type: 'error', 
+            error: e.message 
+          }));
+        }
+      `);
+    } catch (error) {
+      console.error("Error starting speech recognition:", error);
+      setIsListening(false);
+      setIsProcessing(false);
+    }
+  }, [isListening, isSpeaking, hasMicPermission, shouldContinueListening, isProcessing]);
 
-  const stopListening = () => {
+  const stopListening = useCallback(() => {
+    console.log("Stopping voice recognition...");
     setIsListening(false);
+    setIsProcessing(false);
+    
     webviewRef.current.injectJavaScript(`
       if (window.recognition) {
         window.recognition.stop();
       }
     `);
-  };
+  }, []);
 
-  const stopSpeaking = () => {
+  const stopSpeaking = useCallback(() => {
+    console.log("Stopping speech synthesis...");
     Speech.stop();
     setIsSpeaking(false);
-    startListening(); // Automatically listen again after stopping speech
-  };
-
-  const handleWebViewMessage = async (event) => {
-    const data = JSON.parse(event.nativeEvent.data);
-    console.log("WebView message:", data);
-    if (data.type === "speech") {
-      const transcribedText = data.text;
-      setIsListening(false);
-      await sendMessage(transcribedText);
-    } else if (data.type === "error") {
-      Alert.alert("Error", "Speech recognition failed: " + data.error);
-      setIsListening(false);
-    } else if (data.type === "end") {
-      setIsListening(false);
+    
+    if (soundRef.current) {
+      soundRef.current.unloadAsync();
+      soundRef.current = null;
     }
-  };
+  }, []);
 
-  const sendMessage = async (text) => {
-    if (!text.trim()) return;
-
+  // WebView message handler
+  const handleWebViewMessage = useCallback(async (event) => {
     try {
-      const userId = await SecureStore.getItemAsync("currentUserId");
-      const res = await axios.post(`${BACKEND_URL}/chat`, {
-        message: text,
-        speak: true,
-        userId,
-      });
+      const data = JSON.parse(event.nativeEvent.data);
+      console.log("WebView message:", data);
+      
+      if (data.type === "speech") {
+        setIsProcessing(true);
+        await processVoiceCommand(data.text);
+      } else if (data.type === "error") {
+        console.error("Speech recognition error:", data.error);
+        handleSpeechError(data.error);
+      } else if (data.type === "end") {
+        handleSpeechEnd();
+      }
+    } catch (error) {
+      console.error("Error processing WebView message:", error);
+    }
+  }, [navigation, shouldContinueListening]);
 
-      let botText = res.data.response || "No response from AI";
-      botText = botText.replace(/[*#]/g, "");
+  const processVoiceCommand = async (transcribedText) => {
+    setIsListening(false);
+    await sendMessage(transcribedText);
+    setIsProcessing(false);
+  };
 
-      setIsSpeaking(true);
-      Speech.speak(botText, {
-        onDone: () => {
-          setIsSpeaking(false);
-          startListening(); // Automatically listen again after speaking
-        },
-        onStopped: () => {
-          setIsSpeaking(false);
-          startListening();
-        },
-        onError: () => {
-          setIsSpeaking(false);
-          startListening();
-        },
-      });
-    } catch (err) {
-      console.error("Chat error:", err);
-      setIsSpeaking(false);
-      startListening();
+  const handleSpeechError = (error) => {
+    setIsListening(false);
+    setIsProcessing(false);
+    
+    if (error !== "no-speech" && error !== "aborted") {
+      Alert.alert("Voice Error", `Speech recognition failed: ${error}`);
+    }
+    
+    if (shouldContinueListening && !isSpeaking) {
+      speechTimeoutRef.current = setTimeout(() => startListening(), 1000);
     }
   };
 
-  const toggleAIMenu = () => {
-    setActiveTab("ai");
-    setShowAIMenu((prev) => !prev);
+  const handleSpeechEnd = () => {
+    setIsListening(false);
+    setIsProcessing(false);
+    
+    if (shouldContinueListening && !isSpeaking) {
+      speechTimeoutRef.current = setTimeout(() => startListening(), 500);
+    }
   };
 
-  const handleAIOptionPress = (option) => {
-    setShowAIMenu(false);
-    if (option === "chat") navigation.navigate("ai");
-    if (option === "voice") startListening();
-  };
+  // Data fetching functions
+  const fetchBusdetails = useCallback(async (busRouteNo) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/Admin/buses/fetchAllBuses3`, {
+        params: { busRouteNo },
+      });
 
-  const handleTabPress = (tabName) => {
+      const bus = response.data;
+      console.log("Fetched bus details:", bus);
+
+      if (bus) {
+        setfromstage2(bus.fromStage);
+        settostage2(bus.toStage);
+        setbusno2(bus.busRouteNo);
+        return {
+          bus,
+          fromLocation: bus.fromStage,
+          toLocation: bus.toStage
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error("Error fetching bus details:", error);
+      return null;
+    }
+  }, []);
+
+  const fetchBusPrice = useCallback(async (busRouteNo, from, to) => {
+    setbusno(busRouteNo);
+    
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/Admin/buses/fetchAllBuses2`, {
+        params: { busRouteNo, from, to },
+      });
+
+      const data = response.data || [];
+      if (data.length > 0) {
+        const bus = data[0];
+        const prices = bus.prices || {};
+        
+        const isSimilar = (a, b) => {
+          a = a.toLowerCase().replace(/\s+/g, "");
+          b = b.toLowerCase().replace(/\s+/g, "");
+          if (a.includes(b) || b.includes(a)) return true;
+          
+          const minLength = Math.min(a.length, b.length);
+          let matchCount = 0;
+          for (let i = 0; i < minLength; i++) {
+            if (a[i] === b[i]) matchCount++;
+          }
+          return (matchCount / Math.max(a.length, b.length)) >= 0.6;
+        };
+
+        for (const key in prices) {
+          const [priceFrom, priceTo] = key.split("-");
+          if (isSimilar(priceFrom, from) && isSimilar(priceTo, to)) {
+            setPrices(prices[key]);
+            return prices[key];
+          }
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error("Error fetching bus price:", error);
+      return null;
+    }
+  }, []);
+
+  // Navigation handlers
+  const handleBookingNavigation = useCallback((bookingData) => {
+    console.log("Navigating to payment with:", bookingData);
+    fetchBusPrice(bookingData.bus, bookingData.from, bookingData.to)
+      .then(price => {
+        navigation.navigate("payment", {
+          fareprice: price,
+          busno: bookingData.bus,
+        });
+      })
+      .catch(error => {
+        console.error("Booking navigation error:", error);
+      });
+  }, [fetchBusPrice, navigation]);
+
+  const handleTabPress = useCallback((tabName) => {
+    // Reset all animations
     Object.keys(scaleAnims).forEach((key) => {
       Animated.timing(scaleAnims[key], {
         toValue: 1,
@@ -201,6 +324,7 @@ const Footer = ({ navigation }) => {
       }).start();
     });
 
+    // Animate the pressed tab
     Animated.sequence([
       Animated.timing(scaleAnims[tabName], {
         toValue: 1.2,
@@ -221,38 +345,237 @@ const Footer = ({ navigation }) => {
     }).start();
 
     setActiveTab(tabName);
+    setShowAIMenu(false);
 
-    if (tabName === "ticket") navigation.navigate("TicketHistory");
-    if (tabName === "place") navigation.navigate("FavouriteBuses");
-    if (tabName === "profile") navigation.navigate("UserProfile");
-    if (tabName === "home") navigation.navigate("Home");
+    // Navigation mapping
+    const navMap = {
+      ticket: "TicketHistory",
+      place: "FavouriteBuses",
+      profile: "UserProfile",
+      home: "UserHome"
+    };
+    
+    if (navMap[tabName]) {
+      navigation.navigate(navMap[tabName]);
+    }
+  }, [scaleAnims, translateYAnims, navigation]);
+
+  // AI Chat functions
+  const sendMessage = useCallback(debounce(async (text) => {
+    if (!text.trim()) return;
+
+    const lowerText = text.toLowerCase();
+    console.log("Processing voice input:", lowerText);
+
+    // First try to match navigation commands
+    if (await handleNavigationCommands(lowerText)) {
+      return;
+    }
+
+    // Fall back to AI chat
+    try {
+      const userId = await SecureStore.getItemAsync("currentUserId");
+      const res = await axios.post(`${BACKEND_URL}/chat`, {
+        message: text,
+        speak: true,
+        userId,
+      });
+
+      await handleAIResponse(res.data);
+    } catch (err) {
+      console.error("Chat error:", err);
+      setIsSpeaking(false);
+      if (shouldContinueListening) {
+        speechTimeoutRef.current = setTimeout(() => startListening(), 1000);
+      }
+    }
+  }, 300), [navigation, shouldContinueListening]);
+
+  const handleNavigationCommands = async (lowerText) => {
+    const commandPatterns = {
+      ticketHistory: [
+        /(go to|show|view|open) (my )?ticket history/,
+        /ticket history/
+      ],
+      favouriteBuses: [
+        /(go to|show|view|open) (my )?favourites? buses?/,
+        /favourites? buses?/
+      ],
+      userProfile: [
+        /(go to|show|view|open) (my )?profile/,
+        /user profile/
+      ],
+      userHome: [
+        /(go to|show|view|open) (user )?home/,
+      ],
+      busDetails: [
+        /(show|find|tell me|what are|what's) (the )?bus details? (for|of)?\s*(\d+\s*[a-zA-Z]*)/,
+        /bus details? (for|of)?\s*(\d+\s*[a-zA-Z]*)/,
+        /(go to|show) bus details?/
+      ],
+      ai: [
+        /(go to|show|open|view|chat with) ai/,
+      ]
+    };
+
+    for (const [screen, patterns] of Object.entries(commandPatterns)) {
+      for (const pattern of patterns) {
+        const match = lowerText.match(pattern);
+        if (match) {
+          console.log(`Matched ${screen} with pattern:`, pattern);
+          
+          if (screen === "busDetails") {
+            const busRouteNo = match[4] || match[2] || null;
+            if (busRouteNo) {
+              const cleanedBusNo = busRouteNo.replace(/\s+/g, "");
+              const busDetails = await fetchBusdetails(cleanedBusNo);
+              
+              if (busDetails) {
+                navigation.navigate("Busdetails", {
+                  bus: busDetails.bus,
+                  fromLocation: busDetails.fromLocation,
+                  toLocation: busDetails.toLocation
+                });
+                return true;
+              }
+            }
+          } else {
+            const navMap = {
+              ticketHistory: "TicketHistory",
+              favouriteBuses: "FavouriteBuses",
+              userProfile: "UserProfile",
+              userHome: "UserHome",
+              ai: "ai"
+            };
+            
+            navigation.navigate(navMap[screen]);
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   };
 
-  const renderTabItem = (tabName, iconName, activeIconName) => {
+  const handleAIResponse = async (responseData) => {
+    let botText = responseData.response?.replace(/[*#]/g, "") || "I didn't understand that.";
+    console.log("AI response:", botText);
+
+    setIsSpeaking(true);
+    
+    try {
+      if (responseData.audioPath) {
+        // Stop any existing audio
+        if (soundRef.current) {
+          await soundRef.current.unloadAsync();
+        }
+
+        // Play new audio
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: `${BACKEND_URL}${responseData.audioPath}` },
+          { shouldPlay: true }
+        );
+        soundRef.current = sound;
+
+        sound.setOnPlaybackStatusUpdate(async (status) => {
+          if (status.didJustFinish || status.error) {
+            await handlePlaybackComplete(responseData);
+          }
+        });
+      } else {
+        // Fallback to TTS
+        Speech.speak(botText, {
+          language: 'en-IN',
+          onDone: () => handlePlaybackComplete(responseData),
+          onStopped: () => handlePlaybackComplete(responseData),
+          onError: (error) => {
+            console.error("TTS error:", error);
+            handlePlaybackComplete(responseData);
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Error handling AI response:", error);
+      handlePlaybackComplete(responseData);
+    }
+  };
+
+  const handlePlaybackComplete = async (responseData) => {
+    setIsSpeaking(false);
+    
+    if (soundRef.current) {
+      await soundRef.current.unloadAsync();
+      soundRef.current = null;
+    }
+
+    if (responseData.triggerBooking) {
+      handleBookingNavigation(responseData.bookingData);
+      setShouldContinueListening(false);
+    } else if (shouldContinueListening) {
+      speechTimeoutRef.current = setTimeout(() => startListening(), 800);
+    }
+  };
+
+  // AI Menu functions
+  const toggleAIMenu = useCallback(() => {
+    setActiveTab("ai");
+    setShowAIMenu(prev => !prev);
+  }, []);
+
+  const handleAIOptionPress = useCallback((option) => {
+    setShowAIMenu(false);
+    if (option === "chat") navigation.navigate("ai");
+    if (option === "voice") startListening();
+  }, [navigation, startListening]);
+
+  const handleCloseAIMenu = useCallback(() => {
+    console.log("Closing AI menu...");
+    setShowAIMenu(false);
+    setShouldContinueListening(false);
+    stopSpeaking();
+    stopListening();
+  }, [stopListening, stopSpeaking]);
+
+  // Render functions
+  const renderTabItem = useCallback((tabName, iconName, activeIconName) => {
     const isActive = activeTab === tabName;
     const iconToUse = isActive ? activeIconName : iconName;
     const colorToUse = isActive ? "#00468b" : "#aaa";
     const textStyle = isActive ? styles.footerText : styles.footerTextInactive;
 
     return (
-      <TouchableOpacity onPress={() => handleTabPress(tabName)} activeOpacity={0.7}>
+      <TouchableOpacity 
+        onPress={() => handleTabPress(tabName)} 
+        activeOpacity={0.7}
+        accessibilityLabel={`${tabName} tab`}
+      >
         <Animated.View
           style={[
             styles.footerItem,
             {
-              transform: [{ scale: scaleAnims[tabName] }, { translateY: translateYAnims[tabName] }],
+              transform: [
+                { scale: scaleAnims[tabName] }, 
+                { translateY: translateYAnims[tabName] }
+              ],
             },
           ]}
         >
-          <Ionicons name={iconToUse} size={22} color={colorToUse} />
-          <Text style={textStyle}>{tabName.charAt(0).toUpperCase() + tabName.slice(1)}</Text>
+          <Ionicons 
+            name={iconToUse} 
+            size={22} 
+            color={colorToUse} 
+            accessibilityLabel={tabName}
+          />
+          <Text style={textStyle}>
+            {tabName.charAt(0).toUpperCase() + tabName.slice(1)}
+          </Text>
           {isActive && <View style={styles.activeDot} />}
         </Animated.View>
       </TouchableOpacity>
     );
-  };
+  }, [activeTab, scaleAnims, translateYAnims, handleTabPress]);
 
-  const renderAIButton = () => {
+  const renderAIButton = useCallback(() => {
     const isActive = activeTab === "ai";
     const iconName = isActive ? "sparkles" : "sparkles-outline";
     const iconColor = isActive ? "#00468b" : "#aaa";
@@ -262,38 +585,75 @@ const Footer = ({ navigation }) => {
       <View style={{ alignItems: "center" }}>
         {showAIMenu && (
           <View style={styles.popupMenu}>
-            <TouchableOpacity onPress={() => handleAIOptionPress("chat")} style={styles.popupButton}>
+            <TouchableOpacity 
+              onPress={() => handleAIOptionPress("chat")} 
+              style={styles.popupButton}
+              accessibilityLabel="AI Chat"
+            >
               <Ionicons name="chatbubble-ellipses-outline" size={20} color="#00468b" />
               <Text style={styles.popupText}>Chat</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleAIOptionPress("voice")} style={styles.popupButton}>
+            <TouchableOpacity 
+              onPress={() => handleAIOptionPress("voice")} 
+              style={styles.popupButton}
+              accessibilityLabel="Voice Assistant"
+            >
               <Ionicons
-                name={isSpeaking ? "volume-high-outline" : isListening ? "mic" : "mic-outline"}
+                name={isListening ? "mic" : "mic-outline"}
                 size={20}
                 color="#00468b"
               />
               <Text style={styles.popupText}>Voice</Text>
             </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={handleCloseAIMenu} 
+              style={styles.popupButton}
+              accessibilityLabel="Close AI Menu"
+            >
+              <Ionicons name="close-outline" size={20} color="#00468b" />
+              <Text style={styles.popupText}>Close</Text>
+            </TouchableOpacity>
           </View>
         )}
 
-        <TouchableOpacity onPress={toggleAIMenu} activeOpacity={0.7}>
+        <TouchableOpacity 
+          onPress={toggleAIMenu} 
+          activeOpacity={0.7}
+          accessibilityLabel="AI Assistant"
+        >
           <Animated.View
             style={[
               styles.aiButton,
               {
-                transform: [{ scale: scaleAnims["ai"] }, { translateY: translateYAnims["ai"] }],
+                transform: [
+                  { scale: scaleAnims["ai"] }, 
+                  { translateY: translateYAnims["ai"] }
+                ],
               },
             ]}
           >
-            <Ionicons name={iconName} size={28} color={iconColor} />
+            <Ionicons 
+              name={iconName} 
+              size={28} 
+              color={iconColor} 
+              accessibilityLabel="AI"
+            />
             <Text style={[textStyle, { fontSize: 9 }]}>AI</Text>
             {isActive && <View style={styles.activeDot} />}
           </Animated.View>
         </TouchableOpacity>
       </View>
     );
-  };
+  }, [
+    activeTab, 
+    showAIMenu, 
+    isListening, 
+    scaleAnims, 
+    translateYAnims, 
+    handleAIOptionPress, 
+    handleCloseAIMenu, 
+    toggleAIMenu
+  ]);
 
   return (
     <View style={styles.footerContainer}>
@@ -304,6 +664,7 @@ const Footer = ({ navigation }) => {
         {renderTabItem("place", "location-outline", "location")}
         {renderTabItem("profile", "person-outline", "person")}
       </View>
+
       <WebView
         ref={webviewRef}
         source={{ html: "<html><body></body></html>" }}
@@ -313,24 +674,32 @@ const Footer = ({ navigation }) => {
         javaScriptEnabled={true}
         domStorageEnabled={true}
         onMessage={handleWebViewMessage}
+        originWhitelist={["*"]}
+        mixedContentMode="compatibility"
       />
     </View>
   );
 };
 
+// Styles
 const styles = StyleSheet.create({
   footerContainer: {
     borderTopWidth: 1,
     borderTopColor: "#eee",
     backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
   footer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "space-around",
     alignItems: "center",
     backgroundColor: "#fff",
-    paddingVertical: 10,
-    paddingHorizontal: 10,
+    paddingVertical: Platform.select({ ios: 10, android: 8 }),
+    paddingHorizontal: 5,
   },
   footerItem: {
     alignItems: "center",
@@ -370,6 +739,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
     elevation: 5,
+    width: 60,
+    height: 60,
   },
   popupMenu: {
     position: "absolute",
@@ -390,12 +761,14 @@ const styles = StyleSheet.create({
   popupButton: {
     alignItems: "center",
     marginHorizontal: 8,
+    padding: 5,
   },
   popupText: {
     fontSize: 10,
     color: "#00468b",
     marginTop: 2,
+    fontWeight: "500",
   },
 });
 
-export default Footer;
+export default React.memo(Footer);
