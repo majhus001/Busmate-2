@@ -1,6 +1,6 @@
 const express = require("express");
 const crypto = require("crypto");
-const razorpayInstance = require("../config/razorpay");
+const razorpayInstance = require("../Config/razorpay");
 const Order = require("../Module/OnlineTicket");
 
 const router = express.Router();
