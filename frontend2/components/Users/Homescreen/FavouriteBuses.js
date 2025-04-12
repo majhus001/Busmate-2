@@ -15,7 +15,7 @@ import axios from "axios";
 import styles from "./FavouriteBusesStyles"; // Ensure this path is correct
 import { API_BASE_URL } from "../../../apiurl";
 import { useLanguage } from "../../../LanguageContext"; // Ensure this path is correct
-import Footer from "./Footer";
+import Footer from "./Footer/Footer";
 
 // Define translations for all text in the component
 const translations = {

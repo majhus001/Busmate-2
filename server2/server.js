@@ -69,6 +69,11 @@ async function fetchDatabaseInfo(userId) {
   }
 }
 
+// Exponential backoff for retries
+async function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 app.post("/chat", chatLimiter, async (req, res) => {
   const { message, userId, speak } = req.body;
   const maxRetries = 3;
@@ -76,34 +81,79 @@ app.post("/chat", chatLimiter, async (req, res) => {
 
   while (attempt < maxRetries) {
     try {
-      let session = userSessionMap.get(userId) || { messages: [], booking: {} };
+      let session = userSessionMap.get(userId) || { messages: [], booking: {}, systemPrompt: null };
       console.log("User message:", message);
       console.log("Current session booking data:", session.booking);
 
-      if (!session.messages.length) {
-        const dbInfo = await fetchDatabaseInfo(userId);
-        const systemPrompt = `
-You are a multilingual bus assistant built by xAI, designed to assist users in booking bus tickets dynamically. The user might speak in Tamil or English. Detect the language and respond in the same language. Use the following data to help the user.
+      const isBookingIntent = message.toLowerCase().includes("book a ticket") || 
+                             message.toLowerCase().includes("make a ticket");
 
+      if (!session.messages.length) {
+        // Fetch DB info only once per session
+        const dbInfo = await fetchDatabaseInfo(userId);
+        
+        // Set system prompt based on booking intent
+        let systemPrompt;
+        if (isBookingIntent) {
+          systemPrompt = `
+You are a multilingual bus assistant built by xAI, designed to assist users in booking bus tickets dynamically. The user might speak in Tamil or English. Detect the language and respond in the same language. Use the following data to help the user.
 Current User ID: ${userId}
 Bus-related Database Info:
 ${dbInfo}
-
 Instructions:
-- When the user expresses intent to book a ticket (e.g., "I want to book a ticket" or "I want to make a ticket"), ask for the starting point (e.g., "Please tell me the starting point (from where).").
+- Ask for the starting point (e.g., "Please tell me the starting point (from where).").
 - After receiving the starting point, ask for the destination (e.g., "Great, now tell me the destination (to where).").
 - Once both starting point and destination are provided, list available buses with details (route number, bus number, time, available seats, price) based on the database info and ask which bus they want to book.
 - After the user selects a bus (e.g., by mentioning the route number like "55B"), ask how many seats they want.
 - Once the number of seats is provided, confirm the booking details (e.g., "I will book a ticket for you from [from] to [to] on [bus] for [seats] seats") and indicate that the booking is complete with "Booking complete!".
 - For non-booking queries, provide helpful responses based on the database info or general knowledge.
-- Ensure responses are conversational and natural, similar to the example chat provided.
+- Ensure responses are conversational and natural.
 - When the booking is complete, include a trigger in the response to indicate that the booking process is finished and provide the booking data (from, to, bus, seats).
-
 User message:
 ${message}`;
+        } else {
+          systemPrompt = `
+You are a multilingual bus assistant built by Techy Squad, designed to assist users in booking bus tickets dynamically. The user might speak in Tamil or English. Detect the language and respond in the same language. Use the following data to help the user.
+Current User ID: ${userId}
+Bus-related Database Info:
+${dbInfo}
+User message:
+${message}`;
+        }
+
+        session.systemPrompt = systemPrompt;
         session.messages = [{ role: "user", parts: [{ text: systemPrompt }] }];
+      } else if (isBookingIntent && !session.systemPrompt.includes("Instructions:")) {
+        // Update system prompt if booking intent is detected later
+        const dbInfo = await fetchDatabaseInfo(userId);
+        session.systemPrompt = `
+You are a multilingual bus assistant built by xAI, designed to assist users in booking bus tickets dynamically. The user might speak in Tamil or English. Detect the language and respond in the same language. Use the following data to help the user.
+Current User ID: ${userId}
+Bus-related Database Info:
+${dbInfo}
+Instructions:
+- Ask for the starting point (e.g., "Please tell me the starting point (from where).").
+- After receiving the starting point, ask for the destination (e.g., "Great, now tell me the destination (to where).").
+- Once both starting point and destination are provided, list available buses with details (route number, bus number, time, available seats, price) based on the database info and ask which bus they want to book.
+- After the user selects a bus (e.g., by mentioning the route number like "55B"), ask how many seats they want.
+- Once the number of seats is provided, confirm the booking details (e.g., "I will book a ticket for you from [from] to [to] on [bus] for [seats] seats") and indicate that the booking is complete with "Booking complete!".
+- For non-booking queries, provide helpful responses based on the database info or general knowledge.
+- Ensure responses are conversational and natural.
+- When the booking is complete, include a trigger in the response to indicate that the booking process is finished and provide the booking data (from, to, bus, seats).
+User message:
+${message}`;
+        session.messages[0] = { role: "user", parts: [{ text: session.systemPrompt }] };
       } else {
         session.messages.push({ role: "user", parts: [{ text: message }] });
+      }
+
+      // Trim chat history to prevent token limit issues (e.g., keep last 10 messages)
+      if (session.messages.length > 10) {
+        session.messages = session.messages.slice(-10);
+        // Ensure system prompt is preserved
+        if (!session.messages.some(msg => msg.parts[0].text.includes("You are a multilingual bus assistant"))) {
+          session.messages.unshift({ role: "user", parts: [{ text: session.systemPrompt }] });
+        }
       }
 
       const result = await model.generateContent({ contents: session.messages });
@@ -116,7 +166,6 @@ ${message}`;
       const lowerResponse = botResponse.toLowerCase();
       if (lowerResponse.includes("book a ticket for you") || lowerResponse.includes("booking complete")) {
         triggerBooking = true;
-        // Extract booking details from the response or session
         const fromMatch = botResponse.match(/from\s+([^\s]+(?:\s+[^\s]+)*)\s+to/i) || (session.booking.from && [null, session.booking.from]);
         const toMatch = botResponse.match(/to\s+([^\s]+(?:\s+[^\s]+)*)\s+on/i) || (session.booking.to && [null, session.booking.to]);
         const busMatch = botResponse.match(/on\s+([^\s]+(?:\s+[^\s]+)*)\s+for/i) || (session.booking.bus && [null, session.booking.bus]);
@@ -192,8 +241,9 @@ ${message}`;
     } catch (err) {
       console.error("Chat Error:", err);
       if (err.status === 429 && attempt < maxRetries - 1) {
-        console.warn(`Rate limit hit, retrying in 5 seconds... (Attempt ${attempt + 1})`);
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        const backoffTime = Math.pow(2, attempt) * 5000; // Exponential backoff: 5s, 10s, 20s
+        console.warn(`Rate limit hit, retrying in ${backoffTime / 1000} seconds... (Attempt ${attempt + 1})`);
+        await delay(backoffTime);
         attempt++;
       } else {
         res.status(500).json({ error: "Server error", details: err.message });
@@ -201,6 +251,8 @@ ${message}`;
       }
     }
   }
+
+  res.status(429).json({ error: "Rate limit exceeded after retries. Please try again later." });
 });
 
 app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));

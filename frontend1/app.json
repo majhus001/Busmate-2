@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "client",
+    "name": "BusmateHero",
     "slug": "client",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -19,13 +19,25 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.majid.busmatehero"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "f6e4da4b-5381-4abb-8903-ecbe09839502"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/f6e4da4b-5381-4abb-8903-ecbe09839502"
+    }
   }
 }

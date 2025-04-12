@@ -18,7 +18,7 @@ import { Ionicons, MaterialIcons, Feather } from "@expo/vector-icons";
 import { API_BASE_URL } from "../../../apiurl";
 import styles from "./UserProfileStyles"; // Ensure this path is correct
 import { useLanguage } from "../../../LanguageContext";
-import Footer from "../Homescreen/Footer";
+import Footer from "../Homescreen/Footer/Footer";
 
 // Define translations for all text in the component
 const translations = {

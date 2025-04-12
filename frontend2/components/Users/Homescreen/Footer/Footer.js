@@ -6,7 +6,7 @@ import * as Speech from "expo-speech";
 import axios from "axios";
 import { WebView } from "react-native-webview";
 import * as SecureStore from "expo-secure-store";
-import { API_BASE2, API_BASE_URL } from "../../../apiurl";
+import { API_BASE2, API_BASE_URL } from "../../../../apiurl";
 import debounce from "lodash.debounce";
 
 const BACKEND_URL = API_BASE2;
@@ -25,7 +25,7 @@ const Footer = ({ navigation }) => {
   const [tostage2, settostage2] = useState("");
   const [busno2, setbusno2] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  
+
   // Refs
   const webviewRef = useRef(null);
   const soundRef = useRef(null);
@@ -51,9 +51,7 @@ const Footer = ({ navigation }) => {
   // Cleanup effects
   useEffect(() => {
     checkMicrophonePermission();
-    
     return () => {
-      // Cleanup speech and audio
       if (soundRef.current) {
         soundRef.current.unloadAsync();
       }
@@ -253,55 +251,64 @@ const Footer = ({ navigation }) => {
     }
   }, []);
 
-  const fetchBusPrice = useCallback(async (busRouteNo, from, to) => {
+  const fetchBusPrice = async (busRouteNo, from, to) => {
+    console.log("Fetching bus price for:", busRouteNo, from, to);
     setbusno(busRouteNo);
-    
     try {
       const response = await axios.get(`${API_BASE_URL}/api/Admin/buses/fetchAllBuses2`, {
         params: { busRouteNo, from, to },
       });
-
+     
       const data = response.data || [];
       if (data.length > 0) {
         const bus = data[0];
         const prices = bus.prices || {};
-        
         const isSimilar = (a, b) => {
-          a = a.toLowerCase().replace(/\s+/g, "");
-          b = b.toLowerCase().replace(/\s+/g, "");
-          if (a.includes(b) || b.includes(a)) return true;
-          
+          a = a.toLowerCase();
+          b = b.toLowerCase();
           const minLength = Math.min(a.length, b.length);
           let matchCount = 0;
           for (let i = 0; i < minLength; i++) {
             if (a[i] === b[i]) matchCount++;
           }
-          return (matchCount / Math.max(a.length, b.length)) >= 0.6;
+          const similarity = matchCount / Math.max(a.length, b.length);
+          return similarity >= 0.5;
         };
 
+        let matchedPrice = null;
         for (const key in prices) {
           const [priceFrom, priceTo] = key.split("-");
           if (isSimilar(priceFrom, from) && isSimilar(priceTo, to)) {
-            setPrices(prices[key]);
-            return prices[key];
+            matchedPrice = prices[key];
+            console.log(`✅ Match found: ${priceFrom}-${priceTo}`);
+            break;
           }
         }
+        
+        if (matchedPrice) {
+          setPrices(matchedPrice);
+          console.log(`💰 Price from ${from} to ${to} is ₹${matchedPrice}`);
+        } else {
+          console.log(`❌ No matching price for ${from} to ${to}`);
+        }
+      } else {
+        console.log("❌ No bus data received");
       }
-      return null;
     } catch (error) {
-      console.error("Error fetching bus price:", error);
-      return null;
+      console.error("Error fetching buses:", error);
     }
-  }, []);
+  };
 
   // Navigation handlers
   const handleBookingNavigation = useCallback((bookingData) => {
     console.log("Navigating to payment with:", bookingData);
-    fetchBusPrice(bookingData.bus, bookingData.from, bookingData.to)
+    fetchBusPrice(bookingData.bus.replace("bus ", ""), bookingData.from, bookingData.to)
       .then(price => {
         navigation.navigate("payment", {
-          fareprice: price,
-          busno: bookingData.bus,
+          busno: bookingData.bus.replace("bus ", ""),
+          fareprice: Price,
+          fromLocation: bookingData.from,
+          toLocation: bookingData.to,
         });
       })
       .catch(error => {
