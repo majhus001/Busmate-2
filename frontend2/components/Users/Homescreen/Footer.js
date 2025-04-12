@@ -6,10 +6,10 @@ import * as Speech from "expo-speech";
 import axios from "axios";
 import { WebView } from "react-native-webview";
 import * as SecureStore from "expo-secure-store";
-import { API_BASE2, API_BASE_URL } from "../../../apiurl";
+import { API_BASE_URL } from "../../../apiurl";
 import debounce from "lodash.debounce";
 
-const BACKEND_URL = API_BASE2;
+const BACKEND_URL = API_BASE_URL;
 
 const Footer = ({ navigation }) => {
   // State management
