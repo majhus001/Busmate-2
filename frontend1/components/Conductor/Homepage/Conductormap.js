@@ -1,72 +1,47 @@
-import React, { useState, useEffect, useRef } from "react";
-import { View, Text, StyleSheet } from "react-native";
-import * as Location from "expo-location";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, Alert } from "react-native";
 import MapView, { Marker } from "react-native-maps";
-import io from "socket.io-client";
+import { startLocationSharing } from "./locationService";
 
-const SERVER_URL = "http://192.168.232.182:5000"; // Change this to your actual server IP
-const socket = io(SERVER_URL, { transports: ["websocket"] });
-
-export default function Conductormap() {
+export default function Conductormap({ route }) {
+  const { busRouteNo } = route.params || {};
   const [location, setLocation] = useState(null);
-  const locationRef = useRef(null); // Store the latest location
   const [mapRegion, setMapRegion] = useState(null);
+  const [connectionError, setConnectionError] = useState(null);
 
   useEffect(() => {
-    const getLocation = async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        console.log("❌ Location permission denied");
+    if (!busRouteNo) {
+      Alert.alert("Error", "No bus route number provided.");
+      return;
+    }
+
+    console.log(`🚀 Starting conductor map for bus ${busRouteNo}`);
+
+    const cleanup = startLocationSharing(busRouteNo, (newLocation) => {
+      if (newLocation === null) {
+        console.warn(`⚠️ Location sharing failed for bus ${busRouteNo}`);
+        setConnectionError("Failed to connect to server. Please check your network.");
         return;
       }
-
-      // Fetch the latest location immediately
-      let initialLocation = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.BestForNavigation,
-      });
-
-      console.log("📍 Initial Device Location:", initialLocation.coords);
-      setLocation(initialLocation.coords);
-      locationRef.current = initialLocation.coords;
-
-      // Start watching for real-time location updates
-      await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.BestForNavigation,
-          timeInterval: 1000, // Every 1 second
-          distanceInterval: 1, // Every 1 meter moved
-        },
-        (loc) => {
-          const newLocation = {
-            latitude: loc.coords.latitude,
-            longitude: loc.coords.longitude,
-          };
-
-          // Send only if location has changed
-          if (
-            !locationRef.current ||
-            locationRef.current.latitude !== newLocation.latitude ||
-            locationRef.current.longitude !== newLocation.longitude
-          ) {
-            console.log("📤 Sending Location:", newLocation);
-            setLocation(newLocation);
-            locationRef.current = newLocation;
-            socket.emit("sendLocation", newLocation);
-          }
-        }
-      );
-    };
-
-    getLocation();
+      if (newLocation?.latitude && newLocation?.longitude) {
+        setLocation(newLocation);
+        setConnectionError(null);
+        console.log(
+          `📍 Conductor Latitude: ${newLocation.latitude}, Longitude: ${newLocation.longitude} for bus ${busRouteNo}`
+        );
+      } else {
+        console.warn(`⚠️ Invalid location data for bus ${busRouteNo}:`, newLocation);
+      }
+    });
 
     return () => {
-      socket.disconnect();
+      console.log(`🛑 Cleaning up conductor map for bus ${busRouteNo}`);
+      cleanup();
     };
-  }, []);
+  }, [busRouteNo]);
 
-  // Ensure the map centers on the latest location
   useEffect(() => {
-    if (location) {
+    if (location?.latitude && location?.longitude) {
       setMapRegion({
         latitude: location.latitude,
         longitude: location.longitude,
@@ -76,34 +51,62 @@ export default function Conductormap() {
     }
   }, [location]);
 
+  if (!busRouteNo) {
+    return (
+      <View style={styles.container}>
+        <Text>No bus route number provided.</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <MapView 
-        style={styles.map} 
-        region={mapRegion} 
-        showsUserLocation={true} 
+      <MapView
+        style={styles.map}
+        region={mapRegion}
+        showsUserLocation={true}
         followsUserLocation={true}
       >
-        {location && <Marker coordinate={location} title="My Device 📍" pinColor="blue" />}
+        {location && location.latitude && location.longitude && (
+          <Marker coordinate={location} title={`Bus ${busRouteNo}`} pinColor="blue" />
+        )}
       </MapView>
-      
       <View style={styles.infoContainer}>
-        <Text style={styles.text}>📍 Latitude: {location?.latitude ?? "Loading..."}</Text>
-        <Text style={styles.text}>📍 Longitude: {location?.longitude ?? "Loading..."}</Text>
+        {connectionError ? (
+          <Text style={[styles.text, styles.errorText]}>{connectionError}</Text>
+        ) : (
+          <>
+            <Text style={styles.text}>📍 Latitude: {location?.latitude ?? "Loading..."}</Text>
+            <Text style={styles.text}>📍 Longitude: {location?.longitude ?? "Loading..."}</Text>
+            <Text style={styles.text}>🚍 Bus: {busRouteNo}</Text>
+          </>
+        )}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  map: { flex: 1 },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  map: {
+    flex: 1,
+  },
   infoContainer: {
-    backgroundColor: "rgba(255,255,255,0.8)",
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
     padding: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#ddd",
   },
   text: {
     fontSize: 16,
     textAlign: "center",
+    marginVertical: 2,
+  },
+  errorText: {
+    color: "red",
+    fontWeight: "bold",
   },
 });
