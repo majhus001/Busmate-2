@@ -4,10 +4,9 @@ import {
   Alert, Share, Linking, ScrollView
 } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLanguage } from '../../../LanguageContext'; // Adjust path as needed
-import Footer from './Footer';
+import Footer from './Footer/Footer';
 
 const translations = {
   English: {

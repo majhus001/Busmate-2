@@ -39,6 +39,10 @@ const TicketSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  busId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Bus",
+  },
 });
 
 const Ticket = mongoose.model("ticket", TicketSchema);

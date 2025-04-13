@@ -7,6 +7,7 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
+  ToastAndroid,
 } from "react-native";
 import axios from "axios";
 import { API_BASE_URL } from "../../../../apiurl";
@@ -36,7 +37,9 @@ const ViewBusesdata = ({ navigation }) => {
         const [busResponse] = await Promise.all([
           axios.get(`${API_BASE_URL}/api/Admin/buses/fetchbus/${adminId}`),
         ]);
-        setBuses(busResponse.data.data.map((bus) => ({ ...bus, expanded: false })));
+        setBuses(
+          busResponse.data.data.map((bus) => ({ ...bus, expanded: false }))
+        );
       }
     } catch (err) {
       console.error("Error fetching data:", err);
@@ -55,6 +58,7 @@ const ViewBusesdata = ({ navigation }) => {
   const onRefresh = () => {
     setRefreshing(true);
     fetchData();
+    ToastAndroid.show("Buses refreshed ", ToastAndroid.SHORT);
   };
 
   const toggleDropdown = (id) => {
@@ -97,7 +101,7 @@ const ViewBusesdata = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <ScrollView
-      showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -119,7 +123,12 @@ const ViewBusesdata = ({ navigation }) => {
 
         {/* Search Bar */}
         <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+          <Ionicons
+            name="search"
+            size={20}
+            color="#888"
+            style={styles.searchIcon}
+          />
           <TextInput
             style={styles.searchInput}
             placeholder="Search buses..."
@@ -142,13 +151,13 @@ const ViewBusesdata = ({ navigation }) => {
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statNumber}>
-              {filteredBuses.filter(b => b.LoggedIn).length}
+              {filteredBuses.filter((b) => b.LoggedIn).length}
             </Text>
             <Text style={styles.statLabel}>Active</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statNumber}>
-              {filteredBuses.filter(b => !b.LoggedIn).length}
+              {filteredBuses.filter((b) => !b.LoggedIn).length}
             </Text>
             <Text style={styles.statLabel}>Inactive</Text>
           </View>
@@ -156,7 +165,11 @@ const ViewBusesdata = ({ navigation }) => {
 
         {/* Loading Indicator */}
         {loading ? (
-          <ActivityIndicator size="large" color="#007AFF" style={styles.loader} />
+          <ActivityIndicator
+            size="large"
+            color="#007AFF"
+            style={styles.loader}
+          />
         ) : (
           <>
             {/* Bus List */}
@@ -175,12 +188,16 @@ const ViewBusesdata = ({ navigation }) => {
                       <Text style={styles.routeText}>
                         {item.fromStage} → {item.toStage}
                       </Text>
-                      <Text style={styles.routeNumber}>Route #{item.busRouteNo}</Text>
+                      <Text style={styles.routeNumber}>
+                        Route #{item.busRouteNo}
+                      </Text>
                     </View>
-                    <View style={[
-                      styles.statusIndicator,
-                      item.LoggedIn ? styles.active : styles.inactive
-                    ]}>
+                    <View
+                      style={[
+                        styles.statusIndicator,
+                        item.LoggedIn ? styles.active : styles.inactive,
+                      ]}
+                    >
                       <Text style={styles.statusText}>
                         {item.LoggedIn ? "Active" : "Inactive"}
                       </Text>
@@ -197,19 +214,37 @@ const ViewBusesdata = ({ navigation }) => {
                     <View style={styles.expandedContent}>
                       {/* Basic Info */}
                       <View style={styles.infoRow}>
-                        <MaterialIcons name="directions-bus" size={20} color="#007AFF" />
-                        <Text style={styles.infoText}>Type: {item.busType}</Text>
+                        <MaterialIcons
+                          name="directions-bus"
+                          size={20}
+                          color="#007AFF"
+                        />
+                        <Text style={styles.infoText}>
+                          Type: {item.busType}
+                        </Text>
                       </View>
                       <View style={styles.infoRow}>
                         <Ionicons name="people" size={20} color="#007AFF" />
-                        <Text style={styles.infoText}>Seats: {item.totalSeats}</Text>
+                        <Text style={styles.infoText}>
+                          Seats: {item.totalSeats}
+                        </Text>
                       </View>
                       <View style={styles.infoRow}>
-                        <MaterialIcons name="repeat" size={20} color="#007AFF" />
-                        <Text style={styles.infoText}>Shifts: {item.totalShifts}</Text>
+                        <MaterialIcons
+                          name="repeat"
+                          size={20}
+                          color="#007AFF"
+                        />
+                        <Text style={styles.infoText}>
+                          Shifts: {item.totalShifts}
+                        </Text>
                       </View>
                       <View style={styles.infoRow}>
-                        <MaterialIcons name="location-on" size={20} color="#007AFF" />
+                        <MaterialIcons
+                          name="location-on"
+                          size={20}
+                          color="#007AFF"
+                        />
                         <Text style={styles.infoText}>
                           {item.city}, {item.state}
                         </Text>
@@ -218,32 +253,44 @@ const ViewBusesdata = ({ navigation }) => {
                       {/* Timings Section */}
                       <Text style={styles.sectionTitle}>Timings</Text>
                       {item.timings ? (
-                        Object.entries(item.timings).map(([stage, time], index) => (
-                          <View key={index} style={styles.timingRow}>
-                            <Text style={styles.timingStage}>{stage}</Text>
-                            <View style={styles.timeBadge}>
-                              <Ionicons name="time" size={14} color="#007AFF" />
-                              <Text style={styles.timingText}>{time}</Text>
+                        Object.entries(item.timings).map(
+                          ([stage, time], index) => (
+                            <View key={index} style={styles.timingRow}>
+                              <Text style={styles.timingStage}>{stage}</Text>
+                              <View style={styles.timeBadge}>
+                                <Ionicons
+                                  name="time"
+                                  size={14}
+                                  color="#007AFF"
+                                />
+                                <Text style={styles.timingText}>{time}</Text>
+                              </View>
                             </View>
-                          </View>
-                        ))
+                          )
+                        )
                       ) : (
-                        <Text style={styles.noDataText}>No timings available</Text>
+                        <Text style={styles.noDataText}>
+                          No timings available
+                        </Text>
                       )}
 
                       {/* Prices Section */}
                       <Text style={styles.sectionTitle}>Fares</Text>
                       {item.prices ? (
-                        Object.entries(item.prices).map(([route, price], index) => (
-                          <View key={index} style={styles.priceRow}>
-                            <Text style={styles.priceRoute}>{route}</Text>
-                            <View style={styles.priceBadge}>
-                              <Text style={styles.priceText}>₹{price}</Text>
+                        Object.entries(item.prices).map(
+                          ([route, price], index) => (
+                            <View key={index} style={styles.priceRow}>
+                              <Text style={styles.priceRoute}>{route}</Text>
+                              <View style={styles.priceBadge}>
+                                <Text style={styles.priceText}>₹{price}</Text>
+                              </View>
                             </View>
-                          </View>
-                        ))
+                          )
+                        )
                       ) : (
-                        <Text style={styles.noDataText}>No fares available</Text>
+                        <Text style={styles.noDataText}>
+                          No fares available
+                        </Text>
                       )}
 
                       {/* Action Button */}
@@ -285,7 +332,11 @@ const ViewBusesdata = ({ navigation }) => {
                   onPress={handlePrevPage}
                   disabled={currentPage === 0}
                 >
-                  <Ionicons name="chevron-back" size={20} color={currentPage === 0 ? "#ccc" : "#007AFF"} />
+                  <Ionicons
+                    name="chevron-back"
+                    size={20}
+                    color={currentPage === 0 ? "#ccc" : "#007AFF"}
+                  />
                 </TouchableOpacity>
 
                 <Text style={styles.pageText}>
@@ -300,7 +351,11 @@ const ViewBusesdata = ({ navigation }) => {
                   onPress={handleNextPage}
                   disabled={currentPage + 1 >= totalPages}
                 >
-                  <Ionicons name="chevron-forward" size={20} color={currentPage + 1 >= totalPages ? "#ccc" : "#007AFF"} />
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={currentPage + 1 >= totalPages ? "#ccc" : "#007AFF"}
+                  />
                 </TouchableOpacity>
               </View>
             )}

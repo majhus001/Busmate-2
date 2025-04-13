@@ -2,13 +2,13 @@ import * as Location from "expo-location";
 import io from "socket.io-client";
 import { Alert } from "react-native";
 
-const SERVER_URL = "http://192.168.232.182:5000";
-
+import { API_BASE_URL } from "../../../apiurl";
+const SERVER_URL = API_BASE_URL;
 export const startLocationSharing = async (busRouteNo, onLocationUpdate) => {
   const socket = io(SERVER_URL, {
     reconnectionAttempts: 10,
     reconnectionDelay: 1000,
-    transports: ["polling"], // Force polling
+    transports: ["polling"],
     query: { busRouteNo },
   });
 
@@ -44,7 +44,7 @@ export const startLocationSharing = async (busRouteNo, onLocationUpdate) => {
     console.log(`📡 Socket event for bus ${busRouteNo}: ${event}`, args);
   });
 
-  let watchId;
+  let intervalId;
   try {
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
@@ -53,25 +53,28 @@ export const startLocationSharing = async (busRouteNo, onLocationUpdate) => {
       return () => socket.disconnect();
     }
 
-    watchId = await Location.watchPositionAsync(
-      {
-        accuracy: Location.Accuracy.BestForNavigation,
-        timeInterval: 1000,
-        distanceInterval: 1,
-      },
-      (loc) => {
+    // Start interval to fetch and emit location every 3 seconds
+    intervalId = setInterval(async () => {
+      try {
+        const loc = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.BestForNavigation,
+        });
         if (loc.coords) {
           const location = {
             latitude: loc.coords.latitude,
             longitude: loc.coords.longitude,
           };
-          console.log(`📍 Location shared internally:`, location);
+          console.log(`📍 Location shared internally for bus ${busRouteNo}:`, location);
           onLocationUpdate(location);
           socket.emit("sendLocation", { busRouteNo, location });
           console.log(`📤 Emitted location for bus ${busRouteNo}:`, location);
         }
+      } catch (error) {
+        console.error(`❌ Error fetching location for bus ${busRouteNo}:`, error);
+        onLocationUpdate(null);
       }
-    );
+    }, 3000);
+
   } catch (error) {
     console.error(`❌ Error starting location sharing for bus ${busRouteNo}:`, error);
     Alert.alert("Error", "Failed to start location sharing.");
@@ -80,10 +83,8 @@ export const startLocationSharing = async (busRouteNo, onLocationUpdate) => {
 
   return () => {
     console.log(`🛑 Stopping location sharing for bus ${busRouteNo}`);
-    if (watchId) {
-      Location.stopLocationUpdatesAsync(watchId).catch((err) =>
-        console.error("❌ Error stopping location updates:", err)
-      );
+    if (intervalId) {
+      clearInterval(intervalId);
     }
     socket.off("connect");
     socket.off("connect_error");

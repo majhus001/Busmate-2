@@ -12,11 +12,8 @@ router.post("/login", async (req, res) => {
     
     switch (role) {
       case "Conductor":
-        console.log("fghjk");
         Model = Conductor;
         user = await Model.findOne({ Username, password });
-        
-        console.log(user)
         if (user) {
           user.LoggedIn = true;
           await user.save();
@@ -31,6 +28,10 @@ router.post("/login", async (req, res) => {
           password,
           role,
         });
+        if (user) {
+          user.LoggedIn = true;
+          await user.save();
+        }
         break;
         default:
           return res.status(400).json({ error: "Invalid role" });

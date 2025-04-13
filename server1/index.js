@@ -44,14 +44,9 @@ const io = new Server(server, {
 });
 
 // Middleware
-app.use((req, res, next) => {
-  console.log(`📡 Request: ${req.method} ${req.url}`);
-  next();
-});
-app.use(cors(corsOptions));
-app.use(bodyParser.json({ limit: "10mb" }));
-app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
-
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 // API Routes
 app.use("/api/Admin/buses", buses);
 app.use("/api/Admin/conductor", Adconductor);
@@ -146,11 +141,8 @@ server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
 
-// Handle uncaught exceptions
-process.on("uncaughtException", (err) => {
-  console.error("❌ Uncaught Exception:", err);
-});
 
-process.on("unhandledRejection", (err) => {
-  console.error("❌ Unhandled Rejection:", err);
-});
+
+
+
+

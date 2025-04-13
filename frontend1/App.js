@@ -24,6 +24,7 @@ import Updateconductordata from "./components/Admin/Dashboard/Updatedatas/Update
 import ViewBusesdata from "./components/Admin/Dashboard/Updatedatas/ViewBusesdata";
 import Viewconductordata from "./components/Admin/Dashboard/Updatedatas/Viewconductordata";
 import Updatebusesdata from "./components/Admin/Dashboard/Updatedatas/Updatebusesdata";
+import AdminReports from "./components/Admin/Dashboard/Reports/AdminReports";
 
 const Stack = createNativeStackNavigator();
 
@@ -58,6 +59,7 @@ export default function App() {
         <Stack.Screen name="updateconductordata" component={Updateconductordata} />
         <Stack.Screen name="ViewBuses" component={ViewBusesdata} />
         <Stack.Screen name="ViewConductors" component={Viewconductordata} />
+        <Stack.Screen name="adreports" component={AdminReports} />
       </Stack.Navigator>
     </NavigationContainer>
   );

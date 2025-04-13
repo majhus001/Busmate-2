@@ -3,7 +3,7 @@ import { View, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
 
 import Navbar from './Navbar';
 import UserFindBus from './UserFindBus';
-import Footer from './Footer';
+import Footer from './Footer/Footer';
 import { useLanguage } from "../../../LanguageContext"; // Ensure this path is correct
 
 const UserHomeApp = ({ navigation }) => {

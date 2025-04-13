@@ -6,13 +6,13 @@ const BusRoute = require("../Module/BusRoutesSchema"); // Import Mongoose Model
 router.post("/add", async (req, res) => {
   try {
     const { state, city, numStages, stages } = req.body;
-    console.log("hi");
     if (!state || !city || !numStages || !stages.length) {
       return res
-        .status(400)
-        .json({ success: false, message: "All fields are required" });
+      .status(400)
+      .json({ success: false, message: "All fields are required" });
     }
-
+    
+    console.log(state);
     const newRoute = new BusRoute({ state, city, numStages, stages });
     await newRoute.save();
 
@@ -43,7 +43,6 @@ router.get("/getstates", async (req, res) => {
 
 router.get("/getcities/:selectedState", async (req, res) => {
   const {  selectedState } = req.params;
-console.log(selectedState)
   try {
     const routes = await BusRoute.find({
       state: new RegExp(`^${selectedState}$`, "i"),

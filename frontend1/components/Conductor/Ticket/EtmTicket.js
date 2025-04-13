@@ -24,6 +24,7 @@ const EtmTicket = ({ route, navigation }) => {
     busplateNo,
     selectedCity,
     selectedState,
+    BusData
   } = route.params;
 
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
@@ -253,10 +254,10 @@ const EtmTicket = ({ route, navigation }) => {
       paymentMethod,
       selectedCity,
       selectedState,
+      busId: BusData._id,
     };
     
     try {
-      console.log("kkkkk")
       const response = await axios.post(
         `${API_BASE_URL}/api/tickets/add_ticket`,
         ticketData
@@ -264,7 +265,9 @@ const EtmTicket = ({ route, navigation }) => {
       console.log(response.data.message)
       if (response.data.success) {
         setAvailableSeats(availableSeats - ticketData.ticketCount);
+        setTicketCount(1)
         navigation.navigate("ticsuccess", {method: "Cash"});
+
       } else {
         Alert.alert("Failed", "Could not issue ticket. Try again.");
       }

@@ -19,7 +19,7 @@ import { API_BASE_URL } from "../../../apiurl";
 import styles from "./Tickethistorystyles.js"; // Ensure this path is correct
 import { Feather } from "@expo/vector-icons";
 import { useLanguage } from "../../../LanguageContext"; // Ensure this path is correct
-import Footer from "./Footer.js";
+import Footer from "./Footer/Footer.js";
 
 // Define translations for all text in the component
 const translations = {

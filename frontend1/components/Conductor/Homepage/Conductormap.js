@@ -14,9 +14,9 @@ export default function Conductormap({ route }) {
       Alert.alert("Error", "No bus route number provided.");
       return;
     }
-
+  
     console.log(`🚀 Starting conductor map for bus ${busRouteNo}`);
-
+  
     const cleanup = startLocationSharing(busRouteNo, (newLocation) => {
       if (newLocation === null) {
         console.warn(`⚠️ Location sharing failed for bus ${busRouteNo}`);
@@ -27,13 +27,13 @@ export default function Conductormap({ route }) {
         setLocation(newLocation);
         setConnectionError(null);
         console.log(
-          `📍 Conductor Latitude: ${newLocation.latitude}, Longitude: ${newLocation.longitude} for bus ${busRouteNo}`
+          `📍 Conductor Location Updated for bus ${busRouteNo}: Latitude: ${newLocation.latitude}, Longitude: ${newLocation.longitude}`
         );
       } else {
         console.warn(`⚠️ Invalid location data for bus ${busRouteNo}:`, newLocation);
       }
     });
-
+  
     return () => {
       console.log(`🛑 Cleaning up conductor map for bus ${busRouteNo}`);
       cleanup();

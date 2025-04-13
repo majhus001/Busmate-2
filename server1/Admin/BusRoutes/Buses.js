@@ -65,6 +65,7 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Bus Plate No and Password are required",
+        
       });
     }
 
@@ -102,8 +103,6 @@ router.get("/fetchbus/:adminId", async (req, res) => {
 
   try {
     const buses = await Bus.find({ adminId });
-
-    console.log(buses);
     res.json({ data: buses });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -398,4 +397,47 @@ router.get("/seat-availability", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+router.get("/fetchAllBuses2", async (req, res) => {
+  try {
+    const { busRouteNo, from, to } = req.query;
+    const normalizedRouteNo = busRouteNo?.replace(/\s+/g, "").toLowerCase();
+
+    const buses = await Bus.find({
+      busRouteNo: { $regex: new RegExp(`^${normalizedRouteNo}$`, "i") }, // ← backticks here
+    });
+
+    res.json(buses);
+  } catch (error) {
+    console.error("Error fetching all buses:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+router.get("/fetchAllBuses3", async (req, res) => {
+  try {
+    const { busRouteNo } = req.query;
+    if (!busRouteNo) {
+      return res.status(400).json({ message: "busRouteNo is required." });
+    }
+
+    const normalizedRouteNo = busRouteNo.replace(/\s+/g, "").toLowerCase();
+
+    const bus = await Bus.findOne({
+      busRouteNo: { $regex: new RegExp(`^${normalizedRouteNo}$`, "i") }, // ← backticks here
+    });
+
+    if (!bus) {
+      return res.status(404).json({ message: "No bus found for the given route number." });
+    }
+
+    res.json(bus);
+  } catch (error) {
+    console.error("Error fetching bus:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 module.exports = router;

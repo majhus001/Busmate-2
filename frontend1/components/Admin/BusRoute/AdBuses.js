@@ -17,7 +17,7 @@ import axios from "axios";
 
 const AdBuses = ({ navigation, route }) => {
   const { adminData } = route.params || {};
-  const [activeTab, setActiveTab] = useState("basic");
+  const [activeTab, setActiveTab] = useState("route");
   const [busRouteNo, setBusRouteNo] = useState("");
   const [busNo, setBusNo] = useState("");
   const [busPassword, setBusPassword] = useState("");
@@ -138,7 +138,6 @@ const AdBuses = ({ navigation, route }) => {
     const hasStages = filteredStages().length > 0;
 
     if (missingFields.length > 0) {
-      console.log("tttg");
       const errorMessage = `Please fill in the following fields:\n${missingFields.join(
         "\n"
       )}`;
@@ -147,16 +146,15 @@ const AdBuses = ({ navigation, route }) => {
     }
 
     if (!hasStages) {
-      console.log("jjjjj");
       Alert.alert("Route Error", "Please select valid From and To stages");
       return;
     }
-    
+
     // Check if all timings are set
     const missingTimings = filteredStages()
-    .filter((stage) => !timings[stage])
-    .map((stage) => `Timing for ${stage}`);
-    
+      .filter((stage) => !timings[stage])
+      .map((stage) => `Timing for ${stage}`);
+
     if (missingTimings.length > 0) {
       Alert.alert(
         "Missing Timings",
@@ -164,19 +162,19 @@ const AdBuses = ({ navigation, route }) => {
       );
       return;
     }
-    
+
     // Check if all required prices are set
     const missingPrices = [];
     filteredStages().forEach((from, i) => {
       filteredStages()
-      .slice(i + 1)
-      .forEach((to) => {
-        if (!prices[`${from}-${to}`]) {
-          missingPrices.push(`Price from ${from} to ${to}`);
-        }
-      });
+        .slice(i + 1)
+        .forEach((to) => {
+          if (!prices[`${from}-${to}`]) {
+            missingPrices.push(`Price from ${from} to ${to}`);
+          }
+        });
     });
-    
+
     if (missingPrices.length > 0) {
       Alert.alert(
         "Missing Prices",
@@ -184,8 +182,7 @@ const AdBuses = ({ navigation, route }) => {
       );
       return;
     }
-    
-    // All validations passed - proceed with submission
+
     const busData = {
       busRouteNo,
       busNo,
@@ -202,11 +199,9 @@ const AdBuses = ({ navigation, route }) => {
       timings,
       adminId: adminData._id,
     };
-    console.log("kkkkk");
-    
+
     setLoading(true);
     try {
-      console.log(busData)
       const response = await axios.post(
         `${API_BASE_URL}/api/Admin/buses/add`,
         busData,
@@ -274,6 +269,15 @@ const AdBuses = ({ navigation, route }) => {
     if (fromIndex === -1 || toIndex === -1) return [];
     return fromIndex <= toIndex ? stages.slice(fromIndex, toIndex + 1) : [];
   };
+
+  // Sort states alphabetically
+  const sortedStates = [...states].sort((a, b) => a.localeCompare(b));
+
+  // Sort cities alphabetically
+  const sortedCities = [...cities].sort((a, b) => a.localeCompare(b));
+
+  // Sort stages alphabetically
+  const sortedStages = [...stages].sort((a, b) => a.localeCompare(b));
 
   return (
     <View style={styles.container}>
@@ -425,7 +429,7 @@ const AdBuses = ({ navigation, route }) => {
                   onValueChange={handleStateChange}
                   style={styles.picker}
                 >
-                  {states.map((s, index) => (
+                  {sortedStates.map((s, index) => (
                     <Picker.Item key={index} label={s} value={s} />
                   ))}
                 </Picker>
@@ -441,7 +445,7 @@ const AdBuses = ({ navigation, route }) => {
                     onValueChange={handleCityChange}
                     style={styles.picker}
                   >
-                    {cities.map((c, index) => (
+                    {sortedCities.map((c, index) => (
                       <Picker.Item key={index} label={c} value={c} />
                     ))}
                   </Picker>
@@ -459,7 +463,7 @@ const AdBuses = ({ navigation, route }) => {
                       onValueChange={setFromStage}
                       style={styles.picker}
                     >
-                      {stages.map((stage, index) => (
+                      {sortedStages.map((stage, index) => (
                         <Picker.Item key={index} label={stage} value={stage} />
                       ))}
                     </Picker>
@@ -474,7 +478,7 @@ const AdBuses = ({ navigation, route }) => {
                       onValueChange={setToStage}
                       style={styles.picker}
                     >
-                      {stages.map((stage, index) => (
+                      {sortedStages.map((stage, index) => (
                         <Picker.Item key={index} label={stage} value={stage} />
                       ))}
                     </Picker>
