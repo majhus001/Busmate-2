@@ -23,31 +23,27 @@ const buzzer = require("./Conductor/Buzzer");
 const app = express();
 const server = http.createServer(app);
 
-// Configure CORS for Express and Socket.io
+// Configure CORS to allow all origins
 const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow no origin (React Native) or specific origins
-    if (!origin || origin.startsWith("http://192.168.") || origin === process.env.FRONTEND_URL || origin === "http://localhost:3000") {
-      callback(null, true);
-    } else {
-      console.warn(`⚠️ CORS rejected origin: ${origin}`);
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true,
+  origin: "*", // Allow all origins
   methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 };
 
-// Socket.io Setup
+// Socket.io Setup with permissive CORS
 const io = new Server(server, {
-  cors: corsOptions,
-  path: "/socket.io/", // Explicit path
+  cors: {
+    origin: "*", // Allow all origins
+    methods: ["GET", "POST"]
+  },
+  path: "/socket.io/" // Explicit path
 });
 
 // Middleware
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(cors(corsOptions)); // Apply the CORS middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
 // API Routes
 app.use("/api/Admin/buses", buses);
 app.use("/api/Admin/conductor", Adconductor);
