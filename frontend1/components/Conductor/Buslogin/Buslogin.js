@@ -24,29 +24,37 @@ const Buslogin = ({ route, navigation }) => {
       Alert.alert("Error", "Please enter the password");
       return;
     }
-  
+
     try {
       console.log("Attempting login for bus:", busplateNo);
-      const response = await axios.post(`${API_BASE_URL}/api/Admin/buses/login`, {
-        busplateNo,
-        password,
-      });
-  
+      const response = await axios.post(
+        `${API_BASE_URL}/api/Admin/buses/login`,
+        {
+          busplateNo,
+          password,
+        }
+      );
+
       if (response.data.success) {
         Alert.alert("Success", "Login Successful");
-  
+
         // Start location sharing
         console.log("Starting location sharing for bus:", selectedBusNo);
         const cleanup = startLocationSharing(selectedBusNo, (location) => {
           console.log("📍 Location shared internally:", location);
         });
-  
+
         if (!cleanup) {
-          console.error("❌ Failed to start location sharing for bus:", selectedBusNo);
+          console.error(
+            "❌ Failed to start location sharing for bus:",
+            selectedBusNo
+          );
           Alert.alert("Error", "Failed to start location sharing.");
           return;
         }
-  
+
+        const BusData = response.data.busDetails;
+
         // Navigate to taketicket
         navigation.navigate("taketicket", {
           selectedFrom,
@@ -55,6 +63,7 @@ const Buslogin = ({ route, navigation }) => {
           busplateNo,
           selectedCity,
           selectedState,
+          BusData,
         });
       } else {
         Alert.alert("Error", response.data.message || "Invalid Credentials");

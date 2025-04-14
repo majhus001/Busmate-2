@@ -253,7 +253,7 @@ const EtmTicket = ({ route, navigation }) => {
       const upiId = "thamilprakasam2005@okhdfcbank";
       navigation.navigate("Upiqr",{upiId, amount});
     }
-    
+    console.log("bus data-----",BusData)
     const ticketData = {
       routeName: RouteName,
       busRouteNo: selectedBusNo,
