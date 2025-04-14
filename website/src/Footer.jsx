@@ -31,7 +31,7 @@ const Footer = () => {
           <h4>DOWNLOAD APP</h4>
           <ul>
             <li><a href="#">Download Busmate (User App)</a></li>
-            <li><a href="#">Download Busmate Admin, Conductor App</a></li>
+            <li><a href="#">Download Busmate-Hero (Admin, Conductor App)</a></li>
           </ul>
         </div>
 
@@ -40,7 +40,7 @@ const Footer = () => {
           <ul>
             <li>Thamilarasan GP</li>
             <li>Rahul R</li>
-            <li>Majidhusian J</li>
+            <li>Majid Husian J</li>
             <li>Tharan A</li>
           </ul>
         </div>

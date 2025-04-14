@@ -5,6 +5,17 @@ const Navbar = () => {
   const [isNavbarOpaque, setIsNavbarOpaque] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const downloadApp = () => {
+    // Create a temporary anchor element
+    const link = document.createElement('a');
+    link.href = 'https://expo.dev/accounts/majid10/projects/client/builds/a03e2eda-8ffc-4376-88e4-40f48abe4fe6';
+    link.setAttribute('target', '_blank');
+    link.setAttribute('rel', 'noopener noreferrer');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       setIsNavbarOpaque(window.scrollY > 50);
@@ -33,7 +44,7 @@ const Navbar = () => {
           <li><a href="#services" className="nav-item">Services</a></li>
           <li><a href="#qna" className="nav-item">Q&A</a></li>
           <li>
-            <a href="#download" className="download-btn">Download App</a>
+            <button onClick={downloadApp} className="download-btn">Download App</button>
           </li>
         </ul>
 

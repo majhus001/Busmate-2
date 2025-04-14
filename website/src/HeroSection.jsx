@@ -4,6 +4,17 @@ import './HeroSection.css';
 const HeroSection = () => {
   const heroRef = useRef(null);
   
+  const downloadApp = () => {
+    // Create a temporary anchor element
+    const link = document.createElement('a');
+    link.href = 'https://expo.dev/accounts/majid10/projects/client/builds/a03e2eda-8ffc-4376-88e4-40f48abe4fe6';
+    link.setAttribute('target', '_blank');
+    link.setAttribute('rel', 'noopener noreferrer');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
   useEffect(() => {
     // Add animation class after component mounts
     const hero = heroRef.current;
@@ -11,7 +22,6 @@ const HeroSection = () => {
       hero.classList.add('loaded');
     }
     
-    // Optional: Parallax effect on scroll
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
       const parallaxElements = document.querySelectorAll('.parallax');
@@ -74,7 +84,7 @@ const HeroSection = () => {
                 <div className="testimonial-author">
                   <div className="author-image"></div>
                   <div className="author-info">
-                    <span className="author-name">Sarah Johnson</span>
+                    <span className="author-name">Sam Giftson</span>
                     <span className="author-title">Daily Commuter</span>
                   </div>
                 </div>
@@ -82,7 +92,7 @@ const HeroSection = () => {
             </div>
             
             <div className="cta-buttons">
-              <button className="cta-primary">
+              <button className="cta-primary" onClick={downloadApp}>
                 <span className="btn-text">Download App</span>
                 <span className="btn-icon">↓</span>
               </button>
