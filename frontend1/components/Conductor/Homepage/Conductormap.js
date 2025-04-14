@@ -3,8 +3,9 @@ import { View, Text, StyleSheet } from "react-native";
 import * as Location from "expo-location";
 import MapView, { Marker } from "react-native-maps";
 import io from "socket.io-client";
+import { API_BASE_URL } from "../../../apiurl";
 
-const SERVER_URL = "http://192.168.232.182:5000"; // Change this to your actual server IP
+const SERVER_URL = API_BASE_URL; // Change this to your actual server IP
 const socket = io(SERVER_URL, { transports: ["websocket"] });
 
 export default function Conductormap() {
@@ -20,7 +21,7 @@ export default function Conductormap() {
         return;
       }
 
-      // Fetch the latest location immediately
+      
       let initialLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.BestForNavigation,
       });

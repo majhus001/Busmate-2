@@ -3,6 +3,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
+const socketIo = require('socket.io');
 const cors = require("cors");
 const fs = require("fs");
 require("dotenv").config(); // Load environment variables
@@ -67,7 +68,7 @@ io.on("connection", (socket) => {
 
   socket.on("sendLocation", (data) => {
     console.log("📍 Location Received:", data);
-    io.emit("sendLocation", data); // Broadcast to all clients
+    io.emit("sendLocation", data); 
   });
 
   socket.on("disconnect", () => {

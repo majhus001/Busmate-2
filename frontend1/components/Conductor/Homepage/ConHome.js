@@ -6,8 +6,6 @@ import ConductorMap from "./Conductormap";
 const ConHome = ({ navigation, route }) => {
   const { conData } = route.params || {}; 
 
-
-
   useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);

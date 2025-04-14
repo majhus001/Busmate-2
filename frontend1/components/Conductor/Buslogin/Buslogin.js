@@ -38,6 +38,7 @@ const Buslogin = ({ route, navigation }) => {
       if (response.data.success) {
         Alert.alert("Success", "Login Successful");
         const BusData = response.data.busDetails; 
+        
         navigation.navigate("taketicket", {
           selectedFrom,
           selectedTo,

@@ -27,7 +27,7 @@ export default function App() {
     <LanguageProvider>
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Splash"
+        initialRouteName="login"
         screenOptions={{ headerShown: false }}
       >
         <Stack.Screen name="usfindbus" component={UserFindBus} />

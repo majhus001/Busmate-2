@@ -13,14 +13,22 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.majid.busmatehero",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app needs location access to show your real-time position on the map."
+      }
     },
     "android": {
+      "package": "com.majid.busmatehero",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      },
-      "package": "com.majid.busmatehero"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"

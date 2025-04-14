@@ -325,7 +325,7 @@ const Busdetails = ({ route, navigation }) => {
           icon="navigate"
           label={t.liveTrack}
           color="#007AFF"
-          onPress={() => navigation.navigate("usmap")}
+          onPress={() => navigation.navigate("usmap",{busId: bus._id})}
         />
         <ActionButton
           icon="card"
