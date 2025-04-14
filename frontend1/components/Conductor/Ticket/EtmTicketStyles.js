@@ -66,6 +66,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 10,      // Reduced from 12
+    
   },
   infoBox: {
     flex: 1,
@@ -274,6 +275,36 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  locationButtonsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  nextStopContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2563eb',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginLeft: 10,
+  },
+  nextStopLabel: {
+    fontSize: 14,
+    color: '#fff',
+    marginRight: 5,
+  },
+  nextStopValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  nextStopValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginLeft: 5,
   },
 });
 

@@ -15,6 +15,7 @@ import axios from "axios";
 import { Picker } from "@react-native-picker/picker";
 import styles from "./EtmTicketStyles";
 import { API_BASE_URL } from "../../../apiurl";
+import { MaterialIcons } from "@expo/vector-icons";
 
 const EtmTicket = ({ route, navigation }) => {
   const {
@@ -36,16 +37,26 @@ const EtmTicket = ({ route, navigation }) => {
   const [ticketPrice, setTicketPrice] = useState(0);
   const [stages, setStages] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState("Cash");
-
+  const [nextStop, setNextStop] = useState(null);
   const [availableSeats, setAvailableSeats] = useState(0);
   const [seatLoading, setSeatLoading] = useState(true);
   const [seatError, setSeatError] = useState(null);
   const fadeAnim = new Animated.Value(1);
   const [selectedLocations, setSelectedLocations] = useState([]);
+
   const handleLocationSelect = async (item) => {
     setBoarding(item);
-    setSelectedLocations((prev) => [...prev, item]); // Add to selected locations
+    setSelectedLocations((prev) => [...prev, item]);
     setShowLocationDropdown(false);
+    
+    // Find and set next stop
+    const currentIndex = stages.indexOf(item);
+    if (currentIndex !== -1 && currentIndex < stages.length - 1) {
+      setNextStop(stages[currentIndex + 1]);
+    } else {
+      setNextStop(null);
+    }
+
     try {
       setSeatLoading(true);
       const dest = item;
@@ -70,7 +81,6 @@ const EtmTicket = ({ route, navigation }) => {
   };
 
   const resetDisabledLocations = () => {
-    // Start the animation
     Animated.sequence([
       Animated.timing(fadeAnim, {
         toValue: 0.3,
@@ -85,7 +95,8 @@ const EtmTicket = ({ route, navigation }) => {
         useNativeDriver: true,
       }),
     ]).start(() => {
-      setSelectedLocations([]); // Clear after animation starts
+      setSelectedLocations([]);
+      setNextStop(null);
     });
   };
 
@@ -156,7 +167,7 @@ const EtmTicket = ({ route, navigation }) => {
           }
         );
         console.log(response.data.data);
-        setAvailableSeats(response.data.data); // Changed from response.data.availableSeats to response.data.data
+        setAvailableSeats(response.data.data);
         setSeatError(null);
       } catch (error) {
         setSeatError("Failed to load seat data");
@@ -212,7 +223,7 @@ const EtmTicket = ({ route, navigation }) => {
 
   const handleSubmit = async () => {
     if (availableSeats <= 1){
-     axios.post(`${API_BASE_URL}/api/buzzer/trigger`, { selectedBusNo: selectedBusNo });
+      axios.post(`${API_BASE_URL}/api/buzzer/trigger`, { selectedBusNo: selectedBusNo });
       
     } 
     
@@ -254,9 +265,8 @@ const EtmTicket = ({ route, navigation }) => {
       paymentMethod,
       selectedCity,
       selectedState,
-      busId: BusData._id,
+      busId: BusData?._id,
     };
-    
     try {
       const response = await axios.post(
         `${API_BASE_URL}/api/tickets/add_ticket`,
@@ -281,7 +291,6 @@ const EtmTicket = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      
       {/* BUS DETAILS */}
       <View style={styles.cardheader}>
         <View style={styles.row}>
@@ -315,13 +324,25 @@ const EtmTicket = ({ route, navigation }) => {
         </View>
 
         <View style={styles.row}>
-          <TouchableOpacity
-            style={styles.locationButton}
-            onPress={() => setShowLocationDropdown(true)}
-          >
-            <Text style={styles.locationIcon}>📍</Text>
-            <Text style={styles.locationText}>Mark the location</Text>
-          </TouchableOpacity>
+          <View style={styles.locationButtonsContainer}>
+            <TouchableOpacity
+              style={styles.locationButton}
+              onPress={() => setShowLocationDropdown(true)}
+            >
+              <MaterialIcons name="location-pin" size={20} color="lightblue" />
+              <Text style={styles.locationText}>Mark Location</Text>
+            </TouchableOpacity>
+            
+            {nextStop && (
+              <View style={styles.nextStopContainer}>
+                <Text style={styles.nextStopLabel}>Next Stop:</Text>
+                <View style={styles.nextStopValueContainer}>
+                  <MaterialIcons name="arrow-forward" size={16} color="#fff" />
+                  <Text style={styles.nextStopValue}>{nextStop}</Text>
+                </View>
+              </View>
+            )}
+          </View>
         </View>
       </View>
 
@@ -334,7 +355,7 @@ const EtmTicket = ({ route, navigation }) => {
           <Animated.View
             style={[
               styles.modalContent,
-              { opacity: fadeAnim }, // Apply animation to entire modal
+              { opacity: fadeAnim },
             ]}
           >
             <View style={styles.modalHeader}>
@@ -427,7 +448,6 @@ const EtmTicket = ({ route, navigation }) => {
                 );
               }}
             />
-            {/* ... close button */}
           </Animated.View>
         </View>
       </Modal>
