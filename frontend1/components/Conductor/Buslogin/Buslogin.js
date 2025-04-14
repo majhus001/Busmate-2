@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import axios from "axios";
 import styles from "./BusloginStyles";
 import { API_BASE_URL } from "../../../apiurl";
+import { startLocationSharing } from "../Homepage/locationService";
 
 const Buslogin = ({ route, navigation }) => {
   const {
@@ -16,29 +17,37 @@ const Buslogin = ({ route, navigation }) => {
 
   const [password, setPassword] = useState("");
 
-  console.log("Selected Bus Info on loign:", {
-    busplateNo,
-  });
+  console.log("Selected Bus Info on login:", { busplateNo, selectedBusNo });
+
   const handleLogin = async () => {
     if (!password) {
       Alert.alert("Error", "Please enter the password");
       return;
     }
-
+  
     try {
-      console.log(busplateNo, password);
-      const response = await axios.post(
-        `${API_BASE_URL}/api/Admin/buses/login`,
-        {
-          busplateNo,
-          password,
-        }
-      );
-
+      console.log("Attempting login for bus:", busplateNo);
+      const response = await axios.post(`${API_BASE_URL}/api/Admin/buses/login`, {
+        busplateNo,
+        password,
+      });
+  
       if (response.data.success) {
         Alert.alert("Success", "Login Successful");
-        const BusData = response.data.busDetails; 
-        
+  
+        // Start location sharing
+        console.log("Starting location sharing for bus:", selectedBusNo);
+        const cleanup = startLocationSharing(selectedBusNo, (location) => {
+          console.log("📍 Location shared internally:", location);
+        });
+  
+        if (!cleanup) {
+          console.error("❌ Failed to start location sharing for bus:", selectedBusNo);
+          Alert.alert("Error", "Failed to start location sharing.");
+          return;
+        }
+  
+        // Navigate to taketicket
         navigation.navigate("taketicket", {
           selectedFrom,
           selectedTo,
@@ -46,7 +55,6 @@ const Buslogin = ({ route, navigation }) => {
           busplateNo,
           selectedCity,
           selectedState,
-          BusData
         });
       } else {
         Alert.alert("Error", response.data.message || "Invalid Credentials");

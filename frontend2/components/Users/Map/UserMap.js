@@ -1,109 +1,269 @@
-import React, { useState, useEffect, useRef } from "react";
-import { View, Text, StyleSheet, Animated, Dimensions } from "react-native";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { View, Text, StyleSheet, Animated, Dimensions, Alert } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import * as Location from "expo-location";
 import * as SecureStore from "expo-secure-store";
 import io from "socket.io-client";
 import haversine from "haversine-distance";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { LinearGradient } from "expo-linear-gradient";
-import { useLanguage } from "../../../LanguageContext"; 
+import { useLanguage } from "../../../LanguageContext";
 import { API_BASE_URL } from "../../../apiurl";
 
 const SERVER_URL = API_BASE_URL;
 const socket = io(SERVER_URL, { transports: ["websocket"] });
 const { width } = Dimensions.get("window");
 
-export default function UserMap() {
-  const { darkMode } = useLanguage(); // Use the language context with darkMode
+export default function UserMap({ route }) {
+  const { darkMode } = useLanguage();
+  const { busRouteNo } = route.params || {};
 
   const [deviceLocation, setDeviceLocation] = useState(null);
   const [receivedLocation, setReceivedLocation] = useState(null);
   const [mapRegion, setMapRegion] = useState(null);
-  const locationRef = useRef(null);
-  const [storedDistance, setStoredDistance] = useState(null);
   const [deviceAddress, setDeviceAddress] = useState(null);
   const [receivedAddress, setReceivedAddress] = useState(null);
+  const [storedDistance, setStoredDistance] = useState("No distance recorded");
+  const [noConductorLocation, setNoConductorLocation] = useState(false);
+  const locationRef = useRef(null);
+  const socketRef = useRef(null);
+  const lastLocationTimeRef = useRef(0);
+  const mapRef = useRef(null); // Reference to MapView
 
   // Animation values
   const distanceAnimation = useRef(new Animated.Value(0)).current;
   const timeAnimation = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    console.log("🚀 Connecting to socket for live tracking...");
+  // Interpolated scales for animations
+  const distanceScale = distanceAnimation.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [1, 1.2, 1],
+  });
 
-    const getDeviceLocation = async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        console.log("❌ Location permission denied");
-        return;
-      }
+  const timeScale = timeAnimation.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [1, 1.2, 1],
+  });
 
-      let initialLocation = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.BestForNavigation,
-      });
+  const getDeviceLocation = async () => {
+    let attempts = 0;
+    const maxAttempts = 5;
 
-      console.log("📍 Initial Device Location:", initialLocation.coords);
-      setDeviceLocation(initialLocation.coords);
-      locationRef.current = initialLocation.coords;
-      getAddressFromCoordinates(initialLocation.coords.latitude, initialLocation.coords.longitude, setDeviceAddress);
-
-      await Location.watchPositionAsync(
-        {
-          accuracy: Location.Accuracy.BestForNavigation,
-          timeInterval: 1000,
-          distanceInterval: 1,
-        },
-        (loc) => {
-          if (loc.coords) {
-            console.log("📍 Updated Device Location:", loc.coords);
-            setDeviceLocation(loc.coords);
-            locationRef.current = loc.coords;
-            getAddressFromCoordinates(loc.coords.latitude, loc.coords.longitude, setDeviceAddress);
-          }
+    while (attempts < maxAttempts) {
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          console.log("❌ Location permission denied for UserMap");
+          Alert.alert("Permission Denied", "Location permission is required to track the bus.");
+          return false;
         }
-      );
-    };
 
-    getDeviceLocation();
+        let location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.BestForNavigation,
+        });
+        console.log("📍 Initial Device Location:", location.coords);
+        setDeviceLocation(location.coords);
+        locationRef.current = location.coords;
+        getAddressFromCoordinates(location.coords.latitude, location.coords.longitude, setDeviceAddress);
+        return true;
+      } catch (error) {
+        console.error(`❌ Error getting initial location (attempt ${attempts + 1}):`, error);
+        attempts++;
+        if (attempts === maxAttempts) {
+          console.log("❌ Max location attempts reached");
+          Alert.alert("Error", "Failed to get device location after retries.");
+          return false;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+  };
 
-    socket.on("sendLocation", (newLocation) => {
-      console.log("📥 Received Live Location:", newLocation);
-      setReceivedLocation(newLocation);
-      getAddressFromCoordinates(newLocation.latitude, newLocation.longitude, setReceivedAddress);
+  useEffect(() => {
+    if (!busRouteNo) {
+      Alert.alert("Error", "No bus route number provided.");
+      console.log("❌ No bus route number provided for UserMap");
+      return;
+    }
 
-      // Trigger animations when location updates
-      Animated.parallel([
-        Animated.timing(distanceAnimation, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.timing(timeAnimation, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        })
-      ]).start(() => {
-        distanceAnimation.setValue(0);
-        timeAnimation.setValue(0);
+    console.log(`🚀 Initializing UserMap for bus ${busRouteNo}`);
+
+    // Initialize socket
+    socketRef.current = io(SERVER_URL, {
+      transports: ["polling"],
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      query: { busRouteNo },
+    });
+
+    const socket = socketRef.current;
+
+    socket.on("connect", () => {
+      console.log(`✅ Socket connected for UserMap ${busRouteNo}`);
+      socket.emit("joinBusRoom", busRouteNo);
+      console.log(`👀 User joined room for Bus: ${busRouteNo}`);
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error(`❌ Socket connection error for UserMap ${busRouteNo}:`, {
+        message: error.message,
+        description: error.description,
+        type: error.type,
+        stack: error.stack,
       });
+      Alert.alert("Connection Error", "Failed to connect to the server. Retrying...");
+      setNoConductorLocation(true);
+    });
+
+    socket.on("reconnect", (attempt) => {
+      console.log(`🔄 Socket reconnected for UserMap ${busRouteNo} after ${attempt} attempts`);
+      socket.emit("joinBusRoom", busRouteNo);
+      setNoConductorLocation(false);
+    });
+
+    socket.on("error", (error) => {
+      console.error(`❌ Socket error for UserMap ${busRouteNo}:`, error.message);
+      Alert.alert("Error", error.message || "Failed to receive bus location.");
+    });
+
+    socket.onAny((event, ...args) => {
+      console.log(`📡 Received socket event for UserMap ${busRouteNo}: ${event}`, args);
+    });
+
+    // Initialize device location
+    getDeviceLocation().then((success) => {
+      if (success) {
+        Location.watchPositionAsync(
+          {
+            accuracy: Location.Accuracy.BestForNavigation,
+            timeInterval: 1000,
+            distanceInterval: 1,
+          },
+          (loc) => {
+            if (loc.coords) {
+              console.log("📍 Updated Device Location:", loc.coords);
+              setDeviceLocation(loc.coords);
+              locationRef.current = loc.coords;
+              getAddressFromCoordinates(loc.coords.latitude, loc.coords.longitude, setDeviceAddress);
+            }
+          }
+        ).catch((error) => {
+          console.error("❌ Error watching device location:", error);
+        });
+      }
     });
 
     getStoredDistance();
 
-    const interval = setInterval(() => {
-      if (deviceLocation && receivedLocation) {
-        const distance = calculateDistance(receivedLocation, deviceLocation);
-        saveDistance(distance);
+    // Check for conductor location (for UI only)
+    const locationTimeout = setTimeout(() => {
+      if (Date.now() - lastLocationTimeRef.current >= 10000) {
+        console.log(`❌ No conductor location available for bus ${busRouteNo}`);
+        setNoConductorLocation(true);
+        setReceivedLocation(null);
       }
-    }, 3000);
+    }, 10000);
+
+    // Listen for location updates
+    socket.on("sendLocation", async (data) => {
+      console.log(`📥 Raw sendLocation data for Bus ${busRouteNo}:`, data);
+      if (data.busRouteNo !== busRouteNo) {
+        console.log(`⚠️ Received location for wrong bus ${data.busRouteNo}, expected ${busRouteNo}`);
+        return;
+      }
+
+      if (data.location?.latitude && data.location?.longitude) {
+        console.log(`📥 Received Live Location for Bus ${busRouteNo}:`, data.location);
+        console.log(`📍 Received Latitude: ${data.location.latitude}, Longitude: ${data.location.longitude}`);
+        setReceivedLocation(data.location);
+        lastLocationTimeRef.current = Date.now();
+        setNoConductorLocation(false);
+        getAddressFromCoordinates(data.location.latitude, data.location.longitude, setReceivedAddress);
+
+        // Trigger animations
+        Animated.parallel([
+          Animated.timing(distanceAnimation, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(timeAnimation, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ]).start(() => {
+          distanceAnimation.setValue(0);
+          timeAnimation.setValue(0);
+        });
+
+        // Ensure device location
+        let currentDeviceLocation = deviceLocation || locationRef.current;
+        if (!currentDeviceLocation) {
+          console.log(`⚠️ Device location not available, retrying...`);
+          const success = await getDeviceLocation();
+          currentDeviceLocation = success ? locationRef.current : null;
+        }
+
+        if (currentDeviceLocation) {
+          const distance = calculateDistance(data.location, currentDeviceLocation);
+          console.log(`🔍 Immediate distance for ${busRouteNo}: ${distance} km`, {
+            device: currentDeviceLocation,
+            conductor: data.location,
+          });
+          saveDistance(distance);
+        } else {
+          console.log(`⚠️ No device location for distance calculation`);
+        }
+      } else {
+        console.warn(`⚠️ Invalid location data received for Bus ${busRouteNo}:`, data);
+      }
+    });
+
+    // Store distance every 1 second
+    const interval = setInterval(async () => {
+      const timeSinceLastLocation = Date.now() - lastLocationTimeRef.current;
+      let currentDeviceLocation = deviceLocation || locationRef.current;
+      if (!currentDeviceLocation) {
+        console.log(`⚠️ Device location not available in interval, retrying...`);
+        const success = await getDeviceLocation();
+        currentDeviceLocation = success ? locationRef.current : null;
+      }
+
+      if (currentDeviceLocation && receivedLocation) {
+        const distance = calculateDistance(receivedLocation, currentDeviceLocation);
+        console.log(`🔍 Interval calculated distance for ${busRouteNo}: ${distance} km`, {
+          device: currentDeviceLocation,
+          conductor: receivedLocation,
+          timeSinceLastLocation,
+        });
+        saveDistance(distance);
+      } else {
+        console.log(`⚠️ Skipping distance update for ${busRouteNo}:`, {
+          deviceLocation: !!currentDeviceLocation,
+          receivedLocation: !!receivedLocation,
+          timeSinceLastLocation,
+        });
+      }
+    }, 1000);
 
     return () => {
-      socket.off("sendLocation");
+      console.log(`🛑 Cleaning up UserMap for bus ${busRouteNo}`);
+      clearTimeout(locationTimeout);
       clearInterval(interval);
+      socket.off("sendLocation");
+      socket.off("connect");
+      socket.off("connect_error");
+      socket.off("reconnect");
+      socket.off("error");
+      socket.offAny();
+      socket.emit("leaveBusRoom", busRouteNo);
+      socket.disconnect();
+      // Reset mapRef to avoid marker conflicts
+      if (mapRef.current) {
+        mapRef.current = null;
+      }
     };
-  }, [deviceLocation, receivedLocation]);
+  }, [busRouteNo]);
 
   useEffect(() => {
     if (deviceLocation) {
@@ -123,6 +283,7 @@ export default function UserMap() {
         const { street, city, region, country } = response[0];
         const fullAddress = `${street ? street + ", " : ""}${city}, ${region}, ${country}`;
         setAddress(fullAddress);
+        console.log(`📍 Resolved address for ${latitude}, ${longitude}: ${fullAddress}`);
       }
     } catch (error) {
       console.error("❌ Error fetching address:", error);
@@ -131,11 +292,13 @@ export default function UserMap() {
 
   const saveDistance = async (distanceKm) => {
     try {
-      const distanceText = `${distanceKm} km`;
+      const distanceText = distanceKm !== "..." ? `${distanceKm} km` : storedDistance;
       await SecureStore.setItemAsync("storedDistance", distanceText);
       console.log("✅ Distance stored successfully:", distanceText);
+      setStoredDistance(distanceText);
     } catch (error) {
       console.error("❌ Error storing distance:", error);
+      setStoredDistance("Error storing distance");
     }
   };
 
@@ -143,21 +306,34 @@ export default function UserMap() {
     try {
       const storedDistance = await SecureStore.getItemAsync("storedDistance");
       if (storedDistance) {
-        setStoredDistance(storedDistance);
         console.log("📦 Retrieved Distance from Storage:", storedDistance);
+        setStoredDistance(storedDistance);
       } else {
         console.log("⚠️ No distance stored yet.");
+        setStoredDistance("No distance recorded");
       }
     } catch (error) {
       console.error("❌ Error retrieving distance:", error);
+      setStoredDistance("Error retrieving distance");
     }
   };
 
   const calculateDistance = (receivedLocation, deviceLocation) => {
-    if (!receivedLocation || !deviceLocation) return "...";
+    if (!receivedLocation || !deviceLocation) {
+      console.log("⚠️ Invalid coordinates for distance calculation:", {
+        receivedLocation,
+        deviceLocation,
+      });
+      return "...";
+    }
 
     const distanceMeters = haversine(receivedLocation, deviceLocation);
     const distanceKm = (distanceMeters / 1000).toFixed(2);
+    console.log(`📏 Calculated distance: ${distanceKm} km`, {
+      receivedLocation,
+      deviceLocation,
+      distanceMeters,
+    });
 
     return distanceKm;
   };
@@ -175,35 +351,33 @@ export default function UserMap() {
     return timeMinutes.toFixed(0);
   };
 
-  // Animation styles
-  const distanceScale = distanceAnimation.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [1, 1.2, 1],
-  });
-
-  const timeScale = timeAnimation.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [1, 1.2, 1],
-  });
-
-  return (
-    <View style={[styles.container, darkMode && styles.darkContainer]}>
+  // Memoize MapView to prevent re-creation
+  const mapView = useMemo(
+    () => (
       <MapView
+        ref={mapRef}
         style={styles.map}
         region={mapRegion}
         showsUserLocation={true}
         followsUserLocation={true}
       >
         {receivedLocation && (
-          <Marker coordinate={receivedLocation} title="Bus Location">
+          <Marker
+            coordinate={receivedLocation}
+            title={`Bus ${busRouteNo}`}
+            key={`bus-${busRouteNo}-${Date.now()}`}
+          >
             <MaterialCommunityIcons name="bus" size={40} color={darkMode ? "#FF565E" : "red"} />
           </Marker>
         )}
-
         {deviceLocation && (
-          <Marker coordinate={deviceLocation} title="My Location" pinColor={darkMode ? "#4DA8FF" : "blue"} />
+          <Marker
+            coordinate={deviceLocation}
+            title="My Location"
+            pinColor={darkMode ? "#4DA8FF" : "blue"}
+            key={`user-${busRouteNo}-${Date.now()}`}
+          />
         )}
-
         {deviceLocation && receivedLocation && (
           <Polyline
             coordinates={[deviceLocation, receivedLocation]}
@@ -213,8 +387,21 @@ export default function UserMap() {
           />
         )}
       </MapView>
+    ),
+    [mapRegion, receivedLocation, deviceLocation, busRouteNo, darkMode]
+  );
 
-      {/* Destination card */}
+  if (!busRouteNo) {
+    return (
+      <View style={styles.container}>
+        <Text>No bus selected. Please go back and select a bus.</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.container, darkMode && styles.darkContainer]}>
+      {mapView}
       <View style={[styles.destinationCard, darkMode && styles.darkDestinationCard]}>
         <View style={[styles.locationIcon, darkMode && styles.darkLocationIcon]}>
           <MaterialCommunityIcons name="map-marker" size={24} color={darkMode ? "#FFFFFF" : "black"} />
@@ -227,12 +414,13 @@ export default function UserMap() {
             style={[styles.destinationText, darkMode && styles.darkDestinationText]}
             numberOfLines={1}
           >
-            {receivedAddress ?? "Loading Bus Location..."}
+            {noConductorLocation
+              ? "No conductor location available"
+              : receivedAddress ?? "Waiting for bus location..."}
           </Text>
         </View>
       </View>
 
-      {/* Info panel */}
       <View style={[styles.infoPanel, darkMode && styles.darkInfoPanel]}>
         <View style={styles.timingContainer}>
           <Animated.Text
@@ -241,16 +429,15 @@ export default function UserMap() {
             {calculateTime(receivedLocation, deviceLocation)}
           </Animated.Text>
           <Text style={[styles.timeLabel, darkMode && styles.darkTimeLabel]}>min</Text>
-          <Text style={[styles.distanceLabel, darkMode && styles.darkDistanceLabel]}>
+          <Animated.Text
+            style={[styles.distanceLabel, darkMode && styles.darkDistanceLabel, { transform: [{ scale: distanceScale }] }]}
+          >
             ({calculateDistance(receivedLocation, deviceLocation)} km)
-          </Text>
+          </Animated.Text>
         </View>
-
         <View style={styles.greenArrow}>
           <MaterialCommunityIcons name="arrow-right" size={28} color={darkMode ? "#4DA8FF" : "#4CAF50"} />
         </View>
-
-        {/* Route points */}
         <View style={styles.routePoints}>
           <View style={styles.routePoint}>
             <View style={[styles.greenDot, darkMode && styles.darkGreenDot]} />
@@ -261,23 +448,21 @@ export default function UserMap() {
               {deviceAddress ?? "Your current location"}
             </Text>
           </View>
-
           <View style={[styles.routeLine, darkMode && styles.darkRouteLine]} />
-
           <View style={styles.routePoint}>
             <View style={[styles.blackDot, darkMode && styles.darkBlackDot]} />
             <Text
               style={[styles.routePointText, darkMode && styles.darkRoutePointText]}
               numberOfLines={1}
             >
-              {receivedAddress ?? "Destination location"}
+              {noConductorLocation
+                ? "No conductor location available"
+                : receivedAddress ?? "Bus location"}
             </Text>
           </View>
         </View>
-
-        {/* Stored distance */}
         <Text style={[styles.storedDistance, darkMode && styles.darkStoredDistance]}>
-          Last recorded distance: {storedDistance ?? "..."}
+          Last recorded distance: {storedDistance}
         </Text>
       </View>
     </View>

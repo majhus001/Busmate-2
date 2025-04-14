@@ -34,8 +34,9 @@ const translations = {
     goBack: "Go Back",
     errorTitle: "Error",
     errorMessage: "Bus details not found.",
+    inactiveMessage: "This bus is not active.",
     refreshing: "Refreshing data...",
-    boardingInfo: "Boarding Information", // English
+    boardingInfo: "Boarding Information",
     arrivalInfo: "Arrival Information",
     seatInfo: "Seat Availability",
   },
@@ -58,6 +59,7 @@ const translations = {
     goBack: "பின்னால் செல்",
     errorTitle: "பிழை",
     errorMessage: "பேருந்து விவரங்கள் கிடைக்கவில்லை.",
+    inactiveMessage: "இந்த பேருந்து செயலில் இல்லை.",
     refreshing: "தரவைப் புதுப்பிக்கிறது...",
     boardingInfo: "பயணத் தொடக்கம் தகவல்",
     arrivalInfo: "வந்து சேரும் தகவல்",
@@ -82,6 +84,7 @@ const translations = {
     goBack: "वापस जाएं",
     errorTitle: "त्रुटि",
     errorMessage: "बस विवरण नहीं मिला।",
+    inactiveMessage: "यह बस सक्रिय नहीं है।",
     refreshing: "डेटा रिफ्रेश हो रहा है...",
     boardingInfo: "बोर्डिंग जानकारी",
     arrivalInfo: "आगमन जानकारी",
@@ -118,14 +121,11 @@ const Busdetails = ({ route, navigation }) => {
 
       // 1. Fetch updated bus status
       if (bus?._id) {
-        console.log("fetching buses on bus details");
+        console.log("Fetching buses on bus details");
         const busResponse = await axios.get(
           `${API_BASE_URL}/api/Admin/buses/fetchBusbyId/${bus._id}`
         );
-        console.log(
-          "newavseats on busdetails",
-          busResponse.data.availableSeats
-        );
+        console.log("New available seats on busdetails:", busResponse.data.availableSeats);
 
         if (busResponse.data) {
           setBus(busResponse.data);
@@ -148,10 +148,10 @@ const Busdetails = ({ route, navigation }) => {
           const currentTotalSeats = bus?.totalSeats || 0;
           const newavailableSeats = currentAvailableSeats + checkoutseats;
           const newBookedSeats = currentTotalSeats - newavailableSeats;
-          console.log("newav fetching updating", newavailableSeats);
+          console.log("New available seats updating:", newavailableSeats);
           if (newavailableSeats < 0) {
             setAvailableSeats(0);
-          }else{
+          } else {
             setAvailableSeats(newavailableSeats);
           }
           setBookedSeats(newBookedSeats);
@@ -162,15 +162,13 @@ const Busdetails = ({ route, navigation }) => {
       Alert.alert(t.errorTitle, t.errorMessage);
     } finally {
       setIsLoading(false);
-      setRefreshing(false); // Fixed typo here (was setRefreshing)
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
     fetchBusDetails();
     const intervalId = setInterval(fetchBusDetails, 15000);
-
-    // Clean up interval on component unmount
     return () => clearInterval(intervalId);
   }, [fromLocation, totalSeats, bus?._id, availableSeats]);
 
@@ -178,7 +176,6 @@ const Busdetails = ({ route, navigation }) => {
     const unsubscribe = navigation.addListener("focus", () => {
       fetchBusDetails();
     });
-
     return unsubscribe;
   }, [navigation]);
 
@@ -193,7 +190,7 @@ const Busdetails = ({ route, navigation }) => {
   const fareprice = bus?.prices?.[routeKey] || "N/A";
 
   if (!initialBus) {
-    return null; // Already handled in useEffect
+    return null;
   }
 
   return (
@@ -321,12 +318,17 @@ const Busdetails = ({ route, navigation }) => {
 
       {/* Fixed Footer Buttons */}
       <View style={styles.footer}>
-        <ActionButton
-          icon="navigate"
-          label={t.liveTrack}
-          color="#007AFF"
-          onPress={() => navigation.navigate("usmap",{busId: bus._id})}
-        />
+      <ActionButton
+  icon="navigate"
+  label={t.liveTrack}
+  color={bus?.LoggedIn ? "#007AFF" : "#A9A9A9"}
+  onPress={
+    bus?.LoggedIn && bus?.busRouteNo
+      ? () => navigation.navigate("usmap", { busRouteNo: bus?.busRouteNo })
+      : () => Alert.alert(t.errorTitle, bus?.LoggedIn ? "Invalid bus number." : t.inactiveMessage)
+  }
+  disabled={!bus?.LoggedIn || !bus?.busRouteNo}
+/>
         <ActionButton
           icon="card"
           label={t.payNow}
@@ -368,10 +370,11 @@ const SeatPill = ({ label, value, darkMode }) => (
   </View>
 );
 
-const ActionButton = ({ icon, label, color, onPress }) => (
+const ActionButton = ({ icon, label, color, onPress, disabled }) => (
   <TouchableOpacity
-    style={[styles.actionButton, { backgroundColor: color }]}
+    style={[styles.actionButton, { backgroundColor: color }, disabled && styles.disabledButton]}
     onPress={onPress}
+    disabled={disabled}
   >
     <Ionicons name={icon} size={20} color="#fff" />
     <Text style={styles.actionButtonText}>{label}</Text>
@@ -379,4 +382,3 @@ const ActionButton = ({ icon, label, color, onPress }) => (
 );
 
 export default Busdetails;
-

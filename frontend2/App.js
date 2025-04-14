@@ -16,10 +16,10 @@ import UserNotification from "./components/Users/Homescreen/UserNotification";
 import Verifyotp from "./components/Authentication/Verifyotp";
 import { LanguageProvider } from "./LanguageContext";
 import ChatBotScreen from "./components/Ai/ChatBotScreen";
-import SplashScreen from "./components/Users/Homescreen/SplashScreen";
-import Splash1 from "./components/Users/Homescreen/Splash1";
-import Splash2 from "./components/Users/Homescreen/Splash2";
-import Splash3 from "./components/Users/Homescreen/Splash3";
+import SplashScreen from "./components/Users/Welcome/SplashScreen";
+import Splash1 from "./components/Users/Welcome/Splash1";
+import Splash2 from "./components/Users/Welcome/Splash2";
+import Splash3 from "./components/Users/Welcome/Splash3";
 const Stack = createNativeStackNavigator();
 
 export default function App() {
