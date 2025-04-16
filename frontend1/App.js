@@ -13,6 +13,7 @@ import Signup from "./components/Authentication/Signup";
 import Login from "./components/Authentication/Login";
 import AdminHome from "./components/Admin/Homepage/AdminHome";
 import AddConductor from "./components/Admin/Conductor/AddConductor";
+import AssignConductors from "./components/Admin/Conductor/AssignConductors";
 import ComplaintForm from "./components/Conductor/Complaintform/ComplaintForm";
 import ViewComplaintForm from "./components/Conductor/Complaintform/ViewComplaintForm";
 import AdDash from "./components/Admin/Dashboard/AdDash";
@@ -62,6 +63,7 @@ export default function App() {
         <Stack.Screen name="ViewConductors" component={Viewconductordata} />
         <Stack.Screen name="adreports" component={AdminReports} />
         <Stack.Screen name="Conductormap" component={Conductormap} />
+        <Stack.Screen name="AssignConductors" component={AssignConductors} />
       </Stack.Navigator>
     </NavigationContainer>
   );

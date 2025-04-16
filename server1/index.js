@@ -19,6 +19,7 @@ const paymentRoutes = require("./Conductor/paymentRoutes");
 const userdata = require("./Authentication/UserData");
 const favoriteBusesRoutes = require("./User/favorites");
 const buzzer = require("./Conductor/Buzzer");
+const conductorAssignment = require("./Admin/ConductorAssignment/ConductorAssignment");
 
 const app = express();
 const server = http.createServer(app);
@@ -34,7 +35,7 @@ const corsOptions = {
 const io = new Server(server, {
   cors: {
     origin: "*", // Allow all origins
-    methods: ["GET", "POST"]
+    methods: ["GET", "POST", "PUT","DELETE"]
   },
   path: "/socket.io/" // Explicit path
 });
@@ -56,6 +57,7 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/userdata", userdata);
 app.use("/api/favorites", favoriteBusesRoutes);
 app.use("/api/buzzer", buzzer);
+app.use("/api/Admin/conductor-assignment", conductorAssignment);
 
 // Health check route
 app.get("/", (req, res) => {

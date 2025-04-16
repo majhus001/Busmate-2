@@ -5,6 +5,7 @@ const { v2: cloudinary } = require("cloudinary");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const Complaint = require("../Module/Complaint");
 const Conductor = require("../Module/Conductor_sc");
+const Bus = require("../Module/BusSchema");
 require("dotenv").config();
 
 // Configure Cloudinary
@@ -20,7 +21,7 @@ const storage = new CloudinaryStorage({
   params: {
     folder: "complaints",
     allowed_formats: ["jpg", "png", "jpeg"],
-    transformation: [{ width: 800, height: 600, crop: "limit" }], 
+    transformation: [{ width: 800, height: 600, crop: "limit" }],
   },
 });
 const upload = multer({ storage });
@@ -72,7 +73,7 @@ router.get("/complaints/:conductorId", async (req, res) => {
       return res.status(404).json({ error: "No complaints found for this conductor" });
     }
 
-    console.log("Complaints found:", complaints); 
+    console.log("Complaints found:", complaints);
     res.status(200).json(complaints);
 
   } catch (err) {
@@ -96,7 +97,7 @@ router.put("/logout/:conId", async (req, res) => {
       return res.status(404).json({ success: false, message: "Conductor not found." });
     }
 
-    conductor.LoggedIn = false; 
+    conductor.LoggedIn = false;
     await conductor.save();
 
     res.json({ success: true, message: "Logout successful." });
@@ -148,6 +149,67 @@ router.delete("/complaints/decline/:id", async (req, res) => {
     res.json({ message: "Complaint declined and deleted" });
   } catch (error) {
     res.status(500).json({ error: "Failed to delete complaint." });
+  }
+});
+
+// GET: Fetch assigned bus for a conductor
+router.get("/assigned-bus/:conductorId", async (req, res) => {
+  try {
+    const { conductorId } = req.params;
+
+    if (!conductorId) {
+      return res.status(400).json({
+        success: false,
+        message: "Conductor ID is required"
+      });
+    }
+
+    // Find the conductor
+    const conductor = await Conductor.findById(conductorId);
+    if (!conductor) {
+      return res.status(404).json({
+        success: false,
+        message: "Conductor not found"
+      });
+    }
+
+    // Check if conductor has an assigned bus
+    if (!conductor.assignedBusId) {
+      return res.status(200).json({
+        success: true,
+        message: "Conductor is not assigned to any bus",
+        data: null
+      });
+    }
+
+    // Find the assigned bus
+    const bus = await Bus.findById(conductor.assignedBusId);
+    if (!bus) {
+      return res.status(404).json({
+        success: false,
+        message: "Assigned bus not found"
+      });
+    }
+
+    // Return the bus details
+    res.status(200).json({
+      success: true,
+      data: {
+        bus: {
+          _id: bus._id,
+          busNo: bus.busNo,
+          busRouteNo: bus.busRouteNo,
+          route: `${bus.fromStage} to ${bus.toStage}`
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching assigned bus:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message
+    });
   }
 });
 

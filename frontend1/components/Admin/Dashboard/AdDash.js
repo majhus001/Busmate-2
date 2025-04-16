@@ -134,6 +134,13 @@ const AdDash = ({ navigation, route }) => {
       color: "#FF3B30",
     },
     {
+      title: "Assign Conductors",
+      value: "Manage",
+      icon: "people-circle-outline",
+      color: "#5856D6",
+      onPress: () => navigation.navigate("AssignConductors", { conductors, buses }),
+    },
+    {
       title: "Reports",
       value: "10+",
       icon: "document-text-outline",

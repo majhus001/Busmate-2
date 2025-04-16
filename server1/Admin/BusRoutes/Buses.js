@@ -57,6 +57,7 @@ router.post("/add", async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
+  
   try {
     const { busplateNo, password } = req.body;
 
@@ -100,7 +101,6 @@ router.post("/login", async (req, res) => {
 
 router.get("/fetchbus/:adminId", async (req, res) => {
   const { adminId } = req.params;
-
   try {
     const buses = await Bus.find({ adminId });
     res.json({ data: buses });
