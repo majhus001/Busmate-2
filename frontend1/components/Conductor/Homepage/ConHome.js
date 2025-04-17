@@ -55,6 +55,8 @@ const ConHome = ({ navigation, route }) => {
 
       if (response.data && response.data.success && response.data.data) {
         setAssignedBus(response.data.data.bus);
+        console.log("city ",response.data.data.bus.city)
+        console.log("state ",response.data.data.bus.state)
       }
     } catch (error) {
       console.error('Error fetching assigned bus:', error);
@@ -83,16 +85,31 @@ const ConHome = ({ navigation, route }) => {
 
   // Fetch conductor stats
   const fetchConductorStats = async () => {
+    if (!conData || !conData._id) return;
+
     try {
-      // This would be an API call in a real app
-      // For demo purposes, we'll use mock data
-      setStats({
-        totalTrips: Math.floor(Math.random() * 50) + 10,
-        totalTickets: Math.floor(Math.random() * 500) + 100,
-        totalRevenue: Math.floor(Math.random() * 10000) + 1000
-      });
+      
+      const response = await axios.get(
+        `${API_BASE_URL}/api/tickets/conductor-stats/${conData._id}`
+      );
+
+      if (response.data && response.data.success && response.data.data) {
+        setStats(response.data.data);
+      } else {
+        setStats({
+          totalTrips: 0,
+          totalTickets: 0,
+          totalRevenue: 0
+        });
+      }
     } catch (error) {
       console.error('Error fetching conductor stats:', error);
+      // Fallback to default values on error
+      setStats({
+        totalTrips: 0,
+        totalTickets: 0,
+        totalRevenue: 0
+      });
     }
   };
 
@@ -155,6 +172,20 @@ const ConHome = ({ navigation, route }) => {
     setExpanded(!expanded);
   };
 
+  const handlestartride = () => {
+    console.log("homeeee",assignedBus.busNo,assignedBus.fromStage,assignedBus.toStage,
+      assignedBus.busRouteNo,assignedBus.city,assignedBus.state,
+    )
+    navigation.navigate("buslogin", {
+      busplateNo: assignedBus.busNo,
+      selectedFrom: assignedBus.fromStage,
+      selectedTo: assignedBus.toStage,
+      selectedBusNo: assignedBus.busRouteNo,
+      selectedCity: assignedBus.city,
+      selectedState: assignedBus.state,
+    })
+  };
+
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor="#007bff" />
@@ -215,34 +246,7 @@ const ConHome = ({ navigation, route }) => {
           </View>
         )}
 
-        {/* Statistics Card */}
-        <View style={styles.cardContainer}>
-          <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderContent}>
-              <Icon name="stats-chart" size={24} color="#5856D6" style={styles.statsIcon} />
-              <View style={styles.headerTextContainer}>
-                <Text style={styles.cardTitle}>Your Statistics</Text>
-              </View>
-            </View>
-          </View>
 
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{stats.totalTrips}</Text>
-              <Text style={styles.statLabel}>Trips</Text>
-            </View>
-
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{stats.totalTickets}</Text>
-              <Text style={styles.statLabel}>Tickets</Text>
-            </View>
-
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>₹{stats.totalRevenue}</Text>
-              <Text style={styles.statLabel}>Revenue</Text>
-            </View>
-          </View>
-        </View>
 
       {/* Conductor Card */}
       <View style={styles.cardContainer}>
@@ -328,13 +332,17 @@ const ConHome = ({ navigation, route }) => {
                 <Text style={styles.cardTitle}>Assigned Bus</Text>
                 <Text style={styles.busRouteText}>{assignedBus.busRouteNo} - {assignedBus.busNo}</Text>
               </View>
+                <TouchableOpacity style={styles.changebus}
+                onPress={() => navigation.navigate("conbusselect", { preselectedBus: assignedBus })}>
+                  <Text style={styles.changebusText}>Change Bus</Text>
+                </TouchableOpacity>
             </View>
           </View>
 
           <View style={styles.busDetailsContainer}>
             <View style={styles.detailRow}>
               <View style={styles.detailIcon}>
-                <Icon name="map" size={18} color="#8E8E93" />
+                <Icon name="map" size={18} color="#007AFF" />
               </View>
               <Text style={styles.detailText}>
                 <Text style={styles.bold}>Route:</Text> {assignedBus.route}
@@ -343,7 +351,7 @@ const ConHome = ({ navigation, route }) => {
 
             <TouchableOpacity
               style={styles.startRideButton}
-              onPress={() => navigation.navigate("conbusselect", { preselectedBus: assignedBus })}
+              onPress={handlestartride}
             >
               <Icon name="play-circle" size={20} color="#FFFFFF" />
               <Text style={styles.startRideButtonText}>Start Ride</Text>
@@ -367,6 +375,35 @@ const ConHome = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Statistics Card */}
+      <View style={styles.cardContainer}>
+          <View style={styles.cardHeader}>
+            <View style={styles.cardHeaderContent}>
+              <Icon name="stats-chart" size={24} color="#5856D6" style={styles.statsIcon} />
+              <View style={styles.headerTextContainer}>
+                <Text style={styles.cardTitle}>Your Statistics</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{stats.totalTrips}</Text>
+              <Text style={styles.statLabel}>Trips</Text>
+            </View>
+
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{stats.totalTickets}</Text>
+              <Text style={styles.statLabel}>Tickets</Text>
+            </View>
+
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>₹{(stats.totalRevenue || 0).toLocaleString()}</Text>
+              <Text style={styles.statLabel}>Revenue</Text>
+            </View>
+          </View>
+        </View>
 
       {/* Notifications */}
       {notifications.length > 0 && (

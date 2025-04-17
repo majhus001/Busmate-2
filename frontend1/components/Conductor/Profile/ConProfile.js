@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import axios from "axios";
+import * as SecureStore from "expo-secure-store";
 import { API_BASE_URL } from "../../../apiurl";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -29,8 +30,14 @@ const ConProfile = ({ route, navigation }) => {
   const handleLogout = async () => {
     setLoading(true);
     const conId = conData._id;
+
     try {
+      await SecureStore.deleteItemAsync(`loginTime_${conId}`);
+      console.log("Login time deleted successfully");
+
       await axios.put(`${API_BASE_URL}/api/Conductor/logout/${conId}`);
+      console.log("Logged out from server");
+
       navigation.navigate("login");
     } catch (error) {
       console.error("Logout error:", error);

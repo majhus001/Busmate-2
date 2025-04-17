@@ -13,9 +13,10 @@ const busSchema = new mongoose.Schema(
     city: { type: String, required: true },
     fromStage: { type: String, required: true },
     toStage: { type: String, required: true },
-    prices: { type: Map, of: String, default: {} }, // Example: {"Kurichi-Kinathukadavu": "40"}
-    timings: { type: Map, of: String, default: {} }, // Example: {"Kurichi": "4:00 pm"}
+    prices: { type: Map, of: String, default: {} }, 
+    timings: { type: Map, of: String, default: {} }, 
     adminId: { type: mongoose.Schema.Types.ObjectId, ref: "Admin", required: true },
+    conductorId: { type: mongoose.Schema.Types.ObjectId, ref: "Conductor", default: null },
     LoggedIn: { type: Boolean, default: false },
   },
   { timestamps: true }

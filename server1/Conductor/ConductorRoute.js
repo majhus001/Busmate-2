@@ -199,7 +199,11 @@ router.get("/assigned-bus/:conductorId", async (req, res) => {
           _id: bus._id,
           busNo: bus.busNo,
           busRouteNo: bus.busRouteNo,
-          route: `${bus.fromStage} to ${bus.toStage}`
+          fromStage: bus.fromStage,
+          toStage: bus.toStage,
+          route: `${bus.fromStage} to ${bus.toStage}`,
+          city: bus.city,
+          state: bus.state,
         }
       }
     });

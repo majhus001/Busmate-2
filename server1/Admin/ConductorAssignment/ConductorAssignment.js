@@ -12,9 +12,9 @@ router.post("/assign", async (req, res) => {
     if (!conductorId || !busId) {
       console.log(conductorId,busId);
 
-      return res.status(400).json({ 
-        success: false, 
-        message: "Both conductor ID and bus ID are required" 
+      return res.status(400).json({
+        success: false,
+        message: "Both conductor ID and bus ID are required"
       });
     }
 
@@ -22,18 +22,18 @@ router.post("/assign", async (req, res) => {
     // Check if conductor exists
     const conductor = await Conductor.findById(conductorId);
     if (!conductor) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Conductor not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Conductor not found"
       });
     }
 
     // Check if bus exists
     const bus = await Bus.findById(busId);
     if (!bus) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Bus not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Bus not found"
       });
     }
 
@@ -49,6 +49,10 @@ router.post("/assign", async (req, res) => {
     // Update the conductor with the assigned bus
     conductor.assignedBusId = busId;
     await conductor.save();
+
+    // Update the bus with the assigned conductor
+    bus.conductorId = conductorId;
+    await bus.save();
 
     res.status(200).json({
       success: true,
@@ -69,10 +73,10 @@ router.post("/assign", async (req, res) => {
     });
   } catch (error) {
     console.error("Error assigning conductor to bus:", error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       message: "Internal Server Error",
-      error: error.message 
+      error: error.message
     });
   }
 });
@@ -104,10 +108,10 @@ router.get("/all", async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching conductor assignments:", error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       message: "Internal Server Error",
-      error: error.message 
+      error: error.message
     });
   }
 });
@@ -116,11 +120,11 @@ router.get("/all", async (req, res) => {
 router.get("/conductor/:conductorId", async (req, res) => {
   try {
     const { conductorId } = req.params;
-    
+
     if (!mongoose.Types.ObjectId.isValid(conductorId)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid conductor ID format" 
+      return res.status(400).json({
+        success: false,
+        message: "Invalid conductor ID format"
       });
     }
 
@@ -128,9 +132,9 @@ router.get("/conductor/:conductorId", async (req, res) => {
       .populate('assignedBusId', 'busRouteNo busNo fromStage toStage');
 
     if (!conductor) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Conductor not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Conductor not found"
       });
     }
 
@@ -163,10 +167,10 @@ router.get("/conductor/:conductorId", async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching conductor assignment:", error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       message: "Internal Server Error",
-      error: error.message 
+      error: error.message
     });
   }
 });
@@ -175,11 +179,11 @@ router.get("/conductor/:conductorId", async (req, res) => {
 router.get("/bus/:busId", async (req, res) => {
   try {
     const { busId } = req.params;
-    
+
     if (!mongoose.Types.ObjectId.isValid(busId)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid bus ID format" 
+      return res.status(400).json({
+        success: false,
+        message: "Invalid bus ID format"
       });
     }
 
@@ -187,9 +191,9 @@ router.get("/bus/:busId", async (req, res) => {
     const bus = await Bus.findById(busId);
 
     if (!bus) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Bus not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Bus not found"
       });
     }
 
@@ -214,10 +218,10 @@ router.get("/bus/:busId", async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching bus assignments:", error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       message: "Internal Server Error",
-      error: error.message 
+      error: error.message
     });
   }
 });
@@ -226,19 +230,19 @@ router.get("/bus/:busId", async (req, res) => {
 router.delete("/remove/:conductorId", async (req, res) => {
   try {
     const { conductorId } = req.params;
-    
+
     if (!mongoose.Types.ObjectId.isValid(conductorId)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid conductor ID format" 
+      return res.status(400).json({
+        success: false,
+        message: "Invalid conductor ID format"
       });
     }
 
     const conductor = await Conductor.findById(conductorId);
     if (!conductor) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Conductor not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Conductor not found"
       });
     }
 
@@ -249,9 +253,21 @@ router.delete("/remove/:conductorId", async (req, res) => {
       });
     }
 
-    // Remove the assignment
+    // Get the bus ID before removing the assignment
+    const busId = conductor.assignedBusId;
+
+    // Remove the assignment from conductor
     conductor.assignedBusId = null;
     await conductor.save();
+
+    // If there was a bus assigned, remove the conductor ID from it
+    if (busId) {
+      const bus = await Bus.findById(busId);
+      if (bus) {
+        bus.conductorId = null;
+        await bus.save();
+      }
+    }
 
     res.status(200).json({
       success: true,
@@ -259,10 +275,10 @@ router.delete("/remove/:conductorId", async (req, res) => {
     });
   } catch (error) {
     console.error("Error removing conductor assignment:", error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       message: "Internal Server Error",
-      error: error.message 
+      error: error.message
     });
   }
 });

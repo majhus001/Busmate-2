@@ -59,6 +59,16 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 12,
   },
+  changebus:{
+    backgroundColor:"#007AFF",
+    padding:7,
+    borderRadius:5,
+    marginLeft:10,
+  },
+  changebusText:{
+    color:"#fff",
+    fontSize:12,
+  },
   // Conductor Card Styles
   conductorName: {
     fontSize: 18,
@@ -330,6 +340,47 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#3c3c43",
     lineHeight: 20,
+  },
+  // Daily Stats
+  dailyStatsContainer: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#E2E8F0",
+  },
+  dailyStatsTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1c1c1e",
+    marginBottom: 12,
+  },
+  dailyStatsScroll: {
+    paddingBottom: 8,
+  },
+  dailyStatCard: {
+    backgroundColor: "#f9f9fb",
+    borderRadius: 12,
+    padding: 12,
+    marginRight: 12,
+    width: 140,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  dailyStatDate: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1c1c1e",
+    marginBottom: 8,
+  },
+  dailyStatRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  dailyStatText: {
+    fontSize: 13,
+    color: "#3c3c43",
+    marginLeft: 6,
   },
 });
 

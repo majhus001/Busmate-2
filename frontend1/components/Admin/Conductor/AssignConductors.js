@@ -187,8 +187,6 @@ const AssignConductors = ({ route ,navigation }) => {
 
     try {
       setLoading(true);
-
-      console.log("Assigning conductor:", selectedConductor._id, "to bus:", selectedBus);
       // Make API call to update the conductor with the assigned bus
       const response = await axios.put(
         `${API_BASE_URL}/api/Admin/conductor/update/${selectedConductor._id}`,
@@ -212,15 +210,27 @@ const AssignConductors = ({ route ,navigation }) => {
         });
         ToastAndroid.show(`Conductor assigned to ${assignedBus?.busRouteNo || 'bus'} successfully!`, ToastAndroid.SHORT);
 
-        // Refresh the data
+        const busres = await axios.put(`${API_BASE_URL}/api/Admin/buses/update/conductor/${selectedBus}`, {
+          conductorId: selectedConductor._id
+        });
+
+        if(busres.data){
+          console.log("Bus updated successfully:");
+        }else{
+          console.log("Bus update failed");
+        }
+        
         fetchConductors();
         fetchAssignments();
+
       } else {
         setAssignmentStatus({
           success: false,
           message: response.data?.message || "Failed to assign conductor.",
         });
       }
+
+
     } catch (error) {
       console.error("Error assigning conductor:", error);
 
@@ -232,10 +242,8 @@ const AssignConductors = ({ route ,navigation }) => {
         console.error("Error response status:", error.response.status);
         console.error("Error response headers:", error.response.headers);
       } else if (error.request) {
-        // The request was made but no response was received
         console.error("Error request:", error.request);
       } else {
-        // Something happened in setting up the request that triggered an Error
         console.error("Error message:", error.message);
       }
 
@@ -253,7 +261,6 @@ const AssignConductors = ({ route ,navigation }) => {
     }
   };
 
-  // Refresh data
   const onRefresh = () => {
     setRefreshing(true);
     fetchConductors();
@@ -262,7 +269,6 @@ const AssignConductors = ({ route ,navigation }) => {
     ToastAndroid.show("Conductors refreshed", ToastAndroid.SHORT);
   };
 
-  // Fetch conductor assignments
   const fetchAssignments = async () => {
     try {
       // We'll just fetch conductors with assignedBusId

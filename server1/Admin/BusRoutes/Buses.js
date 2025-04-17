@@ -439,5 +439,29 @@ router.get("/fetchAllBuses3", async (req, res) => {
   }
 });
 
+router.put("/update/conductor/:busId", async (req, res) => {
+  try {
+    const { busId } = req.params;
+    const { conductorId } = req.body;
+
+    if (!busId || !conductorId) {
+      return res.status(400).json({ message: "busId and conductorId are required." });
+    }
+
+    const bus = await Bus.findById(busId); // simpler & cleaner
+
+    if (!bus) {
+      return res.status(404).json({ message: "No bus found for the given id." });
+    }
+
+    bus.conductorId = conductorId;
+    await bus.save(); // added await
+
+    res.json({ message: "Conductor assigned successfully", bus });
+  } catch (error) {
+    console.error("Error updating bus conductor:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 module.exports = router;
