@@ -3,6 +3,7 @@ const router = express.Router();
 const Ticket = require("../Module/EtmSchema");
 const Bus = require("../Module/BusSchema");
 const Conductor = require("../Module/Conductor_sc");
+const RouteFrequency = require("../Module/RouteFrequency");
 
 router.post("/add_ticket", async (req, res) => {
   try {
@@ -82,6 +83,46 @@ router.post("/add_ticket", async (req, res) => {
     }
 
     await bus.save();
+
+    // Track route frequency for quick tickets
+    try {
+      // Find the conductor assigned to this bus
+      const conductor = await Conductor.findOne({ assignedBusId: bus._id });
+      const conductorId = conductor ? conductor._id : null;
+
+      // Create route string in the format "from-to"
+      const route = `${boarding}-${destination}`;
+
+      // Try to find an existing frequency record
+      let routeFreq = await RouteFrequency.findOne({
+        busRouteNo,
+        route,
+        conductorId
+      });
+
+      if (routeFreq) {
+        // Update existing record
+        routeFreq.count += 1;
+        routeFreq.lastUsed = new Date();
+        await routeFreq.save();
+        console.log(`✅ Route frequency updated: ${route}, count: ${routeFreq.count}`);
+      } else {
+        // Create new record
+        routeFreq = new RouteFrequency({
+          busRouteNo,
+          route,
+          conductorId,
+          count: 1,
+          lastUsed: new Date()
+        });
+        await routeFreq.save();
+        console.log(`✅ New route frequency created: ${route}`);
+      }
+    } catch (freqError) {
+      // Don't fail the ticket creation if frequency tracking fails
+      console.error("❌ Error tracking route frequency:", freqError);
+    }
+
     res.status(201).json({
       success: true,
       message: "Ticket issued successfully!",
@@ -103,7 +144,7 @@ router.put("/update/seats", async (req, res) => {
       selectedCity,
       selectedState,
     } = req.body;
-
+    console.log("dest in man", dest)
     if (!selectedBusNo || !RouteName || !dest) {
       return res.status(400).json({
         success: false,
@@ -131,7 +172,7 @@ router.put("/update/seats", async (req, res) => {
 
     if (!tickets || tickets.length === 0) {
       return res.status(200).json({
-        success: true,
+        success: false,
         message: "No tickets found for this bus route",
         totalBookedSeats: 0,
       });
@@ -247,7 +288,7 @@ router.get("/bus-tickets/:busRouteNo", async (req, res) => {
     const tickets = await Ticket.find({
       busRouteNo: busRouteNo,
       issuedAt: { $gte: startDate, $lte: endDate }
-    }).sort({ issuedAt: -1 }); 
+    }).sort({ issuedAt: -1 });
 
     res.status(200).json({
       success: true,

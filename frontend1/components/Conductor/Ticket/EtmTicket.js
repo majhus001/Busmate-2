@@ -90,7 +90,14 @@ const EtmTicket = ({ route, navigation }) => {
           selectedState,
         }
       );
-      
+      if (!response.data.success) {
+        setAvailableSeats(availableSeats);
+      }
+
+      console.log(
+        "--------------av seats man",
+        response.data.updatedAvailableSeats
+      );
 
       const onlineresponse = await axios.put(
         `${API_BASE_URL}/api/payment/update/seats`,
@@ -101,8 +108,26 @@ const EtmTicket = ({ route, navigation }) => {
           selectedState,
         }
       );
-      console.log(onlineresponse.data.updatedAvailableSeats)
-      if (onlineresponse.data) {
+      console.log(
+        "----------------av seats in omline ",
+        onlineresponse.data.updatedAvailableSeats
+      );
+      console.log(
+        "----------------av seats in before ",
+        availableSeats
+      );
+      if (!onlineresponse.data.success && !response.data.success) {
+        console.log("av seats ifnot", availableSeats )
+        setAvailableSeats(availableSeats);
+      }
+      if (response.data.success) {
+        console.log("av seats man res", availableSeats )
+        
+        setAvailableSeats(response.data.updatedAvailableSeats);
+      }
+      if (onlineresponse.data.success) {
+        console.log("av seats online res", availableSeats )
+        
         setAvailableSeats(onlineresponse.data.updatedAvailableSeats);
       }
     } catch {
@@ -273,18 +298,52 @@ const EtmTicket = ({ route, navigation }) => {
     if (!selectedBusNo) return;
 
     try {
+      // Get conductor ID from BusData if available
+      const conductorId = BusData?.conductorId || null;
+
       const response = await axios.post(
         `${API_BASE_URL}/api/Admin/buses/getprice`,
         {
           selectedBusNo,
+          conductorId,
         }
       );
 
       if (response.data.success) {
         setBuspriceData(response.data.data);
 
-        // Generate quick tickets from price data
-        if (response.data.data.prices) {
+        // Generate quick tickets based on popular routes if available
+        if (
+          response.data.popularRoutes &&
+          response.data.popularRoutes.length > 0
+        ) {
+          console.log("✅ Using popular routes for quick tickets");
+          const quickTicketsData = [];
+
+          // Process popular routes
+          for (const popularRoute of response.data.popularRoutes) {
+            const route = popularRoute.route;
+            const [from, to] = route.split("-").map((s) => s.trim());
+
+            // Find the price for this route
+            const price = response.data.data.prices[route] || "0";
+
+            quickTicketsData.push({
+              id: quickTicketsData.length + 1,
+              from,
+              to,
+              price: parseFloat(price),
+              route,
+              frequency: popularRoute.count, // Add frequency information
+              lastUsed: new Date(popularRoute.lastUsed), // Add last used date
+            });
+          }
+
+          setQuickTickets(quickTicketsData);
+        }
+        // Fallback to default method if no popular routes
+        else if (response.data.data.prices) {
+          console.log("ℹ️ Using default routes for quick tickets");
           const quickTicketsData = [];
           Object.entries(response.data.data.prices)
             .slice(0, 4)
@@ -798,9 +857,23 @@ const EtmTicket = ({ route, navigation }) => {
                   <Text style={styles.quickTicketRoute}>
                     {ticket.from} → {ticket.to}
                   </Text>
-                  <Text style={styles.quickTicketPrice}>
-                    ₹{ticket.price.toFixed(2)}
-                  </Text>
+                  <View style={styles.quickTicketDetails}>
+                    <Text style={styles.quickTicketPrice}>
+                      ₹{ticket.price.toFixed(2)}
+                    </Text>
+                    {ticket.frequency && (
+                      <View style={styles.frequencyBadge}>
+                        <Text style={styles.frequencyText}>
+                          {ticket.frequency}x
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                  {ticket.lastUsed && (
+                    <Text style={styles.lastUsedText}>
+                      {ticket.lastUsed.toLocaleDateString()}
+                    </Text>
+                  )}
                 </TouchableOpacity>
               ))}
             </View>

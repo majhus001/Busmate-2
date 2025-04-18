@@ -294,7 +294,7 @@ router.put("/update/seats", async (req, res) => {
       selectedCity,
       selectedState,
     } = req.body;
-
+ console.log("dest in online..")
     if (!selectedBusNo || !dest) {
       return res.status(400).json({
         success: false,
@@ -321,7 +321,7 @@ router.put("/update/seats", async (req, res) => {
 
     if (!tickets || tickets.length === 0) {
       return res.status(200).json({
-        success: true,
+        success: false,
         message: "No tickets found for this bus route",
         totalBookedSeats: 0,
       });

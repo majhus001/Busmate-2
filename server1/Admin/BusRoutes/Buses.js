@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const Bus = require("../../Module/BusSchema");
+const RouteFrequency = require("../../Module/RouteFrequency");
+const Conductor = require("../../Module/Conductor_sc");
 
 router.post("/add", async (req, res) => {
   try {
@@ -299,7 +301,7 @@ router.get("/fetchbusno", async (req, res) => {
 
 router.post("/getprice", async (req, res) => {
   try {
-    const { selectedBusNo } = req.body;
+    const { selectedBusNo, conductorId } = req.body;
 
     if (!selectedBusNo) {
       return res
@@ -319,15 +321,77 @@ router.post("/getprice", async (req, res) => {
       });
     }
 
+    // Get popular routes if conductorId is provided
+    let popularRoutes = [];
+    if (conductorId) {
+      try {
+        // Get the most frequently used routes for this bus and conductor
+        const frequentRoutes = await RouteFrequency.find({
+          busRouteNo: selectedBusNo,
+          conductorId: conductorId
+        })
+        .sort({ count: -1, lastUsed: -1 }) // Sort by count (descending) and then by lastUsed (most recent first)
+        .limit(4); // Get top 4
+
+        if (frequentRoutes && frequentRoutes.length > 0) {
+          popularRoutes = frequentRoutes.map(item => ({
+            route: item.route,
+            count: item.count,
+            lastUsed: item.lastUsed
+          }));
+        }
+      } catch (freqError) {
+        console.error("Error fetching popular routes:", freqError);
+        // Continue even if there's an error fetching popular routes
+      }
+    }
+
     res.json({
       success: true,
       data: busRoute,
+      popularRoutes: popularRoutes
     });
   } catch (error) {
     console.error("Error fetching ticket price:", error);
     res.status(500).json({
       success: false,
       message: "Internal server error",
+    });
+  }
+});
+
+// Get popular routes for a bus
+router.get("/popular-routes/:busRouteNo", async (req, res) => {
+  try {
+    const { busRouteNo } = req.params;
+    const { conductorId } = req.query;
+
+    if (!busRouteNo) {
+      return res.status(400).json({
+        success: false,
+        message: "Bus route number is required"
+      });
+    }
+
+    // Build query
+    const query = { busRouteNo };
+    if (conductorId) query.conductorId = conductorId;
+
+    // Get popular routes
+    const popularRoutes = await RouteFrequency.find(query)
+      .sort({ count: -1, lastUsed: -1 }) // Sort by count (descending) and then by lastUsed (most recent first)
+      .limit(4); // Get top 4
+
+    res.json({
+      success: true,
+      popularRoutes: popularRoutes
+    });
+  } catch (error) {
+    console.error("Error fetching popular routes:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message
     });
   }
 });

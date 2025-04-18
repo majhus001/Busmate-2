@@ -454,9 +454,31 @@ const styles = StyleSheet.create({
     color: '#334155',
     marginBottom: 4,
   },
+  quickTicketDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   quickTicketPrice: {
     fontSize: 12,
     color: '#64748b',
+  },
+  frequencyBadge: {
+    backgroundColor: '#3b82f6',
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  frequencyText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  lastUsedText: {
+    fontSize: 10,
+    color: '#94a3b8',
+    fontStyle: 'italic',
   },
 
   // Ticket Summary
