@@ -32,15 +32,29 @@ const ConProfile = ({ route, navigation }) => {
     const conId = conData._id;
 
     try {
-      await SecureStore.deleteItemAsync(loginTime_`${conId}`);
-      console.log("Login time deleted successfully");
+      // Clear login time from SecureStore
+      await SecureStore.deleteItemAsync(`loginTime_${conId}`);
+      console.log("✅ Login time deleted successfully");
 
+      // Clear user data from SecureStore
+      await SecureStore.deleteItemAsync("currentUserData");
+      console.log("✅ User data cleared from SecureStore");
+
+      // Update server status
       await axios.put(`${API_BASE_URL}/api/Conductor/logout/${conId}`);
-      console.log("Logged out from server");
+      console.log("✅ Logged out from server");
 
-      navigation.navigate("login");
+      // Navigate to login screen
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "login" }],
+      });
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("❌ Logout error:", error);
+      Alert.alert(
+        "Logout Error",
+        "There was a problem logging out. Please try again."
+      );
     } finally {
       setLoading(false);
     }

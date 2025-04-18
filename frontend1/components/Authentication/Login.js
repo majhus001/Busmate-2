@@ -89,6 +89,14 @@ const Login = ({ navigation }) => {
       await SecureStore.setItemAsync("currentUserData", JSON.stringify(userData));
       await SecureStore.setItemAsync("userId", userData._id);
 
+      // Set login time for conductors
+      if (role === "Conductor" && userData._id) {
+        const loginTimeKey = `loginTime_${userData._id}`;
+        const currentTime = new Date();
+        await SecureStore.setItemAsync(loginTimeKey, currentTime.toISOString());
+        console.log(`✅ Login time set for conductor: ${currentTime.toLocaleString()}`);
+      }
+
       if (userData) {
         Alert.alert("Success", "Login successful!", [
           {
@@ -127,7 +135,7 @@ const Login = ({ navigation }) => {
       colors={["rgba(0,0,0,0.5)", "rgba(0,50,100,0.7)"]}
       style={styles.overlay}
     />
-  
+
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.keyboardContainer}

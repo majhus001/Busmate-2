@@ -218,10 +218,9 @@ const EtmTicket = ({ route, navigation }) => {
                       `${API_BASE_URL}/api/Admin/buses/logout/${BusData._id}`
                     );
                   }
-                  navigation.navigate("conhomepage");
+                  navigation.pop(2);
                 } catch (error) {
                   console.error("❌ Error logging out bus:", error);
-                  navigation.goBack(); // Still go back even if logout fails
                 }
               },
             },
