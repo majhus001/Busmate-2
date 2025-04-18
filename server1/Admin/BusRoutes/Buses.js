@@ -504,4 +504,30 @@ router.put("/update/conductor/:busId", async (req, res) => {
   }
 });
 
+// Bus logout endpoint
+router.put("/logout/:busId", async (req, res) => {
+  try {
+    const { busId } = req.params;
+
+    if (!busId) {
+      return res.status(400).json({ success: false, message: "Bus ID is required." });
+    }
+
+    const bus = await Bus.findById(busId);
+
+    if (!bus) {
+      return res.status(404).json({ success: false, message: "Bus not found." });
+    }
+
+    bus.LoggedIn = false;
+    await bus.save();
+
+    console.log(`🚌 Bus ${bus.busRouteNo} (ID: ${busId}) logged out successfully`);
+    res.json({ success: true, message: "Bus logout successful." });
+  } catch (error) {
+    console.error("Error during bus logout:", error);
+    res.status(500).json({ success: false, message: "Internal server error." });
+  }
+});
+
 module.exports = router;

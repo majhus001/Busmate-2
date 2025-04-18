@@ -64,19 +64,6 @@ router.post("/orders", async (req, res) => {
       await newOrder.save();
       console.log("✅ Order saved to database");
 
-      const bus = await Bus.findOne({ busRouteNo: busno });
-
-      if (!bus) {
-        return res.status(404).json({ message: "Bus not found!" });
-      }
-
-      if (bus.availableSeats < ticketcount) {
-        return res.status(400).json({ message: "Not enough seats available!" });
-      }
-
-      bus.availableSeats -= ticketcount;
-      await bus.save(); // ✅ use await to ensure saving is complete
-
       res.status(200).json({ order });
     } catch (razorpayError) {
       console.error("❌ Razorpay error:", razorpayError);
@@ -195,7 +182,9 @@ router.get("/bus-tickets/:busRouteNo", async (req, res) => {
       createdAt: { $gte: startDate, $lte: endDate },
     }).sort({ createdAt: -1 }); // Sort by createdAt in descending order (newest first)
 
-    console.log(`Found ${tickets.length} online tickets for bus ${busRouteNo} on ${date}`);
+    console.log(
+      `Found ${tickets.length} online tickets for bus ${busRouteNo} on ${date}`
+    );
 
     // Get usernames for each ticket
     const usernames = await Promise.all(
@@ -215,7 +204,9 @@ router.get("/bus-tickets/:busRouteNo", async (req, res) => {
             return "Unknown User";
           }
 
-          console.log(`✅ Found username: ${user.Username} for ticket ${ticket._id}`);
+          console.log(
+            `✅ Found username: ${user.Username} for ticket ${ticket._id}`
+          );
           return user.Username;
         } catch (err) {
           console.error(`❌ Error finding user for ticket ${ticket._id}:`, err);
@@ -230,7 +221,10 @@ router.get("/bus-tickets/:busRouteNo", async (req, res) => {
       usernames,
     });
   } catch (error) {
-    console.error(`❌ Error fetching online tickets for bus ${busRouteNo}:`, error);
+    console.error(
+      `❌ Error fetching online tickets for bus ${busRouteNo}:`,
+      error
+    );
     res.status(500).json({
       success: false,
       message: "Failed to fetch online tickets",
@@ -238,5 +232,146 @@ router.get("/bus-tickets/:busRouteNo", async (req, res) => {
     });
   }
 });
+
+// 🔹 Check-in a passenger with an online ticket
+router.post("/check-in/:ticketId", async (req, res) => {
+  const { ticketId } = req.params;
+
+  try {
+    // Find and update the ticket
+    const ticket = await Order.findByIdAndUpdate(
+      ticketId,
+      { checkIn: true },
+      { new: true }
+    );
+
+    if (!ticket) {
+      return res.status(404).json({
+        success: false,
+        message: "Ticket not found",
+      });
+    }
+
+    console.log(`✅ Passenger checked in for ticket ${ticketId}`);
+    const busno = ticket.busno;
+    const ticketcount = ticket.ticketcount;
+    const bus = await Bus.findOne({ busRouteNo: busno });
+
+    if (!bus) {
+      return res.status(404).json({ message: "Bus not found!" });
+    }
+
+    if (bus.availableSeats < ticketcount) {
+      return res.status(400).json({ message: "Not enough seats available!" });
+    }
+    console.log("available seats before", bus.availableSeats);
+    bus.availableSeats -= ticketcount;
+    await bus.save();
+    console.log("available seats after", bus.availableSeats);
+    return res.status(200).json({
+      success: true,
+      message: "Passenger checked in successfully",
+      ticket,
+    });
+  } catch (error) {
+    console.error(
+      `❌ Error checking in passenger for ticket ${ticketId}:`,
+      error
+    );
+    return res.status(500).json({
+      success: false,
+      message: "Failed to check in passenger",
+      error: error.message,
+    });
+  }
+});
+
+router.put("/update/seats", async (req, res) => {
+  try {
+    const {
+      selectedBusNo,
+      dest,
+      selectedCity,
+      selectedState,
+    } = req.body;
+
+    if (!selectedBusNo || !dest) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Missing required fields: Bus number, Route name, or Destination",
+      });
+    }
+
+    console.log(
+      "🚌 Searching for tickets with:",
+      dest,
+      selectedBusNo
+    );
+
+    // FIND TICKETS BASED ON FIELDS (field names must match schema)
+    const tickets = await Order.find({
+      busno: selectedBusNo,
+      toLocation: dest,
+      checkIn: true,
+      checkout: false,
+    });
+
+    console.log("🎟️ Found tickets:", tickets.length);
+
+    if (!tickets || tickets.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No tickets found for this bus route",
+        totalBookedSeats: 0,
+      });
+    }
+
+    // Mark tickets as checked out
+    for (const ticket of tickets) {
+      ticket.checkout = true;
+      await ticket.save();
+    }
+
+    // Calculate total booked seats
+    const totalBookedSeats = tickets.reduce(
+      (sum, ticket) => sum + (parseInt(ticket.ticketcount, 10) || 0),
+      0
+    );
+
+    const bus = await Bus.findOne({
+      busRouteNo: selectedBusNo,
+      city: selectedCity,
+      state: selectedState,
+    });
+
+    if (!bus) {
+      return res.status(404).json({
+        success: false,
+        message: "Bus not found",
+      });
+    }
+
+    console.log("🪑 Seats before in online ticks:", bus.availableSeats);
+
+    // Add back the seats
+    bus.availableSeats = (bus.availableSeats || 0) + totalBookedSeats;
+    await bus.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Seats updated successfully",
+      updatedAvailableSeats: bus.availableSeats,
+    });
+  } catch (error) {
+    console.error("❌ Error in /update/seats:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+});
+
 
 module.exports = router;
