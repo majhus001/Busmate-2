@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
+import axios from "axios";
+import { API_BASE_URL } from "../../../apiurl";
 
 const Upiqr = ({ route, navigation }) => {
   const { upiId = "567", amount = "560" } = route.params || {};
@@ -28,9 +30,38 @@ const Upiqr = ({ route, navigation }) => {
     setLoading(false);
   }, [upiId, amount]);
 
-  const handleSuccess = () => {
-    console.log("Payment success clicked");
-    navigation.navigate("ticsuccess",{method: "Online"}); // Navigate to TicketSuccess screen
+  const handleSuccess = async () => {
+    try {
+      // Check if we have pending ticket data
+      if (!global.pendingTicketData) {
+        Alert.alert("Error", "Ticket data not found. Please try again.");
+        return;
+      }
+
+      setLoading(true);
+
+      console.log(global.pendingTicketData)
+      const response = await axios.post(
+        `${API_BASE_URL}/api/tickets/add_ticket`,
+        global.pendingTicketData
+      );
+
+      if (response.data.success) {
+        global.pendingTicketData = null;
+
+        navigation.navigate("ticsuccess", {method: "Online"});
+      } else {
+        Alert.alert("Failed", "Could not issue ticket. Try again.");
+      }
+    } catch (error) {
+      console.error("Error saving online ticket:", error);
+      Alert.alert(
+        "Error",
+        "Failed to issue ticket. Check your network connection."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -51,8 +82,16 @@ const Upiqr = ({ route, navigation }) => {
         </View>
       )}
 
-      <TouchableOpacity style={styles.successButton} >
-        <Text style={styles.buttonText} onPress={handleSuccess}>Payment Success</Text>
+      <TouchableOpacity
+        style={styles.successButton}
+        onPress={handleSuccess}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Payment Success</Text>
+        )}
       </TouchableOpacity>
     </View>
   );

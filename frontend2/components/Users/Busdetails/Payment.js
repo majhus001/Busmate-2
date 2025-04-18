@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import {
   View,
   Text,
@@ -10,11 +10,14 @@ import {
   Alert,
   BackHandler,
 } from "react-native";
+import axios from "axios";
 import { WebView } from "react-native-webview";
+import { LinearGradient } from "expo-linear-gradient";
 import * as SecureStore from "expo-secure-store";
 import { API_BASE_URL } from "../../../apiurl";
 import styles from "./PaymentStyles"; // Import your styles
 import { useLanguage } from "../../../LanguageContext"; // Import the language context
+import { ScrollView } from "react-native";
 
 // Define translations for all text in the component
 const translations = {
@@ -135,14 +138,17 @@ const translations = {
 };
 
 const Payment = ({ route, navigation }) => {
-  const { language, darkMode } = useLanguage(); // Use the language context with darkMode
-  const t = translations[language] || translations.English; // Fallback to English
+  const { language, darkMode } = useLanguage();
+  const t = translations[language] || translations.English;
 
   const [showWebView, setShowWebView] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState("");
-  const [storedDistance, setStoredDistance] = useState(null);
   const [seatCount, setSeatCount] = useState(1);
   const [userId, setUserId] = useState(null);
+  const [busLocation, setBusLocation] = useState(null);
+  const [busStages, setBusStages] = useState([]);
+  const [canPay, setCanPay] = useState(false);
+  const [loading, setLoading] = useState(true);
   const fareprice = route.params?.fareprice
     ? parseFloat(route.params.fareprice)
     : 0;
@@ -150,27 +156,59 @@ const Payment = ({ route, navigation }) => {
   const { fromLocation, toLocation } = route.params;
 
   useEffect(() => {
-    const fetchDistance = async () => {
+    const fetchBusLocation = async () => {
+      setLoading(true);
       try {
-        const distanceStr = await SecureStore.getItemAsync("storedDistance");
-        console.log("📌 Debug: Raw distance from SecureStore =", distanceStr);
+        const response = await axios.get(
+          `${API_BASE_URL}/api/Admin/buses/bus-location/${busno}`
+        );
 
-        const match = distanceStr?.match(/([\d.]+)/);
-        const numericDistance = match ? parseFloat(match[1]) : null;
+        if (response.data.success) {
+          const { currentLocation, stages } = response.data.data;
+         
+          setBusLocation(currentLocation);
+          setBusStages(stages);
 
-        if (numericDistance !== null && !isNaN(numericDistance)) {
-          console.log("✅ Parsed Distance =", numericDistance);
-          setStoredDistance(numericDistance);
+          checkPaymentAvailability(currentLocation, stages, fromLocation);
         } else {
-          console.error("❌ Invalid distance value");
-          setStoredDistance(null);
+          console.error("❌ Failed to fetch bus location");
+          Alert.alert(t.errorTitle, "Failed to fetch bus location");
         }
       } catch (error) {
-        console.error("❌ Error fetching distance:", error);
+        console.error("❌ Error fetching bus location:", error);
+        Alert.alert(t.errorTitle, "Error fetching bus location");
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchDistance();
+    // Check if the bus is at the previous stop of the user's destination
+    const checkPaymentAvailability = (currentLocation, stages, boarding) => {
+      if (!currentLocation || !stages.length || !boarding) {
+        setCanPay(false);
+        return;
+      }
+
+      // Find the index of the current location and destination in stages
+      const currentIndex = stages.indexOf(currentLocation);
+      const boardIndex = stages.indexOf(boarding);
+      
+      if (currentIndex === -1 || boardIndex === -1) {
+        setCanPay(false);
+        return;
+      }
+
+      if (currentIndex == boardIndex - 1 || currentIndex == boardIndex) {
+        setCanPay(true);
+      } else {
+        setCanPay(false);
+      }
+    };
+
+    fetchBusLocation();
+
+    // Set up an interval to refresh the bus location every 30 seconds
+    const intervalId = setInterval(fetchBusLocation, 30000);
 
     const backAction = () => {
       if (showWebView) {
@@ -184,8 +222,12 @@ const Payment = ({ route, navigation }) => {
       "hardwareBackPress",
       backAction
     );
-    return () => backHandler.remove();
-  }, [showWebView]);
+
+    return () => {
+      clearInterval(intervalId);
+      backHandler.remove();
+    };
+  }, [showWebView, busno, toLocation, t.errorTitle]);
 
   useEffect(() => {
     const fetchId = async () => {
@@ -212,7 +254,7 @@ const Payment = ({ route, navigation }) => {
       if (data.type === "paymentSuccess") {
         setShowWebView(false);
         Alert.alert(t.successTitle, t.successMessage(data.paymentId), [
-          { text: t.okButton, onPress: () => navigation.navigate("Home") },
+          { text: t.okButton, onPress: () => navigation.navigate("TicketHistory") },
         ]);
       } else if (data.type === "paymentCancelled") {
         setShowWebView(false);
@@ -228,13 +270,11 @@ const Payment = ({ route, navigation }) => {
   };
 
   const handlePayment = async () => {
-    if (storedDistance === null || isNaN(storedDistance)) {
-      Alert.alert(t.distanceErrorTitle, t.distanceErrorMessage);
-      return;
-    }
-
-    if (storedDistance > 1) {
-      Alert.alert(t.distanceRestrictedTitle, t.distanceRestrictedMessage);
+    if (!canPay) {
+      Alert.alert(
+        t.distanceRestrictedTitle,
+        "Payment is only available when the bus is approaching your stop."
+      );
       return;
     }
 
@@ -244,37 +284,39 @@ const Payment = ({ route, navigation }) => {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/payment/orders`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: fareprice * seatCount,
-          currency: "INR",
-          notes: { description: "Bus Ticketing Payment" },
-          busno: busno,
-          userId: userId,
-        }),
+      console.log("💰 Creating payment order for:", {
+        amount: fareprice * seatCount,
+        seatCount,
+        busno,
+        userId,
+        fromLocation,
+        toLocation
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      const response = await axios.post(`${API_BASE_URL}/api/payment/orders`, {
+        amount: fareprice * seatCount,
+        ticketcount: seatCount,
+        busno: busno,
+        userId: userId,
+        fromLocation,
+        toLocation,
+      });
 
-      const responseText = await response.text();
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error("JSON Parse Error:", parseError);
-        console.error("Raw response:", responseText);
-        throw new Error("Invalid JSON response from server");
-      }
+      console.log("✅ Order API response:", response.status);
+
+      // Axios already parses JSON responses
+      const data = response.data;
+      console.log("📦 Order data received:", data ? "Success" : "Empty");
 
       if (!data?.order?.id) {
+        console.error("❌ Invalid order data:", data);
         throw new Error("Invalid order data received");
       }
 
-      const { id, amount, currency } = data.order;
+      // Extract order details
+      const { id, currency } = data.order;
+      console.log("🔑 Order ID:", id);
+      // Note: We're using the original fareprice * seatCount for display, not the amount from response
       const now = new Date();
       const formattedDate = now.toLocaleDateString(
         language === "English"
@@ -627,13 +669,32 @@ const Payment = ({ route, navigation }) => {
       </html>
       `;
 
-      setPaymentUrl(
-        `data:text/html,${encodeURIComponent(htmlContent)}`
-      );
+      setPaymentUrl(`data:text/html,${encodeURIComponent(htmlContent)}`);
       setShowWebView(true);
     } catch (err) {
       console.error("❌ Payment API Error:", err);
-      Alert.alert(t.errorTitle, t.orderErrorMessage);
+
+      // Provide more specific error messages based on the error
+      let errorMessage = t.orderErrorMessage;
+
+      if (err.response) {
+        // The server responded with a status code outside the 2xx range
+        console.error("❌ Server response error:", {
+          status: err.response.status,
+          data: err.response.data
+        });
+
+        // Use the server's error message if available
+        if (err.response.data && err.response.data.message) {
+          errorMessage = `${t.orderErrorMessage}: ${err.response.data.message}`;
+        }
+      } else if (err.request) {
+        // The request was made but no response was received
+        console.error("❌ No response received from server");
+        errorMessage = "No response from payment server. Please check your internet connection.";
+      }
+
+      Alert.alert(t.errorTitle, errorMessage);
     }
   };
 
@@ -678,6 +739,107 @@ const Payment = ({ route, navigation }) => {
         </Text>
       </View>
 
+      <View
+        style={[
+          styles.liveTrackContainer,
+          darkMode && styles.darkLiveTrackContainer,
+        ]}
+      >
+        <Text
+          style={[styles.liveTrackTitle, darkMode && styles.darkLiveTrackTitle]}
+        >
+          Live Tracking
+        </Text>
+
+        {/* Horizontal route line */}
+        <LinearGradient
+          colors={darkMode ? ["#3B82F6", "#EF4444"] : ["#2563EB", "#DC2626"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.routeLine}
+        />
+
+        {/* Bus stops - horizontal layout */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.stopsContainer}>
+            {busStages.map((stop, index) => {
+              const isCurrentStop = stop === busLocation;
+              const isBoardingStop = stop === fromLocation;
+              const isDestination = stop === toLocation;
+
+              return (
+                <View key={index} style={styles.stopWrapper}>
+                  {/* Stop indicator */}
+                  {isCurrentStop ? (
+                    <View>
+                      <View>
+                        <Ionicons
+                          name="bus"
+                          size={20}
+                          color={darkMode ? "#3B82F6" : "#2563EB"}
+                          style={{ marginRight: 8, bottom: 13, index: 100 }}
+                        />
+                      </View>
+                    </View>
+                  ) : isBoardingStop ? (
+                    <View>
+                      <Ionicons
+                        name="man"
+                        size={20}
+                        color={darkMode ? "#3B82F6" : "#2563EB"}
+                        style={{ marginRight: 8, bottom: 13, index: 100 }}
+                      />
+                    </View>
+                  ) : isDestination ? (
+                    <View
+                      style={[
+                        styles.stopIndicator,
+                        {
+                          backgroundColor: darkMode ? "#111" : "#fff",
+                          borderColor: "#EF4444",
+                        },
+                      ]}
+                    />
+                  ) : (
+                    <View
+                      style={[
+                        styles.stopIndicator,
+                        {
+                          backgroundColor: darkMode ? "#111" : "#fff",
+                          borderColor: darkMode ? "#666" : "#94A3B8",
+                        },
+                      ]}
+                    />
+                  )}
+
+                  {/* Stop name */}
+                  <Text
+                    numberOfLines={2}
+                    style={[
+                      isCurrentStop ? styles.currentStopText : styles.stopText,
+                      darkMode
+                        ? isCurrentStop
+                          ? styles.darkCurrentStopText
+                          : styles.darkStopText
+                        : {},
+                      isBoardingStop && {
+                        color: darkMode ? "#3B82F6" : "#2563EB",
+                      },
+                      isDestination && {
+                        color: darkMode ? "#EF4444" : "#DC2626",
+                      },
+                    ]}
+                  >
+                    {stop}
+                    {isCurrentStop && " (Current)"}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+        </ScrollView>
+      </View>
+
       <View style={[styles.card, darkMode && styles.darkCard]}>
         <View style={styles.infoRow}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -701,17 +863,50 @@ const Payment = ({ route, navigation }) => {
         <View style={styles.infoRow}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Ionicons
-              name="speedometer"
+              name="location"
               size={20}
               color={darkMode ? "#3B82F6" : "#2563EB"}
               style={{ marginRight: 8 }}
             />
             <Text style={[styles.infoLabel, darkMode && styles.darkInfoLabel]}>
-              {t.distance}
+              Current Bus Location:
             </Text>
           </View>
           <Text style={[styles.infoValue, darkMode && styles.darkInfoValue]}>
-            {storedDistance ? `${storedDistance.toFixed(2)} km` : t.fetching}
+            {loading ? t.fetching : busLocation || "Unknown"}
+          </Text>
+        </View>
+
+        <View style={[styles.divider, darkMode && styles.darkDivider]} />
+
+        <View style={styles.infoRow}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Ionicons
+              name="checkmark-circle"
+              size={20}
+              color={canPay ? "#10b981" : "#ef4444"}
+              style={{ marginRight: 8 }}
+            />
+            <Text style={[styles.infoLabel, darkMode && styles.darkInfoLabel]}>
+              Payment Status:
+            </Text>
+          </View>
+          <Text
+            style={[
+              styles.infoValue,
+              darkMode && styles.darkInfoValue,
+              {
+                color: canPay
+                  ? darkMode
+                    ? "#10b981"
+                    : "#059669"
+                  : darkMode
+                  ? "#ef4444"
+                  : "#dc2626",
+              },
+            ]}
+          >
+            {canPay ? "Available" : "Unavailable"}
           </Text>
         </View>
       </View>
@@ -779,8 +974,14 @@ const Payment = ({ route, navigation }) => {
       </View>
 
       <TouchableOpacity
-        style={[styles.button, darkMode && styles.darkButton]}
+        style={[
+          styles.button,
+          darkMode && styles.darkButton,
+          !canPay &&
+            (darkMode ? styles.darkDisabledButton : styles.disabledButton),
+        ]}
         onPress={handlePayment}
+        disabled={!canPay || loading}
       >
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Ionicons

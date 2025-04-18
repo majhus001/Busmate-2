@@ -1,5 +1,5 @@
 
-export const API_BASE_URL = "https://busmate-2.onrender.com"; // Ensure this is your correct API URL
+export const API_BASE_URL = "http://192.168.1.6:5000"; // Ensure this is your correct API URL
 export const API_BASE2 = "https://busmate-2-acol.onrender.com"; 
 
 // Host 1 =  "https://busmate-2.onrender.com"

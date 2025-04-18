@@ -5,6 +5,7 @@ import ConHome from "./components/Conductor/Homepage/ConHome";
 import BusSelection from "./components/Conductor/SelectBus/BusSelection";
 import Buslogin from "./components/Conductor/Buslogin/Buslogin";
 import EtmTicket from "./components/Conductor/Ticket/EtmTicket";
+import ViewTickets from "./components/Conductor/Ticket/ViewTickets";
 import AdRoutes from "./components/Admin/BusRoute/AdRoutes";
 import Payment from "./components/Conductor/Ticket/Payment";
 import TicketSuccess from "./components/Conductor/Ticket/TicketSuccess";
@@ -64,6 +65,7 @@ export default function App() {
         <Stack.Screen name="adreports" component={AdminReports} />
         <Stack.Screen name="Conductormap" component={Conductormap} />
         <Stack.Screen name="AssignConductors" component={AssignConductors} />
+        <Stack.Screen name="ViewTickets" component={ViewTickets} />
       </Stack.Navigator>
     </NavigationContainer>
   );

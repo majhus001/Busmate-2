@@ -43,6 +43,7 @@ router.post("/add", async (req, res) => {
       city,
       fromStage,
       toStage,
+      currentLocation: fromStage,
       prices,
       timings,
       adminId,
@@ -57,7 +58,7 @@ router.post("/add", async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-  
+
   try {
     const { busplateNo, password } = req.body;
 
@@ -66,7 +67,7 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Bus Plate No and Password are required",
-        
+
       });
     }
 
@@ -395,6 +396,45 @@ router.get("/seat-availability", async (req, res) => {
   } catch (error) {
     console.error("Error fetching seat availability:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Get bus location and stages
+router.get("/bus-location/:busRouteNo", async (req, res) => {
+  const { busRouteNo } = req.params;
+
+  try {
+    const bus = await Bus.findOne({ busRouteNo }).lean();
+
+    if (!bus) {
+      return res.status(404).json({
+        success: false,
+        message: "Bus not found"
+      });
+    }
+
+    let stages = [];
+    if (bus.timings && typeof bus.timings === "object") {
+      stages = Object.keys(bus.timings);
+    }
+
+    // Return the current location and all stages
+    res.json({
+      success: true,
+      data: {
+        currentLocation: bus.currentLocation,
+        stages: stages,
+        fromStage: bus.fromStage,
+        toStage: bus.toStage
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching bus location:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message
+    });
   }
 });
 

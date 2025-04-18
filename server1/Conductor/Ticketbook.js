@@ -231,6 +231,38 @@ router.get("/genrevenue/all/:adminId", async (req, res) => {
   }
 });
 
+// Get tickets for a specific bus by route number and date
+router.get("/bus-tickets/:busRouteNo", async (req, res) => {
+  const { busRouteNo } = req.params;
+  const { date } = req.query;
+  console.log("hhhhh")
+  try {
+    // Create date range for the given date (start of day to end of day)
+    const startDate = new Date(date);
+    startDate.setHours(0, 0, 0, 0);
+
+    const endDate = new Date(date);
+    endDate.setHours(23, 59, 59, 999);
+
+    const tickets = await Ticket.find({
+      busRouteNo: busRouteNo,
+      issuedAt: { $gte: startDate, $lte: endDate }
+    }).sort({ issuedAt: -1 }); 
+
+    res.status(200).json({
+      success: true,
+      tickets: tickets
+    });
+  } catch (error) {
+    console.error(`Error fetching tickets for bus ${busRouteNo}:`, error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch tickets",
+      error: error.message
+    });
+  }
+});
+
 // Get statistics for a conductor based on their assigned bus
 router.get("/conductor-stats/:conductorId", async (req, res) => {
   const { conductorId } = req.params;
@@ -272,12 +304,12 @@ router.get("/conductor-stats/:conductorId", async (req, res) => {
     const uniqueTrips = new Set();
 
     tickets.forEach((item) => {
-      const tripDate = new Date(item.issuedAt).toISOString().split("T")[0]; 
-      uniqueTrips.add(tripDate); 
-      
+      const tripDate = new Date(item.issuedAt).toISOString().split("T")[0];
+      uniqueTrips.add(tripDate);
+
     });
-    
-    const totalTrips = uniqueTrips.size; 
+
+    const totalTrips = uniqueTrips.size;
 
     res.status(200).json({
       success: true,
