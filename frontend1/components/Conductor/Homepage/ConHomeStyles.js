@@ -18,6 +18,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 5,
   },
+  notifyicon: {
+marginLeft:"80%",
+marginTop:"-10%",
+color:"white",
+  },
   appTitle: {
     fontSize: 28,
     fontWeight: "bold",
@@ -29,6 +34,7 @@ const styles = StyleSheet.create({
     color: "#d1d5db",
     marginTop: 5,
     fontStyle: "italic",
+    marginLeft:"3%",
   },
   // Card Container - Used for all cards
   cardContainer: {

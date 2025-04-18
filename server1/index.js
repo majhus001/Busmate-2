@@ -20,7 +20,8 @@ const userdata = require("./Authentication/UserData");
 const favoriteBusesRoutes = require("./User/favorites");
 const buzzer = require("./Conductor/Buzzer");
 const conductorAssignment = require("./Admin/ConductorAssignment/ConductorAssignment");
-
+const UserComplaints = require('./User/complaints');
+const busRoutes = require("./User/bus-routes");
 const app = express();
 const server = http.createServer(app);
 
@@ -58,10 +59,35 @@ app.use("/api/userdata", userdata);
 app.use("/api/favorites", favoriteBusesRoutes);
 app.use("/api/buzzer", buzzer);
 app.use("/api/Admin/conductor-assignment", conductorAssignment);
-
-// Health check route
+app.use('/api/Usercomplaints', UserComplaints);
+app.use("/api/bus", busRoutes);
+// Health check routes
 app.get("/", (req, res) => {
   res.status(200).send("Socket.io server is running");
+});
+
+// Debug route to test API directly
+app.get("/api/debug/test", (req, res) => {
+  console.log("Debug test route accessed");
+  res.status(200).json({ message: "Debug route is working" });
+});
+
+// Direct username route for testing
+app.get("/api/debug/username/:id", async (req, res) => {
+  try {
+    const User = require("./Module/User");
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({
+      username: user.Username,
+      success: true
+    });
+  } catch (error) {
+    console.error("Debug username error:", error);
+    res.status(500).json({ message: "Error", error: error.message });
+  }
 });
 
 // MongoDB Connection

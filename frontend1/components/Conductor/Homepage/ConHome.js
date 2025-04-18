@@ -5,6 +5,9 @@ import axios from "axios";
 import { API_BASE_URL } from "../../../apiurl";
 import * as SecureStore from "expo-secure-store";
 import styles from "./ConHomeStyles";
+import UserComplaint from "../Complaintform/UserCompliants";
+import NotificationAlert from "./NotificationAlert";
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Simple helper function to format time elapsed
 const getTimeElapsed = (date) => {
@@ -157,17 +160,24 @@ const ConHome = ({ navigation, route }) => {
       fetchAllData();
     }
   }, [conData]);
-
+  const handleNotificationPress = () => {
+    // Navigate to notifications screen or show alert
+    navigation.navigate('NotificationAlert'); // assuming you have a screen for this
+  };
+  
   // Handle refresh
   const onRefresh = () => {
     setRefreshing(true);
     fetchAllData();
   };
 
+  const handleUserComplaints = () => {
+    navigation.navigate("UserComplaints", { conData });
+  };
+  
   const handleProfile = () => {
     navigation.navigate("conprofile", { conData });
   };
-
   const toggleExpanded = () => {
     setExpanded(!expanded);
   };
@@ -196,11 +206,16 @@ const ConHome = ({ navigation, route }) => {
         }
       >
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.appTitle}>🚍 BusMate</Text>
-          <Text style={styles.panelName}>Conductor Panel</Text>
-        </View>
-
+    
+<View style={styles.header}>
+  <View>
+    <Text style={styles.appTitle}>BusMate</Text>
+    <Text style={styles.panelName}>Conductor Panel</Text>
+  </View>
+  <TouchableOpacity onPress={handleNotificationPress}>
+    <Ionicons name="notifications-outline" size={28} color="#000" style={styles.notifyicon} />
+  </TouchableOpacity>
+</View>
         {/* Status Card */}
         {showStatusCard && (
           <View style={styles.statusCard}>
@@ -405,33 +420,7 @@ const ConHome = ({ navigation, route }) => {
           </View>
         </View>
 
-      {/* Notifications */}
-      {notifications.length > 0 && (
-        <View style={styles.cardContainer}>
-          <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderContent}>
-              <Icon name="notifications" size={24} color="#FF9500" style={styles.notificationIcon} />
-              <View style={styles.headerTextContainer}>
-                <Text style={styles.cardTitle}>Notifications</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.notificationsContainer}>
-            {notifications.map(notification => (
-              <View key={notification.id} style={styles.notificationItem}>
-                <View style={styles.notificationHeader}>
-                  <Text style={styles.notificationTitle}>{notification.title}</Text>
-                  <Text style={styles.notificationTime}>
-                    {getTimeElapsed(notification.time)}
-                  </Text>
-                </View>
-                <Text style={styles.notificationMessage}>{notification.message}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-      )}
+    
 
       {/* Quick Actions */}
       <View style={styles.quickActionsContainer}>
@@ -459,12 +448,12 @@ const ConHome = ({ navigation, route }) => {
 
           <TouchableOpacity
             style={styles.actionButton}
-            onPress={handleProfile}
+            onPress={handleUserComplaints}
           >
             <View style={[styles.actionIcon, { backgroundColor: '#34C759' }]}>
               <Icon name="person" size={24} color="#FFFFFF" />
             </View>
-            <Text style={styles.actionText}>Profile</Text>
+            <Text style={styles.actionText}>UserComplaint</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -475,6 +464,7 @@ const ConHome = ({ navigation, route }) => {
         </View>
       )}
     </ScrollView>
+
     </>
   );
 };

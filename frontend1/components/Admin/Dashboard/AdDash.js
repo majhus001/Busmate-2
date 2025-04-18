@@ -25,6 +25,7 @@ const AdDash = ({ navigation, route }) => {
   const [complaints, setComplaints] = useState([]);
   const [alertsCount, setAlertsCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+
   const fetchAdminData = async () => {
     try {
       const storedData = await SecureStore.getItemAsync("currentUserData");
@@ -153,6 +154,13 @@ const AdDash = ({ navigation, route }) => {
       icon: "alert-circle-outline",
       color: "#FF3B30",
       onPress: () => navigation.navigate("statuscomplient", { complaints }),
+    },
+    {
+      title: "User Complaints",
+      value: complaints.length > 0 ? `${complaints.length}+` : "0",
+      icon: "chatbox-ellipses-outline",
+      color: "#FF9500",
+      onPress: () => navigation.navigate("AdminUserComplaints", { complaints }),
     },
   ];
 

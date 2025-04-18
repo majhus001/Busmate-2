@@ -28,6 +28,9 @@ import Viewconductordata from "./components/Admin/Dashboard/Updatedatas/Viewcond
 import Updatebusesdata from "./components/Admin/Dashboard/Updatedatas/Updatebusesdata";
 import AdminReports from "./components/Admin/Dashboard/Reports/AdminReports";
 import Conductormap from "./components/Conductor/Homepage/Conductormap";
+import UserComplaints from "./components/Conductor/Complaintform/UserCompliants";
+import AdminUserComplaint from "./components/Admin/Admincompliant/Usercompliant";
+import NotificationAlert from "./components/Conductor/Homepage/NotificationAlert";
 
 const Stack = createNativeStackNavigator();
 
@@ -65,6 +68,11 @@ export default function App() {
         <Stack.Screen name="adreports" component={AdminReports} />
         <Stack.Screen name="Conductormap" component={Conductormap} />
         <Stack.Screen name="AssignConductors" component={AssignConductors} />
+        <Stack.Screen name="UserComplaints" component={UserComplaints} />
+  
+        <Stack.Screen name="AdminUserComplaints" component={AdminUserComplaint} />
+        
+        <Stack.Screen name="NotificationAlert" component={NotificationAlert} />
         <Stack.Screen name="ViewTickets" component={ViewTickets} />
       </Stack.Navigator>
     </NavigationContainer>

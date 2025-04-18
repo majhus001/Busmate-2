@@ -20,6 +20,8 @@ import SplashScreen from "./components/Users/Welcome/SplashScreen";
 import Splash1 from "./components/Users/Welcome/Splash1";
 import Splash2 from "./components/Users/Welcome/Splash2";
 import Splash3 from "./components/Users/Welcome/Splash3";
+import UserComplaint from "./components/Users/Homescreen/UserComplaint";
+import ViewUserComplaints from "./components/Users/Homescreen/ViewUserComplaints";
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -49,6 +51,8 @@ export default function App() {
         <Stack.Screen name="Splash1" component={Splash1} />
         <Stack.Screen name="Splash2" component={Splash2} />
         <Stack.Screen name="Splash3" component={Splash3} />
+        <Stack.Screen name="AddComplaint" component={UserComplaint} />
+        <Stack.Screen name="ViewComplaints" component={ViewUserComplaints} />
       </Stack.Navigator>
     </NavigationContainer>
     </LanguageProvider>
