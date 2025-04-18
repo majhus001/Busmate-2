@@ -143,7 +143,8 @@ const Payment = ({ route, navigation }) => {
 
   const [showWebView, setShowWebView] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState("");
-  const [seatCount, setSeatCount] = useState(1);
+  const sss = route.params?.seats || 1;
+  const [seatCount, setSeatCount] = useState(parseInt(sss));
   const [userId, setUserId] = useState(null);
   const [busLocation, setBusLocation] = useState(null);
   const [busStages, setBusStages] = useState([]);

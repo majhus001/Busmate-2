@@ -8,7 +8,6 @@ import { WebView } from "react-native-webview";
 import * as SecureStore from "expo-secure-store";
 import { API_BASE2, API_BASE_URL } from "../../../../apiurl";
 import debounce from "lodash.debounce";
-import styles from "./FooterStyles";
 
 const BACKEND_URL = API_BASE2;
 
@@ -248,7 +247,7 @@ const Footer = ({ navigation }) => {
       });
 
       const bus = response.data;
-      console.log("✅ Fetched bus details:", bus);
+      console.log("Fetched bus details:", bus);
 
       if (bus) {
         setfromstage2(bus.fromStage);
@@ -260,7 +259,6 @@ const Footer = ({ navigation }) => {
           toLocation: bus.toStage
         };
       }
-      console.log(`⚠️ No bus details found for ${busRouteNo}`);
       return null;
     } catch (error) {
       console.error("Error fetching bus details:", error);
@@ -321,7 +319,7 @@ const Footer = ({ navigation }) => {
   };
 
   const handleBookingNavigation = useCallback(async (bookingData) => {
-    console.log("🚌 Navigating to payment with:", bookingData);
+    console.log("Navigating to payment with:", bookingData);
 
     if (
       !bookingData ||
@@ -330,23 +328,18 @@ const Footer = ({ navigation }) => {
       !bookingData.bus ||
       ["book", "confirm", "proceed"].includes(bookingData.to.toLowerCase())
     ) {
-      console.error("❌ Invalid booking data:", bookingData);
+      console.error("Invalid booking data:", bookingData);
       Alert.alert("Error", "Invalid booking details. Please provide valid locations.");
       return;
     }
 
     const busRouteNo = bookingData.bus.replace(/^bus\s+/i, "");
     try {
-      // Show loading indicator
-      setIsProcessing(true);
-
       const price = await fetchBusPrice(busRouteNo, bookingData.from, bookingData.to);
       setPrices(price);
 
       const distance = bookingData.distance || "10";
       await SecureStore.setItemAsync("bookingDistance", distance);
-
-      console.log(`✅ Successfully fetched price for bus ${busRouteNo}: ₹${price}`);
 
       navigation.navigate("payment", {
         busno: busRouteNo,
@@ -356,16 +349,10 @@ const Footer = ({ navigation }) => {
         seats: bookingData.seats || "1",
         distance,
       });
-      console.log(`✅ Navigation successful - Price: ₹${price}, Distance: ${distance}km`);
+      console.log("Price fetched:", price, "Distance:", distance);
     } catch (error) {
-      console.error(`❌ Booking navigation error: ${error.message}`);
-      Alert.alert(
-        "Booking Error",
-        "Failed to fetch price. Proceeding with unknown price",
-        [{ text: "OK", onPress: () => console.log("Booking error acknowledged") }]
-      );
-
-      // Still try to navigate even if price fetch failed
+      console.error("Booking navigation error:", error);
+      Alert.alert("Error", "Failed to fetch price. Proceeding with unknown price");
 
       const distance = bookingData.distance || "10";
       await SecureStore.setItemAsync("bookingDistance", distance);
@@ -650,9 +637,9 @@ const Footer = ({ navigation }) => {
     return (
       <View style={{ alignItems: "center" }}>
         {showAIMenu && (
-          <View style={styles.popupMenu}>
+          <View style={styles.popupContainer}>
             {!isListening && !isSpeaking && (
-              <>
+              <View style={styles.popupMenu}>
                 <TouchableOpacity
                   onPress={() => handleAIOptionPress("chat")}
                   style={styles.popupButton}
@@ -677,32 +664,36 @@ const Footer = ({ navigation }) => {
                   <Ionicons name="close-outline" size={20} color="#00468b" />
                   <Text style={styles.popupText}>Close</Text>
                 </TouchableOpacity>
-              </>
+              </View>
             )}
             {(isListening || isSpeaking) && (
-              <View style={styles.animationContainer}>
-                <View style={styles.rainbowBackground}>
+              <View style={styles.animationWrapper}>
+                <View style={styles.animationContainer}>
                   {isListening ? (
-                    <View style={{ backgroundColor: '#FFFFFF' }} />
+                    <Animated.View
+                      style={[
+                        styles.circle,
+                        { transform: [{ scale: circleScale }], opacity: circleOpacity }
+                      ]}
+                    />
                   ) : isSpeaking ? (
-                    <View style={{ backgroundColor: '#FFFFFF' }} />
+                    <View style={styles.speakingAnimationContainer}>
+                      <Animated.View style={[styles.oval, { transform: [{ translateY: dotTranslations.dot1 }] }]} />
+                      <Animated.View style={[styles.oval, { transform: [{ translateY: dotTranslations.dot2 }] }]} />
+                      <Animated.View style={[styles.oval, { transform: [{ translateY: dotTranslations.dot3 }] }]} />
+                      <Animated.View style={[styles.oval, { transform: [{ translateY: dotTranslations.dot4 }] }]} />
+                    </View>
                   ) : null}
                 </View>
-                {isListening ? (
-                  <Animated.View
-                    style={[
-                      styles.circle,
-                      { transform: [{ scale: circleScale }] }
-                    ]}
-                  />
-                ) : isSpeaking ? (
-                  <View style={styles.speakingAnimationContainer}>
-                    <Animated.View style={[styles.oval, { transform: [{ translateY: dotTranslations.dot1 }] }]} />
-                    <Animated.View style={[styles.oval, { transform: [{ translateY: dotTranslations.dot2 }] }]} />
-                    <Animated.View style={[styles.oval, { transform: [{ translateY: dotTranslations.dot3 }] }]} />
-                    <Animated.View style={[styles.oval, { transform: [{ translateY: dotTranslations.dot4 }] }]} />
-                  </View>
-                ) : null}
+                {isSpeaking && (
+                  <TouchableOpacity
+                    onPress={stopSpeaking}
+                    style={styles.closeButton}
+                    accessibilityLabel="Stop AI Response"
+                  >
+                    <Ionicons name="close-circle" size={24} color="#00468b" />
+                  </TouchableOpacity>
+                )}
               </View>
             )}
           </View>
@@ -748,6 +739,8 @@ const Footer = ({ navigation }) => {
     toggleAIMenu,
     dotTranslations,
     circleScale,
+    circleOpacity,
+    stopSpeaking,
   ]);
 
   const startListeningAnimation = () => {
@@ -765,6 +758,18 @@ const Footer = ({ navigation }) => {
             useNativeDriver: true,
           }),
         ]),
+        Animated.sequence([
+          Animated.timing(circleOpacity, {
+            toValue: 0.8,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(circleOpacity, {
+            toValue: 0.3,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ]),
       ]),
       { iterations: -1 }
     ).start();
@@ -774,29 +779,29 @@ const Footer = ({ navigation }) => {
     circleScale.stopAnimation(() => {
       circleScale.setValue(1);
     });
+    circleOpacity.stopAnimation(() => {
+      circleOpacity.setValue(0.3);
+    });
   };
 
   const startSpeakingAnimation = () => {
     const animations = Object.values(dotTranslations).map((trans, index) => {
-      // Use index to create varied animations for each dot
       const randomAmplitude = 5 + Math.random() * 10; // Random height between 5 and 15
-      const baseDuration = 300 + (index * 50); // Stagger durations based on index
-
       return Animated.loop(
         Animated.sequence([
           Animated.timing(trans, {
             toValue: -randomAmplitude,
-            duration: baseDuration,
+            duration: 400,
             useNativeDriver: true,
           }),
           Animated.timing(trans, {
             toValue: randomAmplitude,
-            duration: baseDuration,
+            duration: 400,
             useNativeDriver: true,
           }),
           Animated.timing(trans, {
             toValue: 0,
-            duration: baseDuration,
+            duration: 400,
             useNativeDriver: true,
           }),
         ]),
@@ -807,11 +812,9 @@ const Footer = ({ navigation }) => {
     animations.forEach((anim, index) => {
       anim.start();
       if (index > 0) {
-        setTimeout(() => anim.start(), index * 100); // Staggered start for wave effect
+        setTimeout(() => anim.start(), index * 100); // Staggered start for wave
       }
     });
-
-    console.log(`🎙️ Started speaking animation with ${animations.length} dots`);
   };
 
   const stopSpeakingAnimation = () => {
@@ -847,5 +850,133 @@ const Footer = ({ navigation }) => {
     </View>
   );
 };
+
+// Styles
+const styles = StyleSheet.create({
+  footerContainer: {
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  footer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    paddingVertical: Platform.select({ ios: 10, android: 8 }),
+    paddingHorizontal: 5,
+  },
+  footerItem: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 8,
+    position: "relative",
+    minWidth: 60,
+  },
+  footerText: {
+    fontSize: 12,
+    color: "#00468b",
+    marginTop: 4,
+    fontWeight: "500",
+  },
+  footerTextInactive: {
+    fontSize: 12,
+    color: "#aaa",
+    marginTop: 4,
+  },
+  activeDot: {
+    width: 4,
+    height: 4,
+    backgroundColor: "#00468b",
+    borderRadius: 2,
+    position: "absolute",
+    bottom: 0,
+  },
+  aiButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    padding: 10,
+    borderRadius: 30,
+    marginTop: -10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 5,
+    width: 60,
+    height: 60,
+  },
+  popupContainer: {
+    position: "absolute",
+    bottom: 70,
+    alignItems: "center",
+    zIndex: 100,
+  },
+  popupMenu: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+  popupButton: {
+    alignItems: "center",
+    marginHorizontal: 8,
+    padding: 5,
+  },
+  popupText: {
+    fontSize: 10,
+    color: "#00468b",
+    marginTop: 2,
+    fontWeight: "500",
+  },
+  animationWrapper: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  animationContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 80,
+    height: 80,
+  },
+  circle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#00468b",
+    zIndex: 1,
+  },
+  speakingAnimationContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 60,
+    zIndex: 1,
+  },
+  oval: {
+    width: 10,
+    height: 20,
+    borderRadius: 5,
+    backgroundColor: "#1E3A8A",
+    marginHorizontal: 2,
+  },
+  closeButton: {
+    marginTop: 8,
+    padding: 5,
+  },
+});
 
 export default React.memo(Footer);
