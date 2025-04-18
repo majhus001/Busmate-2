@@ -1,81 +1,137 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform, Dimensions } from "react-native"
+
+const { width } = Dimensions.get("window")
 
 export default StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
   container: {
     flex: 1,
-    backgroundColor: "#f4f7fa",
+    backgroundColor: "#F9FAFB",
+  },
+  mainContainer: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
   },
   chatContainer: {
     flex: 1,
-    paddingHorizontal: 12,
+    backgroundColor: "transparent",
   },
-  messageBubble: {
-    marginVertical: 6,
-    padding: 14,
-    borderRadius: 20,
+  chatContentContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
+    flexGrow: 1,
+  },
+  welcomeContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    minHeight: 300,
+  },
+  welcomeText: {
+    fontSize: 20,
+    color: "#6B7280",
+    textAlign: "center",
+    fontWeight: "500",
+  },
+  messageContainer: {
+    marginBottom: 12,
     maxWidth: "85%",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 3,
   },
-  userBubble: {
-    backgroundColor: "#0a84ff",
+  userMessageContainer: {
     alignSelf: "flex-end",
   },
-  botBubble: {
-    backgroundColor: "#ffffff",
+  botMessageContainer: {
     alignSelf: "flex-start",
   },
+  messageBubble: {
+    borderRadius: 18,
+    padding: 12,
+    minWidth: 60,
+  },
+  userBubble: {
+    backgroundColor: "#1E3A8A",
+  },
+  botBubble: {
+    backgroundColor: "#E5E7EB",
+  },
   messageText: {
-    color: "#000",
+    fontSize: 16,
+    color: "#1F2937",
+    lineHeight: 22,
+  },
+  userBubble: {
+    backgroundColor: "#00468b",
+  },
+  botBubble: {
+    backgroundColor: "#E5E7EB",
+  },
+  messageText: {
     fontSize: 16,
     lineHeight: 22,
   },
+  userBubble: {
+    backgroundColor: "#1E3A8A",
+  },
+  botBubble: {
+    backgroundColor: "#E5E7EB",
+  },
+  messageText: {
+    fontSize: 16,
+    color: (props) => (props.sender === "user" ? "#FFFFFF" : "#1F2937"),
+  },
+  timestamp: {
+    fontSize: 10,
+    color: "#9CA3AF",
+    alignSelf: "flex-end",
+    marginTop: 4,
+  },
+  inputWrapper: {
+    paddingHorizontal: 16,
+    paddingBottom: Platform.OS === "ios" ? 16 : 8,
+    paddingTop: 8,
+    backgroundColor: "#FFFFFF",
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+  },
   inputContainer: {
-    position: "absolute",
-    bottom: 0,
     flexDirection: "row",
     alignItems: "center",
-    padding: 10,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderColor: "#e1e1e1",
+    backgroundColor: "#F3F4F6",
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   input: {
     flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    marginRight: 6,
+    fontSize: 16,
+    color: "#1F2937",
     maxHeight: 100,
-    minHeight: 40,
-    textAlignVertical: "top",
-    fontSize: 16,
+    paddingTop: 8,
+    paddingBottom: 8,
   },
-  sendButton: {
-    backgroundColor: "#0a84ff",
-    padding: 10,
-    borderRadius: 25,
+  buttonContainer: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-  stopButton: {
-    backgroundColor: "#ff453a",
-    padding: 10,
-    borderRadius: 25,
+  actionButton: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 8,
   },
-  voiceButton: {
-    backgroundColor: "#32d74b",
-    padding: 10,
-    borderRadius: 25,
-    marginLeft: 6,
+  disabledButton: {
+    opacity: 0.5,
   },
-  sendText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
+  webView: {
+    height: 0,
+    width: 0,
+    opacity: 0,
+    position: "absolute",
   },
-});
+})

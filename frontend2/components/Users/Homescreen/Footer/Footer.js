@@ -39,7 +39,7 @@ const Footer = ({ navigation }) => {
     place: new Animated.Value(1),
     profile: new Animated.Value(1),
   });
-  
+
   const [translateYAnims] = useState({
     home: new Animated.Value(0),
     ticket: new Animated.Value(0),
@@ -48,7 +48,18 @@ const Footer = ({ navigation }) => {
     profile: new Animated.Value(0),
   });
 
-  // Cleanup effects
+  // Speaking animation (vertical movement with random wave)
+  const [dotTranslations] = useState({
+    dot1: new Animated.Value(0),
+    dot2: new Animated.Value(0),
+    dot3: new Animated.Value(0),
+    dot4: new Animated.Value(0),
+  });
+
+  // Listening animation (opacity and scale for glowing circle)
+  const [circleOpacity] = useState(new Animated.Value(0.3));
+  const [circleScale] = useState(new Animated.Value(1));
+
   useEffect(() => {
     checkMicrophonePermission();
     return () => {
@@ -57,15 +68,16 @@ const Footer = ({ navigation }) => {
       }
       Speech.stop();
       clearTimeout(speechTimeoutRef.current);
+      Object.values(dotTranslations).forEach((trans) => trans.stopAnimation());
+      circleOpacity.stopAnimation();
+      circleScale.stopAnimation();
     };
   }, []);
 
-  // Microphone permission check
   const checkMicrophonePermission = async () => {
     try {
       const { status } = await Audio.getPermissionsAsync();
       console.log("Microphone permission status:", status);
-      
       if (status === "granted") {
         setHasMicPermission(true);
       } else {
@@ -78,10 +90,9 @@ const Footer = ({ navigation }) => {
     }
   };
 
-  // Speech recognition handlers
   const startListening = useCallback(async () => {
     if (isListening || isProcessing) return;
-    
+
     if (isSpeaking) {
       stopSpeaking();
     }
@@ -99,7 +110,8 @@ const Footer = ({ navigation }) => {
     setIsListening(true);
     setIsProcessing(true);
     setShouldContinueListening(true);
-    
+    startListeningAnimation();
+
     try {
       webviewRef.current.injectJavaScript(`
         try {
@@ -112,37 +124,37 @@ const Footer = ({ navigation }) => {
           recognition.onstart = () => {
             console.log("Speech recognition started");
           };
-          
+
           recognition.onresult = (event) => {
             const transcript = event.results[0][0].transcript;
             console.log("Transcript:", transcript);
-            window.ReactNativeWebView.postMessage(JSON.stringify({ 
-              type: 'speech', 
-              text: transcript 
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+              type: 'speech',
+              text: transcript
             }));
           };
-          
+
           recognition.onerror = (event) => {
             console.error("Speech error:", event.error);
-            window.ReactNativeWebView.postMessage(JSON.stringify({ 
-              type: 'error', 
-              error: event.error 
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+              type: 'error',
+              error: event.error
             }));
           };
-          
+
           recognition.onend = () => {
             console.log("Speech recognition ended");
-            window.ReactNativeWebView.postMessage(JSON.stringify({ 
-              type: 'end' 
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+              type: 'end'
             }));
           };
 
           recognition.start();
         } catch (e) {
           console.error("Speech init error:", e);
-          window.ReactNativeWebView.postMessage(JSON.stringify({ 
-            type: 'error', 
-            error: e.message 
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'error',
+            error: e.message
           }));
         }
       `);
@@ -150,6 +162,7 @@ const Footer = ({ navigation }) => {
       console.error("Error starting speech recognition:", error);
       setIsListening(false);
       setIsProcessing(false);
+      stopListeningAnimation();
     }
   }, [isListening, isSpeaking, hasMicPermission, shouldContinueListening, isProcessing]);
 
@@ -157,7 +170,8 @@ const Footer = ({ navigation }) => {
     console.log("Stopping voice recognition...");
     setIsListening(false);
     setIsProcessing(false);
-    
+    stopListeningAnimation();
+
     webviewRef.current.injectJavaScript(`
       if (window.recognition) {
         window.recognition.stop();
@@ -169,19 +183,19 @@ const Footer = ({ navigation }) => {
     console.log("Stopping speech synthesis...");
     Speech.stop();
     setIsSpeaking(false);
-    
+
     if (soundRef.current) {
       soundRef.current.unloadAsync();
       soundRef.current = null;
     }
+    stopSpeakingAnimation();
   }, []);
 
-  // WebView message handler
   const handleWebViewMessage = useCallback(async (event) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
       console.log("WebView message:", data);
-      
+
       if (data.type === "speech") {
         setIsProcessing(true);
         await processVoiceCommand(data.text);
@@ -205,11 +219,12 @@ const Footer = ({ navigation }) => {
   const handleSpeechError = (error) => {
     setIsListening(false);
     setIsProcessing(false);
-    
+    stopListeningAnimation();
+
     if (error !== "no-speech" && error !== "aborted") {
       Alert.alert("Voice Error", `Speech recognition failed: ${error}`);
     }
-    
+
     if (shouldContinueListening && !isSpeaking) {
       speechTimeoutRef.current = setTimeout(() => startListening(), 1000);
     }
@@ -218,13 +233,13 @@ const Footer = ({ navigation }) => {
   const handleSpeechEnd = () => {
     setIsListening(false);
     setIsProcessing(false);
-    
+    stopListeningAnimation();
+
     if (shouldContinueListening && !isSpeaking) {
       speechTimeoutRef.current = setTimeout(() => startListening(), 500);
     }
   };
 
-  // Data fetching functions
   const fetchBusdetails = useCallback(async (busRouteNo) => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/Admin/buses/fetchAllBuses3`, {
@@ -252,13 +267,13 @@ const Footer = ({ navigation }) => {
   }, []);
 
   const fetchBusPrice = async (busRouteNo, from, to) => {
-    console.log("Fetching bus price for:", busRouteNo, from, to);
+    console.log("Fetching price for:", busRouteNo, from, to);
     setbusno(busRouteNo);
     try {
       const response = await axios.get(`${API_BASE_URL}/api/Admin/buses/fetchAllBuses2`, {
         params: { busRouteNo, from, to },
       });
-     
+
       const data = response.data || [];
       if (data.length > 0) {
         const bus = data[0];
@@ -284,40 +299,76 @@ const Footer = ({ navigation }) => {
             break;
           }
         }
-        
+
         if (matchedPrice) {
           setPrices(matchedPrice);
           console.log(`💰 Price from ${from} to ${to} is ₹${matchedPrice}`);
+          return matchedPrice;
         } else {
           console.log(`❌ No matching price for ${from} to ${to}`);
+          return "Unknown";
         }
       } else {
         console.log("❌ No bus data received");
+        return "Unknown";
       }
     } catch (error) {
       console.error("Error fetching buses:", error);
+      return "Unknown";
     }
   };
 
-  // Navigation handlers
-  const handleBookingNavigation = useCallback((bookingData) => {
+  const handleBookingNavigation = useCallback(async (bookingData) => {
     console.log("Navigating to payment with:", bookingData);
-    fetchBusPrice(bookingData.bus.replace("bus ", ""), bookingData.from, bookingData.to)
-      .then(price => {
-        navigation.navigate("payment", {
-          busno: bookingData.bus.replace("bus ", ""),
-          fareprice: Price,
-          fromLocation: bookingData.from,
-          toLocation: bookingData.to,
-        });
-      })
-      .catch(error => {
-        console.error("Booking navigation error:", error);
+
+    if (
+      !bookingData ||
+      !bookingData.from ||
+      !bookingData.to ||
+      !bookingData.bus ||
+      ["book", "confirm", "proceed"].includes(bookingData.to.toLowerCase())
+    ) {
+      console.error("Invalid booking data:", bookingData);
+      Alert.alert("Error", "Invalid booking details. Please provide valid locations.");
+      return;
+    }
+
+    const busRouteNo = bookingData.bus.replace(/^bus\s+/i, "");
+    try {
+      const price = await fetchBusPrice(busRouteNo, bookingData.from, bookingData.to);
+      setPrices(price);
+
+      const distance = bookingData.distance || "10";
+      await SecureStore.setItemAsync("bookingDistance", distance);
+
+      navigation.navigate("payment", {
+        busno: busRouteNo,
+        fareprice: price,
+        fromLocation: bookingData.from,
+        toLocation: bookingData.to,
+        seats: bookingData.seats || "1",
+        distance,
       });
-  }, [fetchBusPrice, navigation]);
+      console.log("Price fetched:", price, "Distance:", distance);
+    } catch (error) {
+      console.error("Booking navigation error:", error);
+      Alert.alert("Error", "Failed to fetch price. Proceeding with unknown price");
+
+      const distance = bookingData.distance || "10";
+      await SecureStore.setItemAsync("bookingDistance", distance);
+
+      navigation.navigate("payment", {
+        busno: busRouteNo,
+        fareprice: "Unknown",
+        fromLocation: bookingData.from,
+        toLocation: bookingData.to,
+        seats: bookingData.seats || "1",
+        distance,
+      });
+    }
+  }, [fetchBusPrice, navigation, setPrices]);
 
   const handleTabPress = useCallback((tabName) => {
-    // Reset all animations
     Object.keys(scaleAnims).forEach((key) => {
       Animated.timing(scaleAnims[key], {
         toValue: 1,
@@ -331,7 +382,6 @@ const Footer = ({ navigation }) => {
       }).start();
     });
 
-    // Animate the pressed tab
     Animated.sequence([
       Animated.timing(scaleAnims[tabName], {
         toValue: 1.2,
@@ -354,32 +404,28 @@ const Footer = ({ navigation }) => {
     setActiveTab(tabName);
     setShowAIMenu(false);
 
-    // Navigation mapping
     const navMap = {
       ticket: "TicketHistory",
       place: "FavouriteBuses",
       profile: "UserProfile",
       home: "UserHome"
     };
-    
+
     if (navMap[tabName]) {
       navigation.navigate(navMap[tabName]);
     }
   }, [scaleAnims, translateYAnims, navigation]);
 
-  // AI Chat functions
   const sendMessage = useCallback(debounce(async (text) => {
     if (!text.trim()) return;
 
     const lowerText = text.toLowerCase();
     console.log("Processing voice input:", lowerText);
 
-    // First try to match navigation commands
     if (await handleNavigationCommands(lowerText)) {
       return;
     }
 
-    // Fall back to AI chat
     try {
       const userId = await SecureStore.getItemAsync("currentUserId");
       const res = await axios.post(`${BACKEND_URL}/chat`, {
@@ -430,13 +476,13 @@ const Footer = ({ navigation }) => {
         const match = lowerText.match(pattern);
         if (match) {
           console.log(`Matched ${screen} with pattern:`, pattern);
-          
+
           if (screen === "busDetails") {
             const busRouteNo = match[4] || match[2] || null;
             if (busRouteNo) {
               const cleanedBusNo = busRouteNo.replace(/\s+/g, "");
               const busDetails = await fetchBusdetails(cleanedBusNo);
-              
+
               if (busDetails) {
                 navigation.navigate("Busdetails", {
                   bus: busDetails.bus,
@@ -454,7 +500,7 @@ const Footer = ({ navigation }) => {
               userHome: "UserHome",
               ai: "ai"
             };
-            
+
             navigation.navigate(navMap[screen]);
             return true;
           }
@@ -469,15 +515,14 @@ const Footer = ({ navigation }) => {
     console.log("AI response:", botText);
 
     setIsSpeaking(true);
-    
+    startSpeakingAnimation();
+
     try {
       if (responseData.audioPath) {
-        // Stop any existing audio
         if (soundRef.current) {
           await soundRef.current.unloadAsync();
         }
 
-        // Play new audio
         const { sound } = await Audio.Sound.createAsync(
           { uri: `${BACKEND_URL}${responseData.audioPath}` },
           { shouldPlay: true }
@@ -490,7 +535,6 @@ const Footer = ({ navigation }) => {
           }
         });
       } else {
-        // Fallback to TTS
         Speech.speak(botText, {
           language: 'en-IN',
           onDone: () => handlePlaybackComplete(responseData),
@@ -509,7 +553,7 @@ const Footer = ({ navigation }) => {
 
   const handlePlaybackComplete = async (responseData) => {
     setIsSpeaking(false);
-    
+
     if (soundRef.current) {
       await soundRef.current.unloadAsync();
       soundRef.current = null;
@@ -521,17 +565,19 @@ const Footer = ({ navigation }) => {
     } else if (shouldContinueListening) {
       speechTimeoutRef.current = setTimeout(() => startListening(), 800);
     }
+    stopSpeakingAnimation();
   };
 
-  // AI Menu functions
   const toggleAIMenu = useCallback(() => {
     setActiveTab("ai");
     setShowAIMenu(prev => !prev);
   }, []);
 
   const handleAIOptionPress = useCallback((option) => {
-    setShowAIMenu(false);
-    if (option === "chat") navigation.navigate("ai");
+    if (option === "chat") {
+      navigation.navigate("ai");
+      setShowAIMenu(false);
+    }
     if (option === "voice") startListening();
   }, [navigation, startListening]);
 
@@ -541,9 +587,10 @@ const Footer = ({ navigation }) => {
     setShouldContinueListening(false);
     stopSpeaking();
     stopListening();
+    stopListeningAnimation();
+    stopSpeakingAnimation();
   }, [stopListening, stopSpeaking]);
 
-  // Render functions
   const renderTabItem = useCallback((tabName, iconName, activeIconName) => {
     const isActive = activeTab === tabName;
     const iconToUse = isActive ? activeIconName : iconName;
@@ -551,8 +598,8 @@ const Footer = ({ navigation }) => {
     const textStyle = isActive ? styles.footerText : styles.footerTextInactive;
 
     return (
-      <TouchableOpacity 
-        onPress={() => handleTabPress(tabName)} 
+      <TouchableOpacity
+        onPress={() => handleTabPress(tabName)}
         activeOpacity={0.7}
         accessibilityLabel={`${tabName} tab`}
       >
@@ -561,16 +608,16 @@ const Footer = ({ navigation }) => {
             styles.footerItem,
             {
               transform: [
-                { scale: scaleAnims[tabName] }, 
+                { scale: scaleAnims[tabName] },
                 { translateY: translateYAnims[tabName] }
               ],
             },
           ]}
         >
-          <Ionicons 
-            name={iconToUse} 
-            size={22} 
-            color={colorToUse} 
+          <Ionicons
+            name={iconToUse}
+            size={22}
+            color={colorToUse}
             accessibilityLabel={tabName}
           />
           <Text style={textStyle}>
@@ -584,47 +631,76 @@ const Footer = ({ navigation }) => {
 
   const renderAIButton = useCallback(() => {
     const isActive = activeTab === "ai";
-    const iconName = isActive ? "sparkles" : "sparkles-outline";
     const iconColor = isActive ? "#00468b" : "#aaa";
     const textStyle = isActive ? styles.footerText : styles.footerTextInactive;
 
     return (
       <View style={{ alignItems: "center" }}>
         {showAIMenu && (
-          <View style={styles.popupMenu}>
-            <TouchableOpacity 
-              onPress={() => handleAIOptionPress("chat")} 
-              style={styles.popupButton}
-              accessibilityLabel="AI Chat"
-            >
-              <Ionicons name="chatbubble-ellipses-outline" size={20} color="#00468b" />
-              <Text style={styles.popupText}>Chat</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              onPress={() => handleAIOptionPress("voice")} 
-              style={styles.popupButton}
-              accessibilityLabel="Voice Assistant"
-            >
-              <Ionicons
-                name={isListening ? "mic" : "mic-outline"}
-                size={20}
-                color="#00468b"
-              />
-              <Text style={styles.popupText}>Voice</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              onPress={handleCloseAIMenu} 
-              style={styles.popupButton}
-              accessibilityLabel="Close AI Menu"
-            >
-              <Ionicons name="close-outline" size={20} color="#00468b" />
-              <Text style={styles.popupText}>Close</Text>
-            </TouchableOpacity>
+          <View style={styles.popupContainer}>
+            {!isListening && !isSpeaking && (
+              <View style={styles.popupMenu}>
+                <TouchableOpacity
+                  onPress={() => handleAIOptionPress("chat")}
+                  style={styles.popupButton}
+                  accessibilityLabel="AI Chat"
+                >
+                  <Ionicons name="chatbubble-ellipses-outline" size={20} color="#00468b" />
+                  <Text style={styles.popupText}>Chat</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => handleAIOptionPress("voice")}
+                  style={styles.popupButton}
+                  accessibilityLabel="Voice Assistant"
+                >
+                  <Ionicons name="mic-outline" size={20} color="#00468b" />
+                  <Text style={styles.popupText}>Voice</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleCloseAIMenu}
+                  style={styles.popupButton}
+                  accessibilityLabel="Close AI Menu"
+                >
+                  <Ionicons name="close-outline" size={20} color="#00468b" />
+                  <Text style={styles.popupText}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            {(isListening || isSpeaking) && (
+              <View style={styles.animationWrapper}>
+                <View style={styles.animationContainer}>
+                  {isListening ? (
+                    <Animated.View
+                      style={[
+                        styles.circle,
+                        { transform: [{ scale: circleScale }], opacity: circleOpacity }
+                      ]}
+                    />
+                  ) : isSpeaking ? (
+                    <View style={styles.speakingAnimationContainer}>
+                      <Animated.View style={[styles.oval, { transform: [{ translateY: dotTranslations.dot1 }] }]} />
+                      <Animated.View style={[styles.oval, { transform: [{ translateY: dotTranslations.dot2 }] }]} />
+                      <Animated.View style={[styles.oval, { transform: [{ translateY: dotTranslations.dot3 }] }]} />
+                      <Animated.View style={[styles.oval, { transform: [{ translateY: dotTranslations.dot4 }] }]} />
+                    </View>
+                  ) : null}
+                </View>
+                {isSpeaking && (
+                  <TouchableOpacity
+                    onPress={stopSpeaking}
+                    style={styles.closeButton}
+                    accessibilityLabel="Stop AI Response"
+                  >
+                    <Ionicons name="close-circle" size={24} color="#00468b" />
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
           </View>
         )}
 
-        <TouchableOpacity 
-          onPress={toggleAIMenu} 
+        <TouchableOpacity
+          onPress={toggleAIMenu}
           activeOpacity={0.7}
           accessibilityLabel="AI Assistant"
         >
@@ -633,16 +709,16 @@ const Footer = ({ navigation }) => {
               styles.aiButton,
               {
                 transform: [
-                  { scale: scaleAnims["ai"] }, 
+                  { scale: scaleAnims["ai"] },
                   { translateY: translateYAnims["ai"] }
                 ],
               },
             ]}
           >
-            <Ionicons 
-              name={iconName} 
-              size={28} 
-              color={iconColor} 
+            <Ionicons
+              name={isActive ? "sparkles" : "sparkles-outline"}
+              size={28}
+              color={iconColor}
               accessibilityLabel="AI"
             />
             <Text style={[textStyle, { fontSize: 9 }]}>AI</Text>
@@ -652,15 +728,102 @@ const Footer = ({ navigation }) => {
       </View>
     );
   }, [
-    activeTab, 
-    showAIMenu, 
-    isListening, 
-    scaleAnims, 
-    translateYAnims, 
-    handleAIOptionPress, 
-    handleCloseAIMenu, 
-    toggleAIMenu
+    activeTab,
+    showAIMenu,
+    isListening,
+    isSpeaking,
+    scaleAnims,
+    translateYAnims,
+    handleAIOptionPress,
+    handleCloseAIMenu,
+    toggleAIMenu,
+    dotTranslations,
+    circleScale,
+    circleOpacity,
+    stopSpeaking,
   ]);
+
+  const startListeningAnimation = () => {
+    Animated.loop(
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(circleScale, {
+            toValue: 1.2,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(circleScale, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.sequence([
+          Animated.timing(circleOpacity, {
+            toValue: 0.8,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(circleOpacity, {
+            toValue: 0.3,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]),
+      { iterations: -1 }
+    ).start();
+  };
+
+  const stopListeningAnimation = () => {
+    circleScale.stopAnimation(() => {
+      circleScale.setValue(1);
+    });
+    circleOpacity.stopAnimation(() => {
+      circleOpacity.setValue(0.3);
+    });
+  };
+
+  const startSpeakingAnimation = () => {
+    const animations = Object.values(dotTranslations).map((trans, index) => {
+      const randomAmplitude = 5 + Math.random() * 10; // Random height between 5 and 15
+      return Animated.loop(
+        Animated.sequence([
+          Animated.timing(trans, {
+            toValue: -randomAmplitude,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(trans, {
+            toValue: randomAmplitude,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(trans, {
+            toValue: 0,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+        ]),
+        { iterations: -1 }
+      );
+    });
+
+    animations.forEach((anim, index) => {
+      anim.start();
+      if (index > 0) {
+        setTimeout(() => anim.start(), index * 100); // Staggered start for wave
+      }
+    });
+  };
+
+  const stopSpeakingAnimation = () => {
+    Object.values(dotTranslations).forEach((trans) => {
+      trans.stopAnimation(() => {
+        trans.setValue(0);
+      });
+    });
+  };
 
   return (
     <View style={styles.footerContainer}>
@@ -749,9 +912,13 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
   },
-  popupMenu: {
+  popupContainer: {
     position: "absolute",
     bottom: 70,
+    alignItems: "center",
+    zIndex: 100,
+  },
+  popupMenu: {
     backgroundColor: "#fff",
     borderRadius: 8,
     paddingVertical: 6,
@@ -763,7 +930,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 6,
-    zIndex: 100,
   },
   popupButton: {
     alignItems: "center",
@@ -776,6 +942,41 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontWeight: "500",
   },
+  animationWrapper: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  animationContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 80,
+    height: 80,
+  },
+  circle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#00468b",
+    zIndex: 1,
+  },
+  speakingAnimationContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 60,
+    zIndex: 1,
+  },
+  oval: {
+    width: 10,
+    height: 20,
+    borderRadius: 5,
+    backgroundColor: "#1E3A8A",
+    marginHorizontal: 2,
+  },
+  closeButton: {
+    marginTop: 8,
+    padding: 5,
+  },
 });
 
-export default React.memo(Footer);
+export default Footer;
