@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, Image, ScrollView, ActivityIndicator, RefreshControl, StatusBar } from "react-native";
+import { View, Text, TouchableOpacity, Image, ScrollView, ActivityIndicator, RefreshControl, StatusBar, Alert } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import axios from "axios";
 import { API_BASE_URL } from "../../../apiurl";
@@ -27,7 +27,8 @@ const getTimeElapsed = (date) => {
 };
 
 const ConHome = ({ navigation, route }) => {
-  const { conData } = route.params || {};
+  const { conData: routeConData } = route.params || {};
+  const [conData, setConData] = useState(routeConData || {});
   const [assignedBus, setAssignedBus] = useState(null);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -48,21 +49,35 @@ const ConHome = ({ navigation, route }) => {
 
   // Fetch assigned bus details
   const fetchAssignedBus = async () => {
-    if (!conData || !conData._id) return;
-
     try {
+      // Get the latest conductor data either from route params or SecureStore
+      const storedData = await SecureStore.getItemAsync("currentUserData");
+      const currentConData = storedData ? JSON.parse(storedData) : conData;
+
+      if (!currentConData || !currentConData._id) {
+        console.error('No conductor ID available for fetching assigned bus');
+        return;
+      }
+
       setLoading(true);
+      console.log(`🚌 Fetching assigned bus for conductor ID: ${currentConData._id}`);
+
       const response = await axios.get(
-        `${API_BASE_URL}/api/Conductor/assigned-bus/${conData._id}`
+        `${API_BASE_URL}/api/Conductor/assigned-bus/${currentConData._id}`
       );
 
       if (response.data && response.data.success && response.data.data) {
         setAssignedBus(response.data.data.bus);
-        console.log("city ",response.data.data.bus.city)
-        console.log("state ",response.data.data.bus.state)
+        console.log(`✅ Bus assigned: ${response.data.data.bus.busRouteNo} - ${response.data.data.bus.busNo}`);
+        console.log("city: ", response.data.data.bus.city);
+        console.log("state: ", response.data.data.bus.state);
+      } else {
+        console.log("⚠️ No bus assigned to this conductor");
+        setAssignedBus(null);
       }
     } catch (error) {
-      console.error('Error fetching assigned bus:', error);
+      console.error('❌ Error fetching assigned bus:', error);
+      setAssignedBus(null);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -72,33 +87,74 @@ const ConHome = ({ navigation, route }) => {
   // Fetch login time from secure storage
   const fetchLoginTime = async () => {
     try {
-      const storedLoginTime = await SecureStore.getItemAsync(`loginTime_${conData._id}`);
-      if (storedLoginTime) {
-        setLoginTime(new Date(storedLoginTime));
-      } else {
-        // If no stored login time, set current time and store it
-        const currentTime = new Date();
-        setLoginTime(currentTime);
-        await SecureStore.setItemAsync(`loginTime_${conData._id}`, currentTime.toISOString());
+      // Get the latest conductor data either from route params or SecureStore
+      const storedData = await SecureStore.getItemAsync("currentUserData");
+      const currentConData = storedData ? JSON.parse(storedData) : conData;
+
+      if (!currentConData || !currentConData._id) {
+        console.error('❌ No conductor ID available for fetching login time');
+        return;
+      }
+
+      const loginTimeKey = `loginTime_${currentConData._id}`;
+      console.log(`🕒 Fetching login time for conductor ID: ${currentConData._id} with key: ${loginTimeKey}`);
+
+      try {
+        const storedLoginTime = await SecureStore.getItemAsync(loginTimeKey);
+
+        if (storedLoginTime) {
+          setLoginTime(new Date(storedLoginTime));
+          console.log(`✅ Login time retrieved: ${new Date(storedLoginTime).toLocaleString()}`);
+        } else {
+          // If no stored login time, set current time and store it
+          const currentTime = new Date();
+          setLoginTime(currentTime);
+          await SecureStore.setItemAsync(loginTimeKey, currentTime.toISOString());
+          console.log(`✅ New login time set: ${currentTime.toLocaleString()}`);
+        }
+      } catch (storageError) {
+        console.error(`❌ Error accessing SecureStore for key ${loginTimeKey}:`, storageError);
+        // Set a fallback login time
+        const fallbackTime = new Date();
+        setLoginTime(fallbackTime);
+        // Try to set the login time again
+        try {
+          await SecureStore.setItemAsync(loginTimeKey, fallbackTime.toISOString());
+          console.log(`✅ Fallback login time set: ${fallbackTime.toLocaleString()}`);
+        } catch (setError) {
+          console.error('❌ Failed to set fallback login time:', setError);
+        }
       }
     } catch (error) {
-      console.error('Error fetching login time:', error);
+      console.error('❌ Error in fetchLoginTime:', error);
+      // Set a fallback login time without storing it
+      setLoginTime(new Date());
     }
   };
 
   // Fetch conductor stats
   const fetchConductorStats = async () => {
-    if (!conData || !conData._id) return;
-
     try {
-      
+      // Get the latest conductor data either from route params or SecureStore
+      const storedData = await SecureStore.getItemAsync("currentUserData");
+      const currentConData = storedData ? JSON.parse(storedData) : conData;
+
+      if (!currentConData || !currentConData._id) {
+        console.error('No conductor ID available for fetching stats');
+        return;
+      }
+
+      console.log(`📊 Fetching stats for conductor ID: ${currentConData._id}`);
+
       const response = await axios.get(
-        `${API_BASE_URL}/api/tickets/conductor-stats/${conData._id}`
+        `${API_BASE_URL}/api/tickets/conductor-stats/${currentConData._id}`
       );
 
       if (response.data && response.data.success && response.data.data) {
         setStats(response.data.data);
+        console.log(`✅ Stats fetched successfully: ${JSON.stringify(response.data.data)}`);
       } else {
+        console.log("⚠️ No stats available, using default values");
         setStats({
           totalTrips: 0,
           totalTickets: 0,
@@ -106,7 +162,7 @@ const ConHome = ({ navigation, route }) => {
         });
       }
     } catch (error) {
-      console.error('Error fetching conductor stats:', error);
+      console.error('❌ Error fetching conductor stats:', error);
       // Fallback to default values on error
       setStats({
         totalTrips: 0,
@@ -134,8 +190,6 @@ const ConHome = ({ navigation, route }) => {
   // Fetch notifications
   const fetchNotifications = async () => {
     try {
-      // This would be an API call in a real app
-      // For demo purposes, we'll use mock data
       setNotifications([
         { id: 1, title: 'Schedule Change', message: 'Your shift has been updated for tomorrow.', time: new Date(Date.now() - 3600000) },
         { id: 2, title: 'Maintenance Alert', message: 'Bus maintenance scheduled for next week.', time: new Date(Date.now() - 86400000) }
@@ -156,25 +210,76 @@ const ConHome = ({ navigation, route }) => {
 
   // Fetch data on component mount
   useEffect(() => {
-    if (conData && conData._id) {
+    const fetchCurrentUserData = async () => {
+      try {
+        const storedData = await SecureStore.getItemAsync("currentUserData");
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          // Update conData with the stored data
+          if (parsedData && parsedData._id) {
+            console.log(`👤 Loaded conductor data from SecureStore: ${parsedData.Username}`);
+            // Update the local state
+            setConData(parsedData);
+            // If we're using route params, we need to update the navigation params
+            navigation.setParams({ conData: parsedData });
+            // Call fetchAllData after we have the updated conData
+            fetchAllData();
+          }
+        } else {
+          console.error("❌ No conductor data found in SecureStore");
+          // Navigate back to login if no data is found
+          Alert.alert(
+            "Session Error",
+            "Your session information could not be found. Please log in again.",
+            [{ text: "OK", onPress: () => navigation.navigate("Login") }]
+          );
+        }
+      } catch (error) {
+        console.error("❌ Error fetching conductor data from SecureStore:", error);
+      }
+    };
+
+    // If conData is not available from route params, fetch it from SecureStore
+    if (!conData || !conData._id) {
+      fetchCurrentUserData();
+    } else {
+      console.log(`👤 Using conductor data from route params: ${conData.Username}`);
+      // If conData is already available, just fetch the other data
       fetchAllData();
     }
-  }, [conData]);
+  }, []);
   const handleNotificationPress = () => {
     // Navigate to notifications screen or show alert
     navigation.navigate('NotificationAlert'); // assuming you have a screen for this
   };
-  
+
   // Handle refresh
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    fetchAllData();
+
+    try {
+      // Refresh conductor data from SecureStore
+      const storedData = await SecureStore.getItemAsync("currentUserData");
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        if (parsedData && parsedData._id) {
+          console.log(`🔄 Refreshing conductor data: ${parsedData.Username}`);
+          setConData(parsedData);
+        }
+      }
+
+      // Fetch all other data
+      fetchAllData();
+    } catch (error) {
+      console.error('❌ Error refreshing data:', error);
+      setRefreshing(false);
+    }
   };
 
   const handleUserComplaints = () => {
     navigation.navigate("UserComplaints", { conData });
   };
-  
+
   const handleProfile = () => {
     navigation.navigate("conprofile", { conData });
   };
@@ -206,7 +311,7 @@ const ConHome = ({ navigation, route }) => {
         }
       >
         {/* Header */}
-    
+
 <View style={styles.header}>
   <View>
     <Text style={styles.appTitle}>BusMate</Text>
@@ -420,7 +525,7 @@ const ConHome = ({ navigation, route }) => {
           </View>
         </View>
 
-    
+
 
       {/* Quick Actions */}
       <View style={styles.quickActionsContainer}>

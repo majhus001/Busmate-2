@@ -15,13 +15,6 @@ const Buslogin = ({ route, navigation }) => {
     selectedState,
   } = route.params;
 
-  console.log("loginnn",busplateNo,
-    selectedFrom,
-    selectedTo,
-    selectedBusNo,
-    selectedCity,
-    selectedState,)
-
   const [password, setPassword] = useState("");
 
   console.log("Selected Bus Info on login:", { busplateNo, selectedBusNo });
