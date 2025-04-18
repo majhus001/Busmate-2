@@ -15,6 +15,9 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as SecureStore from "expo-secure-store";
 import { API_BASE_URL } from "../../apiurl";
+
+
+
 import styles from "./LoginStyles";
 
 const Login = ({ navigation }) => {
@@ -113,15 +116,22 @@ const Login = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={["rgba(0,0,0,0.5)", "rgba(0,50,100,0.7)"]}
-        style={styles.overlay}
-      />
+ <View style={{ position: "absolute", top: 150, alignItems: "center", width: '100%' }}>
+  <MaterialCommunityIcons name="bus" size={40} color="#007BFF" />
+  <Text style={{ fontSize: 32, fontWeight: "700", color: "#fff" }}>
+    Welcome back!
+  </Text>
+</View>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardContainer}
-      >
+    <LinearGradient
+      colors={["rgba(0,0,0,0.5)", "rgba(0,50,100,0.7)"]}
+      style={styles.overlay}
+    />
+  
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.keyboardContainer}
+    >
         <Animated.View
           style={[
             styles.card,

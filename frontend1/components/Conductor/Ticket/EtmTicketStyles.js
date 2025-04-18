@@ -1,13 +1,15 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   // Main container
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
-    marginTop: 40, // Reduced from 12
-    paddingHorizontal: 14, // Reduced from 16
-    paddingBottom: 20,     // Reduced from 24
+    backgroundColor: '#f0f5fa',
+    marginTop: 5,
+    paddingHorizontal: 16,
+    paddingBottom: 100,
   },
 
   // Header styles
@@ -26,7 +28,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#ffffff',
     borderRadius: 10,       // Reduced from 12
-    paddingHorizontal: 14,  
+    paddingHorizontal: 14,
     paddingTop:10,
     paddingBottom:10,       // Reduced from 16
     marginBottom: 7,      // Reduced from 16
@@ -66,11 +68,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 10,      // Reduced from 12
-    
+
   },
   infoBox: {
     flex: 1,
-    paddingHorizontal: 6,  // Reduced from 8
+    paddingHorizontal: 0,  // Reduced from 8
   },
 
   // Seats container
@@ -305,6 +307,271 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     marginLeft: 5,
+  },
+
+  // Journey Progress Indicator
+  journeyProgressContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  journeyTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  progressTrack: {
+    height: 6,
+    backgroundColor: '#e2e8f0',
+    borderRadius: 3,
+    marginVertical: 16,
+    position: 'relative',
+  },
+  progressFill: {
+    height: 6,
+    backgroundColor: '#3b82f6',
+    borderRadius: 3,
+    position: 'absolute',
+    left: 0,
+    top: 0,
+  },
+  stopsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  stopDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#e2e8f0',
+    position: 'absolute',
+    top: -3,
+  },
+  activeDot: {
+    backgroundColor: '#3b82f6',
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    top: -5,
+    borderWidth: 2,
+    borderColor: '#dbeafe',
+  },
+  completedDot: {
+    backgroundColor: '#10b981',
+  },
+  stopLabel: {
+    fontSize: 12,
+    color: '#64748b',
+    position: 'absolute',
+    top: 16,
+    width: 80,
+    textAlign: 'center',
+    marginLeft: -40,
+  },
+  activeLabel: {
+    color: '#1e40af',
+    fontWeight: '600',
+  },
+
+  // Clock and Timer
+  clockContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  clockItem: {
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    padding: 12,
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  clockLabel: {
+    fontSize: 12,
+    color: '#64748b',
+    marginBottom: 4,
+  },
+  clockValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1e293b',
+  },
+
+  // Quick Ticket
+  quickTicketContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  quickTicketTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: 12,
+  },
+  quickTicketsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  quickTicketItem: {
+    backgroundColor: '#f1f5f9',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    width: '48%',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  quickTicketItemActive: {
+    backgroundColor: '#dbeafe',
+    borderColor: '#3b82f6',
+  },
+  quickTicketRoute: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#334155',
+    marginBottom: 4,
+  },
+  quickTicketPrice: {
+    fontSize: 12,
+    color: '#64748b',
+  },
+
+  // Ticket Summary
+  summaryContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  summaryTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: '#64748b',
+  },
+  summaryValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e293b',
+    textAlign: 'right',
+  },
+  summaryTotal: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1e293b',
+  },
+
+  // Enhanced Button
+  buttonContainer: {
+    marginTop: 16,
+  },
+  button: {
+    backgroundColor: '#2563eb',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#1e40af',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  // Animation styles
+  fadeIn: {
+    opacity: 0,
+  },
+  slideUp: {
+    transform: [{ translateY: 50 }],
+  },
+
+  // Tickets button
+  ticketsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#3b82f6',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    justifyContent: 'center',
+  },
+  ticketsButtonText: {
+    color: '#ffffff',
+    fontWeight: '500',
+    fontSize: 14,
+    marginLeft: 4,
+  },
+
+  // Card styles - enhanced
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardheader: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
 });
 

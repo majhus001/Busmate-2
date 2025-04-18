@@ -13,6 +13,7 @@ const busSchema = new mongoose.Schema(
     city: { type: String, required: true },
     fromStage: { type: String, required: true },
     toStage: { type: String, required: true },
+    currentLocation: { type: String, required: true },
     prices: { type: Map, of: String, default: {} }, 
     timings: { type: Map, of: String, default: {} }, 
     adminId: { type: mongoose.Schema.Types.ObjectId, ref: "Admin", required: true },

@@ -26,7 +26,7 @@ export default StyleSheet.create({
     color: "#fff",
     textAlign: "center",
     letterSpacing: 1,
-    marginTop: 10,
+    marginTop: 20,
   },
   icon: {
     marginBottom: 5,

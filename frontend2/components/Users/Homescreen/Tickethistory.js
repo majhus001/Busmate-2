@@ -108,6 +108,7 @@ const TicketHistory = ({ navigation }) => {
         `${API_BASE_URL}/api/payment/transactions/${id}`
       );
       setTransactions(response.data.transactions);
+      
     } catch (error) {
       console.error(
         "❌ Error fetching transactions:",
@@ -228,7 +229,7 @@ const TicketHistory = ({ navigation }) => {
                       darkMode && styles.darkAmountText,
                     ]}
                   >
-                    ₹{item.amount / 100}
+                    ₹{item.amount.toFixed(2)}
                   </Text>
                 </View>
                 <View style={styles.statusContainer}>

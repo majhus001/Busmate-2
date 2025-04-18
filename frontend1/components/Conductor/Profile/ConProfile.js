@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import axios from "axios";
+import * as SecureStore from "expo-secure-store";
 import { API_BASE_URL } from "../../../apiurl";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -29,8 +30,14 @@ const ConProfile = ({ route, navigation }) => {
   const handleLogout = async () => {
     setLoading(true);
     const conId = conData._id;
+
     try {
+      await SecureStore.deleteItemAsync(loginTime_`${conId}`);
+      console.log("Login time deleted successfully");
+
       await axios.put(`${API_BASE_URL}/api/Conductor/logout/${conId}`);
+      console.log("Logged out from server");
+
       navigation.navigate("login");
     } catch (error) {
       console.error("Logout error:", error);
@@ -43,7 +50,7 @@ const ConProfile = ({ route, navigation }) => {
     <ScrollView contentContainerStyle={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <LinearGradient colors={["#3a7bd5", "#3a6073"]} style={styles.gradient}>
+        <LinearGradient colors={["#64AEFE", "#007bff"]} style={styles.gradient}>
           <Text style={styles.title}>Conductor Profile</Text>
         </LinearGradient>
       </View>
@@ -82,14 +89,14 @@ const ConProfile = ({ route, navigation }) => {
       {/* Action Buttons */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity onPress={() => handleNavigate("complaintform")}>
-          <LinearGradient colors={["#ff7e5f", "#feb47b"]} style={styles.button}>
+          <LinearGradient colors={["#007bff", "#007bff"]} style={styles.button}>
             <Icon name="report" size={24} color="#fff" />
             <Text style={styles.buttonText}>Add Complaint</Text>
           </LinearGradient>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => handleNavigate("viewcomplaintform")}>
-          <LinearGradient colors={["#6a11cb", "#2575fc"]} style={styles.button}>
+          <LinearGradient colors={["#007bff", "#007bff"]} style={styles.button}>
             <Icon name="visibility" size={24} color="#fff" />
             <Text style={styles.buttonText}>View Complaints</Text>
           </LinearGradient>

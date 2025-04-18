@@ -7,6 +7,7 @@ import * as SecureStore from "expo-secure-store";
 import styles from "./ConHomeStyles";
 import UserComplaint from "../Complaintform/UserCompliants";
 import NotificationAlert from "./NotificationAlert";
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Simple helper function to format time elapsed
 const getTimeElapsed = (date) => {
@@ -57,6 +58,8 @@ const ConHome = ({ navigation, route }) => {
 
       if (response.data && response.data.success && response.data.data) {
         setAssignedBus(response.data.data.bus);
+        console.log("city ",response.data.data.bus.city)
+        console.log("state ",response.data.data.bus.state)
       }
     } catch (error) {
       console.error('Error fetching assigned bus:', error);
@@ -85,16 +88,31 @@ const ConHome = ({ navigation, route }) => {
 
   // Fetch conductor stats
   const fetchConductorStats = async () => {
+    if (!conData || !conData._id) return;
+
     try {
-      // This would be an API call in a real app
-      // For demo purposes, we'll use mock data
-      setStats({
-        totalTrips: Math.floor(Math.random() * 50) + 10,
-        totalTickets: Math.floor(Math.random() * 500) + 100,
-        totalRevenue: Math.floor(Math.random() * 10000) + 1000
-      });
+      
+      const response = await axios.get(
+        `${API_BASE_URL}/api/tickets/conductor-stats/${conData._id}`
+      );
+
+      if (response.data && response.data.success && response.data.data) {
+        setStats(response.data.data);
+      } else {
+        setStats({
+          totalTrips: 0,
+          totalTickets: 0,
+          totalRevenue: 0
+        });
+      }
     } catch (error) {
       console.error('Error fetching conductor stats:', error);
+      // Fallback to default values on error
+      setStats({
+        totalTrips: 0,
+        totalTickets: 0,
+        totalRevenue: 0
+      });
     }
   };
 
@@ -142,19 +160,40 @@ const ConHome = ({ navigation, route }) => {
       fetchAllData();
     }
   }, [conData]);
-
+  const handleNotificationPress = () => {
+    // Navigate to notifications screen or show alert
+    navigation.navigate('NotificationAlert'); // assuming you have a screen for this
+  };
+  
   // Handle refresh
   const onRefresh = () => {
     setRefreshing(true);
     fetchAllData();
   };
 
+  const handleUserComplaints = () => {
+    navigation.navigate("UserComplaints", { conData });
+  };
+  
   const handleProfile = () => {
     navigation.navigate("conprofile", { conData });
   };
-
   const toggleExpanded = () => {
     setExpanded(!expanded);
+  };
+
+  const handlestartride = () => {
+    console.log("homeeee",assignedBus.busNo,assignedBus.fromStage,assignedBus.toStage,
+      assignedBus.busRouteNo,assignedBus.city,assignedBus.state,
+    )
+    navigation.navigate("buslogin", {
+      busplateNo: assignedBus.busNo,
+      selectedFrom: assignedBus.fromStage,
+      selectedTo: assignedBus.toStage,
+      selectedBusNo: assignedBus.busRouteNo,
+      selectedCity: assignedBus.city,
+      selectedState: assignedBus.state,
+    })
   };
 
   return (
@@ -167,11 +206,16 @@ const ConHome = ({ navigation, route }) => {
         }
       >
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.appTitle}>🚍 BusMate</Text>
-          <Text style={styles.panelName}>Conductor Panel</Text>
-        </View>
-
+    
+<View style={styles.header}>
+  <View>
+    <Text style={styles.appTitle}>BusMate</Text>
+    <Text style={styles.panelName}>Conductor Panel</Text>
+  </View>
+  <TouchableOpacity onPress={handleNotificationPress}>
+    <Ionicons name="notifications-outline" size={28} color="#000" style={styles.notifyicon} />
+  </TouchableOpacity>
+</View>
         {/* Status Card */}
         {showStatusCard && (
           <View style={styles.statusCard}>
@@ -217,34 +261,7 @@ const ConHome = ({ navigation, route }) => {
           </View>
         )}
 
-        {/* Statistics Card */}
-        <View style={styles.cardContainer}>
-          <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderContent}>
-              <Icon name="stats-chart" size={24} color="#5856D6" style={styles.statsIcon} />
-              <View style={styles.headerTextContainer}>
-                <Text style={styles.cardTitle}>Your Statistics</Text>
-              </View>
-            </View>
-          </View>
 
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{stats.totalTrips}</Text>
-              <Text style={styles.statLabel}>Trips</Text>
-            </View>
-
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{stats.totalTickets}</Text>
-              <Text style={styles.statLabel}>Tickets</Text>
-            </View>
-
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>₹{stats.totalRevenue}</Text>
-              <Text style={styles.statLabel}>Revenue</Text>
-            </View>
-          </View>
-        </View>
 
       {/* Conductor Card */}
       <View style={styles.cardContainer}>
@@ -330,13 +347,17 @@ const ConHome = ({ navigation, route }) => {
                 <Text style={styles.cardTitle}>Assigned Bus</Text>
                 <Text style={styles.busRouteText}>{assignedBus.busRouteNo} - {assignedBus.busNo}</Text>
               </View>
+                <TouchableOpacity style={styles.changebus}
+                onPress={() => navigation.navigate("conbusselect", { preselectedBus: assignedBus })}>
+                  <Text style={styles.changebusText}>Change Bus</Text>
+                </TouchableOpacity>
             </View>
           </View>
 
           <View style={styles.busDetailsContainer}>
             <View style={styles.detailRow}>
               <View style={styles.detailIcon}>
-                <Icon name="map" size={18} color="#8E8E93" />
+                <Icon name="map" size={18} color="#007AFF" />
               </View>
               <Text style={styles.detailText}>
                 <Text style={styles.bold}>Route:</Text> {assignedBus.route}
@@ -345,7 +366,7 @@ const ConHome = ({ navigation, route }) => {
 
             <TouchableOpacity
               style={styles.startRideButton}
-              onPress={() => navigation.navigate("conbusselect", { preselectedBus: assignedBus })}
+              onPress={handlestartride}
             >
               <Icon name="play-circle" size={20} color="#FFFFFF" />
               <Text style={styles.startRideButtonText}>Start Ride</Text>
@@ -370,33 +391,36 @@ const ConHome = ({ navigation, route }) => {
         </View>
       )}
 
-      {/* Notifications */}
-      {notifications.length > 0 && (
-        <View style={styles.cardContainer}>
+      {/* Statistics Card */}
+      <View style={styles.cardContainer}>
           <View style={styles.cardHeader}>
             <View style={styles.cardHeaderContent}>
-              <Icon name="notifications" size={24} color="#FF9500" style={styles.notificationIcon} />
+              <Icon name="stats-chart" size={24} color="#5856D6" style={styles.statsIcon} />
               <View style={styles.headerTextContainer}>
-                <Text style={styles.cardTitle}>Notifications</Text>
+                <Text style={styles.cardTitle}>Your Statistics</Text>
               </View>
             </View>
           </View>
 
-          <View style={styles.notificationsContainer}>
-            {notifications.map(notification => (
-              <View key={notification.id} style={styles.notificationItem}>
-                <View style={styles.notificationHeader}>
-                  <Text style={styles.notificationTitle}>{notification.title}</Text>
-                  <Text style={styles.notificationTime}>
-                    {getTimeElapsed(notification.time)}
-                  </Text>
-                </View>
-                <Text style={styles.notificationMessage}>{notification.message}</Text>
-              </View>
-            ))}
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{stats.totalTrips}</Text>
+              <Text style={styles.statLabel}>Trips</Text>
+            </View>
+
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{stats.totalTickets}</Text>
+              <Text style={styles.statLabel}>Tickets</Text>
+            </View>
+
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>₹{(stats.totalRevenue || 0).toLocaleString()}</Text>
+              <Text style={styles.statLabel}>Revenue</Text>
+            </View>
           </View>
         </View>
-      )}
+
+    
 
       {/* Quick Actions */}
       <View style={styles.quickActionsContainer}>
@@ -424,12 +448,12 @@ const ConHome = ({ navigation, route }) => {
 
           <TouchableOpacity
             style={styles.actionButton}
-            onPress={handleProfile}
+            onPress={handleUserComplaints}
           >
             <View style={[styles.actionIcon, { backgroundColor: '#34C759' }]}>
               <Icon name="person" size={24} color="#FFFFFF" />
             </View>
-            <Text style={styles.actionText}>Profile</Text>
+            <Text style={styles.actionText}>UserComplaint</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -440,8 +464,7 @@ const ConHome = ({ navigation, route }) => {
         </View>
       )}
     </ScrollView>
-    <UserComplaint/>
-    <NotificationAlert/>
+
     </>
   );
 };

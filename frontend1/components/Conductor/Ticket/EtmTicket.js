@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   Animated,
   Easing,
   ActivityIndicator,
+  ScrollView,
+  SafeAreaView,
 } from "react-native";
 import axios from "axios";
 import { Picker } from "@react-native-picker/picker";
@@ -44,11 +46,24 @@ const EtmTicket = ({ route, navigation }) => {
   const fadeAnim = new Animated.Value(1);
   const [selectedLocations, setSelectedLocations] = useState([]);
 
+  // New state variables for enhanced features
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [journeyTime, setJourneyTime] = useState(0); // in minutes
+  const [showSummary, setShowSummary] = useState(false);
+  const [quickTickets, setQuickTickets] = useState([]);
+  const [selectedQuickTicket, setSelectedQuickTicket] = useState(null);
+  const [currentStopIndex, setCurrentStopIndex] = useState(0);
+
+  // Animation refs
+  const fadeAnim1 = useRef(new Animated.Value(0)).current;
+  const fadeAnim2 = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+
   const handleLocationSelect = async (item) => {
     setBoarding(item);
     setSelectedLocations((prev) => [...prev, item]);
     setShowLocationDropdown(false);
-    
+
     // Find and set next stop
     const currentIndex = stages.indexOf(item);
     if (currentIndex !== -1 && currentIndex < stages.length - 1) {
@@ -104,6 +119,52 @@ const EtmTicket = ({ route, navigation }) => {
     setPaymentMethod(method);
   };
 
+  // Animation functions
+  const runAnimations = () => {
+    // Reset animations
+    fadeAnim1.setValue(0);
+    fadeAnim2.setValue(0);
+    slideAnim.setValue(50);
+
+    // Run animations in sequence
+    Animated.sequence([
+      Animated.timing(fadeAnim1, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.parallel([
+        Animated.timing(fadeAnim2, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 600,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+  };
+
+  // Clock timer function
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+
+    const journeyTimer = setInterval(() => {
+      setJourneyTime(prev => prev + 1);
+    }, 60000);
+
+    return () => {
+      clearInterval(timer);
+      clearInterval(journeyTimer);
+    };
+  }, []);
+
   useEffect(() => {
     const fetchStages = async () => {
       try {
@@ -117,6 +178,8 @@ const EtmTicket = ({ route, navigation }) => {
 
         if (response.data.success && Array.isArray(response.data.stages)) {
           setStages(response.data.stages);
+          // Run animations after data is loaded
+          runAnimations();
         } else {
           setStages([]);
         }
@@ -139,6 +202,22 @@ const EtmTicket = ({ route, navigation }) => {
 
         if (response.data.success) {
           setBuspriceData(response.data.data);
+
+          // Generate quick tickets from price data
+          if (response.data.data.prices) {
+            const quickTicketsData = [];
+            Object.entries(response.data.data.prices).slice(0, 4).forEach(([route, price]) => {
+              const [from, to] = route.split('-').map(s => s.trim());
+              quickTicketsData.push({
+                id: quickTicketsData.length + 1,
+                from,
+                to,
+                price: parseFloat(price),
+                route
+              });
+            });
+            setQuickTickets(quickTicketsData);
+          }
         } else {
           setBuspriceData({});
         }
@@ -148,8 +227,47 @@ const EtmTicket = ({ route, navigation }) => {
       }
     };
 
+    const fetchtickets = async () => {
+      try {
+        // Get current date in YYYY-MM-DD format
+        const currentDate = new Date().toISOString().split('T')[0];
+
+        // Fetch onboard tickets (from tickets collection)
+        const onboardResponse = await axios.get(
+          `${API_BASE_URL}/api/tickets/bus-tickets/${selectedBusNo}`,
+          {
+            params: {
+              date: currentDate
+            }
+          }
+        );
+
+        const onlineResponse = await axios.get(
+          `${API_BASE_URL}/api/payment/bus-tickets/${selectedBusNo}`,
+          {
+            params: {
+              date: currentDate
+            }
+          }
+        );
+
+        // Store the fetched tickets in state
+        const ticketsData = {
+          onboardTickets: onboardResponse.data.tickets || [],
+          onlineTickets: onlineResponse.data.tickets || []
+        };
+
+        // Store the tickets data to pass to ViewTickets screen
+        global.ticketsData = ticketsData;
+
+      } catch (error) {
+        console.error('Error fetching tickets:', error);
+      }
+    }
+
     fetchStages();
     fetchPrice();
+    fetchtickets();
   }, [busplateNo, selectedBusNo]);
 
   useEffect(() => {
@@ -221,12 +339,27 @@ const EtmTicket = ({ route, navigation }) => {
   const handleDecrement = () =>
     setTicketCount((prev) => (prev > 1 ? prev - 1 : prev));
 
-  const handleSubmit = async () => {
-    if (availableSeats <= 1){
-      axios.post(`${API_BASE_URL}/api/buzzer/trigger`, { selectedBusNo: selectedBusNo });
-      
-    } 
-    
+  // Function to handle quick ticket selection
+  const handleQuickTicketSelect = (ticket) => {
+    setSelectedQuickTicket(ticket);
+    setBoarding(ticket.from);
+    setDestination(ticket.to);
+    setTicketPrice(ticket.price);
+
+    // Find and set current stop index
+    const fromIndex = stages.indexOf(ticket.from);
+    if (fromIndex !== -1) {
+      setCurrentStopIndex(fromIndex);
+    }
+
+    // Find and set next stop
+    if (fromIndex !== -1 && fromIndex < stages.length - 1) {
+      setNextStop(stages[fromIndex + 1]);
+    }
+  };
+
+  // Function to show ticket summary
+  const showTicketSummaryModal = () => {
     if (!boarding || !destination) {
       Alert.alert(
         "Selection Required",
@@ -234,7 +367,7 @@ const EtmTicket = ({ route, navigation }) => {
       );
       return;
     }
-    
+
     if (ticketPrice === 0) {
       Alert.alert(
         "Price Not Available",
@@ -242,18 +375,69 @@ const EtmTicket = ({ route, navigation }) => {
       );
       return;
     }
-    
+
     if (!paymentMethod) {
       Alert.alert("Payment Method Required", "Please select a payment method.");
       return;
     }
-    
-    if (paymentMethod === "Online" && ticketCount >= 1) {
-      const amount =  ticketPrice * ticketCount;
-      const upiId = "thamilprakasam2005@okhdfcbank";
-      navigation.navigate("Upiqr",{upiId, amount});
+
+    // Show summary modal
+    setShowSummary(true);
+  };
+
+  const handleSubmit = async () => {
+    if (availableSeats <= 1){
+      axios.post(`${API_BASE_URL}/api/buzzer/trigger`, { selectedBusNo: selectedBusNo });
     }
-    console.log("bus data-----",BusData)
+
+    if (!boarding || !destination) {
+      Alert.alert(
+        "Selection Required",
+        "Please select boarding and destination."
+      );
+      return;
+    }
+
+    if (ticketPrice === 0) {
+      Alert.alert(
+        "Price Not Available",
+        "Cannot issue ticket without a valid price."
+      );
+      return;
+    }
+
+    if (!paymentMethod) {
+      Alert.alert("Payment Method Required", "Please select a payment method.");
+      return;
+    }
+
+    if (paymentMethod === "Online" && ticketCount >= 1) {
+      const amount = ticketPrice * ticketCount;
+      const upiId = "thamilprakasam2005@okhdfcbank";
+
+      // Create ticket data
+      const ticketData = {
+        routeName: RouteName,
+        busRouteNo: selectedBusNo,
+        busplateNo,
+        boarding,
+        destination,
+        ticketCount,
+        ticketPrice: ticketPrice * ticketCount,
+        paymentMethod,
+        selectedCity,
+        selectedState,
+        busId: BusData?._id,
+      };
+
+      global.pendingTicketData = ticketData;
+
+      // Navigate to Upiqr with amount and upiId
+      navigation.navigate("Upiqr", {upiId, amount});
+      return;
+    }
+
+    // Create ticket data
     const ticketData = {
       routeName: RouteName,
       busRouteNo: selectedBusNo,
@@ -267,17 +451,49 @@ const EtmTicket = ({ route, navigation }) => {
       selectedState,
       busId: BusData?._id,
     };
+
     try {
+      // Start loading animation
+      Animated.sequence([
+        Animated.timing(fadeAnim1, {
+          toValue: 0.5,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim1, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+
       const response = await axios.post(
         `${API_BASE_URL}/api/tickets/add_ticket`,
         ticketData
       );
-      console.log(response.data.message)
-      if (response.data.success) {
-        setAvailableSeats(availableSeats - ticketData.ticketCount);
-        setTicketCount(1)
-        navigation.navigate("ticsuccess", {method: "Cash"});
 
+      if (response.data.success) {
+        // Update available seats
+        setAvailableSeats(availableSeats - ticketData.ticketCount);
+        setTicketCount(1);
+        setShowSummary(false);
+
+        // Success animation
+        Animated.sequence([
+          Animated.timing(fadeAnim2, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.timing(fadeAnim2, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+        ]).start(() => {
+          // Navigate to success screen
+          navigation.navigate("ticsuccess", {method: paymentMethod});
+        });
       } else {
         Alert.alert("Failed", "Could not issue ticket. Try again.");
       }
@@ -290,61 +506,175 @@ const EtmTicket = ({ route, navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      {/* BUS DETAILS */}
-      <View style={styles.cardheader}>
-        <View style={styles.row}>
-          <View style={styles.infoBox}>
-            <Text style={styles.label}>Route</Text>
-            <Text style={styles.value}>{RouteName}</Text>
-          </View>
-          <View style={styles.infoBox}>
-            <Text style={styles.label}>Bus No</Text>
-            <Text style={styles.value}>{selectedBusNo}</Text>
-          </View>
-        </View>
-
-        <View style={styles.seatsContainer}>
-          {seatLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator
-                size="small"
-                color="#0000ff"
-                style={styles.loadingIndicator}
-              />
-              <Text style={styles.loadingText}>Checking availability...</Text>
-            </View>
-          ) : (
-            <Text style={styles.seatsText}>
-              {availableSeats !== null
-                ? `${availableSeats} seats available`
-                : "Seat info not available"}
+    <SafeAreaView style={{flex: 1}}>
+      <ScrollView style={styles.container}>
+        {/* Clock and Timer */}
+        <View style={styles.clockContainer}>
+          <View style={styles.clockItem}>
+            <Text style={styles.clockLabel}>Current Time</Text>
+            <Text style={styles.clockValue}>
+              {currentTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
             </Text>
-          )}
+          </View>
+          <View style={styles.clockItem}>
+            <Text style={styles.clockLabel}>Journey Time</Text>
+            <Text style={styles.clockValue}>
+              {Math.floor(journeyTime / 60)}h {journeyTime % 60}m
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.row}>
-          <View style={styles.locationButtonsContainer}>
-            <TouchableOpacity
-              style={styles.locationButton}
-              onPress={() => setShowLocationDropdown(true)}
-            >
-              <MaterialIcons name="location-pin" size={20} color="lightblue" />
-              <Text style={styles.locationText}>Mark Location</Text>
-            </TouchableOpacity>
-            
-            {nextStop && (
-              <View style={styles.nextStopContainer}>
-                <Text style={styles.nextStopLabel}>Next Stop:</Text>
-                <View style={styles.nextStopValueContainer}>
-                  <MaterialIcons name="arrow-forward" size={16} color="#fff" />
-                  <Text style={styles.nextStopValue}>{nextStop}</Text>
-                </View>
+        {/* BUS DETAILS */}
+        <Animated.View
+          style={[styles.cardheader, {
+            opacity: fadeAnim1,
+            transform: [{ translateY: slideAnim }]
+          }]}
+        >
+          <View style={styles.row}>
+            <View style={styles.infoBox}>
+              <Text style={styles.label}>Route</Text>
+              <Text style={styles.value}>{RouteName}</Text>
+            </View>
+            <View style={styles.infoBox}>
+              <Text style={styles.label}>Bus No</Text>
+              <Text style={styles.value}>{selectedBusNo}</Text>
+            </View>
+            <View style={styles.infoBox}>
+              <TouchableOpacity
+                style={styles.ticketsButton}
+                onPress={()=> navigation.navigate("ViewTickets", {
+                  busRouteNo: selectedBusNo,
+                  ticketsData: global.ticketsData
+                })}
+              >
+                <MaterialIcons name="receipt" size={18} color="#fff" />
+                <Text style={styles.ticketsButtonText}>Tickets</Text>
+              </TouchableOpacity>
               </View>
+          </View>
+
+          <View style={styles.seatsContainer}>
+            {seatLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator
+                  size="small"
+                  color="#3b82f6"
+                  style={styles.loadingIndicator}
+                />
+                <Text style={styles.loadingText}>Checking availability...</Text>
+              </View>
+            ) : (
+              <Text style={[styles.seatsText, {color: availableSeats <= 5 ? '#e53e3e' : '#2e8b57'}]}>
+                {availableSeats !== null
+                  ? `${availableSeats} seats available`
+                  : "Seat info not available"}
+              </Text>
             )}
           </View>
-        </View>
-      </View>
+
+          <View style={styles.row}>
+            <View style={styles.locationButtonsContainer}>
+              <TouchableOpacity
+                style={styles.locationButton}
+                onPress={() => setShowLocationDropdown(true)}
+                activeOpacity={0.7}
+              >
+                <MaterialIcons name="location-pin" size={20} color="#dbeafe" />
+                <Text style={styles.locationText}>Mark Location</Text>
+              </TouchableOpacity>
+
+              {nextStop && (
+                <View style={styles.nextStopContainer}>
+                  <Text style={styles.nextStopLabel}>Next Stop:</Text>
+                  <View style={styles.nextStopValueContainer}>
+                    <MaterialIcons name="arrow-forward" size={16} color="#fff" />
+                    <Text style={styles.nextStopValue}>{nextStop}</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* Journey Progress */}
+        {stages.length > 0 && boarding && (
+          <Animated.View
+            style={[styles.journeyProgressContainer, {
+              opacity: fadeAnim2,
+              transform: [{ translateY: slideAnim }]
+            }]}
+          >
+            <Text style={styles.journeyTitle}>Journey Progress</Text>
+
+            <View style={styles.progressTrack}>
+              {/* Progress fill based on current stop */}
+              <View
+                style={[styles.progressFill, {
+                  width: `${(currentStopIndex / (stages.length - 1)) * 100}%`
+                }]}
+              />
+
+              {/* Stop dots */}
+              {stages.map((stage, index) => {
+                const position = `${(index / (stages.length - 1)) * 100}%`;
+                const isActive = boarding === stage;
+                const isCompleted = stages.indexOf(boarding) > index;
+
+                return (
+                  <View key={index}>
+                    <View
+                      style={[styles.stopDot,
+                        isActive && styles.activeDot,
+                        isCompleted && styles.completedDot,
+                        {left: position}
+                      ]}
+                    />
+                    {(index === 0 || index === stages.length - 1 || isActive || index % Math.ceil(stages.length / 5) === 0) && (
+                      <Text
+                        style={[styles.stopLabel,
+                          isActive && styles.activeLabel,
+                          {left: position}
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {stage}
+                      </Text>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+          </Animated.View>
+        )}
+
+        {/* Quick Tickets */}
+        {quickTickets.length > 0 && (
+          <Animated.View
+            style={[styles.quickTicketContainer, {
+              opacity: fadeAnim2,
+              transform: [{ translateY: slideAnim }]
+            }]}
+          >
+            <Text style={styles.quickTicketTitle}>Quick Tickets</Text>
+            <View style={styles.quickTicketsRow}>
+              {quickTickets.map((ticket) => (
+                <TouchableOpacity
+                  key={ticket.id}
+                  style={[
+                    styles.quickTicketItem,
+                    selectedQuickTicket?.id === ticket.id && styles.quickTicketItemActive
+                  ]}
+                  onPress={() => handleQuickTicketSelect(ticket)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.quickTicketRoute}>{ticket.from} → {ticket.to}</Text>
+                  <Text style={styles.quickTicketPrice}>₹{ticket.price.toFixed(2)}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Animated.View>
+        )}
 
       <Modal
         visible={showLocationDropdown}
@@ -533,10 +863,81 @@ const EtmTicket = ({ route, navigation }) => {
       </View>
 
       {/* BUTTON */}
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>Issue Ticket</Text>
-      </TouchableOpacity>
-    </View>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={showTicketSummaryModal}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.buttonText}>Preview & Issue Ticket</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Ticket Summary Modal */}
+      <Modal
+        visible={showSummary}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.modalOverlay}>
+          <Animated.View style={styles.summaryContainer}>
+            <Text style={styles.summaryTitle}>Ticket Summary</Text>
+
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Route</Text>
+              <Text style={styles.summaryValue}>{RouteName}</Text>
+            </View>
+
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Boarding</Text>
+              <Text style={styles.summaryValue}>{boarding}</Text>
+            </View>
+
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Destination</Text>
+              <Text style={styles.summaryValue}>{destination}</Text>
+            </View>
+
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Tickets</Text>
+              <Text style={styles.summaryValue}>{ticketCount}</Text>
+            </View>
+
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Price per ticket</Text>
+              <Text style={styles.summaryValue}>₹{ticketPrice.toFixed(2)}</Text>
+            </View>
+
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Payment Method</Text>
+              <Text style={styles.summaryValue}>{paymentMethod}</Text>
+            </View>
+
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Total Amount</Text>
+              <Text style={styles.summaryTotal}>₹{(ticketPrice * ticketCount).toFixed(2)}</Text>
+            </View>
+
+            <View style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: 16}}>
+              <TouchableOpacity
+                style={[styles.button, {backgroundColor: '#e2e8f0', flex: 1, marginRight: 8}]}
+                onPress={() => setShowSummary(false)}
+              >
+                <Text style={[styles.buttonText, {color: '#4a5568'}]}>Edit</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.button, {flex: 1, marginLeft: 8}]}
+                onPress={handleSubmit}
+              >
+                <Text style={styles.buttonText}>Confirm & Issue</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </View>
+      </Modal>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

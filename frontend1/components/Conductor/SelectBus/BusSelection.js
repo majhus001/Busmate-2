@@ -46,6 +46,7 @@ const BusSelection = ({ navigation, route }) => {
   const [recentSelections, setRecentSelections] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [showMapPreview, setShowMapPreview] = useState(false);
+  const [intermediateStages, setIntermediateStages] = useState([]);
   const [filteredBusData, setFilteredBusData] = useState([]);
 
   // Check for preselected bus from route params (from conductor home screen)
@@ -129,6 +130,9 @@ const BusSelection = ({ navigation, route }) => {
       setLoading(true);
       setError(null);
 
+      // Clear search query
+      setSearchQuery('');
+
       // Set state and fetch buses
       setSelectedState(selection.state);
       await fetchBusesByState(selection.state);
@@ -150,6 +154,12 @@ const BusSelection = ({ navigation, route }) => {
 
       // Show map preview
       setShowMapPreview(true);
+
+      // Save this selection to recent selections
+      await saveToRecentSelections();
+
+      // Update the current step to show we've completed the selection
+      setCurrentStep(5);
     } catch (error) {
       console.error('Error using recent selection:', error);
       setError('Failed to load the selected route. Please try again.');
@@ -188,6 +198,19 @@ const BusSelection = ({ navigation, route }) => {
     setCurrentStep(keepState ? 1 : 1);
   };
 
+  const fetchAllBuses = useCallback(async () => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/api/Admin/buses/fetchAllBuses`
+      );
+      if (response.data && response.data.length > 0) {
+        setFilteredBusData(response.data);
+      }
+    } catch (err) {
+      console.error("Error fetching all buses:", err);
+    }
+  }, []);
+
   // Fetch states only once when the screen is focused
   useFocusEffect(
     useCallback(() => {
@@ -213,8 +236,9 @@ const BusSelection = ({ navigation, route }) => {
       };
 
       fetchStates();
+      fetchAllBuses(); // Fetch all buses for search
       return () => resetSelections(true); // Cleanup on unmount
-    }, [states.length])
+    }, [states.length, fetchAllBuses])
   );
 
   // Fetch buses by state
@@ -293,44 +317,129 @@ const BusSelection = ({ navigation, route }) => {
 
   // Search functionality
   useEffect(() => {
+    // If search query is empty and a state is selected, show buses for that state
     if (searchQuery.trim() === '') {
-      setFilteredBusData(busData);
+      if (selectedState) {
+        // If a state is selected, keep showing the buses for that state
+        return;
+      } else {
+        // If no state is selected, show all buses
+        fetchAllBuses();
+      }
       return;
     }
 
+    // When searching, use the complete bus data (not just the current state)
     const query = searchQuery.toLowerCase();
-    const filtered = busData.filter(bus =>
-      bus.busRouteNo?.toLowerCase().includes(query) ||
-      bus.busNo?.toLowerCase().includes(query) ||
-      bus.fromStage?.toLowerCase().includes(query) ||
-      bus.toStage?.toLowerCase().includes(query) ||
-      bus.city?.toLowerCase().includes(query)
-    );
 
-    setFilteredBusData(filtered);
+    // Fetch all buses again to ensure we have the latest data
+    axios.get(`${API_BASE_URL}/api/Admin/buses/fetchAllBuses`)
+      .then(response => {
+        if (response.data && response.data.length > 0) {
+          const allBuses = response.data;
 
-    // If we have search results and user hasn't made selections yet, suggest the first result
-    if (filtered.length > 0 && !selectedState && !selectedCity) {
-      const suggestion = filtered[0];
-      setError(
-        <TouchableOpacity
-          onPress={() => useRecentSelection({
-            id: Date.now().toString(),
-            state: suggestion.state,
-            city: suggestion.city,
-            from: suggestion.fromStage,
-            to: suggestion.toStage,
-            busRouteNo: suggestion.busRouteNo,
-            busNo: suggestion.busNo,
-          })}
-          style={{ flexDirection: 'row', alignItems: 'center' }}
-        >
-          <Text>Found matching bus: {suggestion.busRouteNo} ({suggestion.fromStage} to {suggestion.toStage}). Tap to select.</Text>
-          <MaterialIcons name="arrow-forward" size={16} color="#E53E3E" style={{ marginLeft: 4 }} />
-        </TouchableOpacity>
-      );
-    }
-  }, [searchQuery, busData]);
+          // Filter buses based on search query
+          const filtered = allBuses.filter(bus =>
+            (bus.busRouteNo?.toLowerCase() || '').includes(query) ||
+            (bus.busNo?.toLowerCase() || '').includes(query) ||
+            (bus.fromStage?.toLowerCase() || '').includes(query) ||
+            (bus.toStage?.toLowerCase() || '').includes(query) ||
+            (bus.city?.toLowerCase() || '').includes(query) ||
+            (bus.state?.toLowerCase() || '').includes(query)
+          );
+
+          setFilteredBusData(filtered);
+
+          // If we have search results, show them as suggestions
+          if (filtered.length > 0) {
+            // Clear any previous error messages
+            setError(null);
+
+            // Create a search results section
+            const searchResultsSection = (
+              <View style={styles.searchResultsContainer}>
+                <Text style={styles.searchResultsTitle}>
+                  <MaterialIcons name="search" size={20} color="#3182CE" style={{marginRight: 8}} />
+                  Search Results
+                </Text>
+                {filtered.slice(0, 3).map((bus, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.searchResultItem}
+                    onPress={() => useRecentSelection({
+                      id: Date.now().toString(),
+                      state: bus.state,
+                      city: bus.city,
+                      from: bus.fromStage,
+                      to: bus.toStage,
+                      busRouteNo: bus.busRouteNo,
+                      busNo: bus.busNo,
+                    })}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.searchResultContent}>
+                      <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 6}}>
+                        <MaterialIcons name="directions" size={16} color="#3182CE" style={{marginRight: 6}} />
+                        <Text style={styles.searchResultRoute}>{bus.fromStage} → {bus.toStage}</Text>
+                      </View>
+
+                      <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 4}}>
+                        <MaterialIcons name="directions-bus" size={16} color="#4A5568" style={{marginRight: 6}} />
+                        <Text style={styles.searchResultBus}>Bus: {bus.busRouteNo} ({bus.busNo})</Text>
+                      </View>
+
+                      <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                        <MaterialIcons name="location-city" size={16} color="#718096" style={{marginRight: 6}} />
+                        <Text style={styles.searchResultLocation}>{bus.city}, {bus.state}</Text>
+                      </View>
+                    </View>
+
+                    <View style={{backgroundColor: '#EBF8FF', padding: 8, borderRadius: 20}}>
+                      <MaterialIcons name="arrow-forward" size={20} color="#3182CE" />
+                    </View>
+                  </TouchableOpacity>
+                ))}
+                {filtered.length > 3 && (
+                  <Text style={styles.moreResultsText}>
+                    <MaterialIcons name="info" size={14} color="#718096" style={{marginRight: 4}} />
+                    {filtered.length - 3} more results found. Refine your search.
+                  </Text>
+                )}
+              </View>
+            );
+
+            // Set the search results as the error content (we're repurposing the error container)
+            setError(searchResultsSection);
+          } else {
+            setError(
+              <View style={{alignItems: 'center', padding: 10}}>
+                <MaterialIcons name="search-off" size={40} color="#A0AEC0" style={{marginBottom: 10}} />
+                <Text style={{fontSize: 16, color: '#4A5568', textAlign: 'center'}}>
+                  No buses found matching your search criteria.
+                </Text>
+                <Text style={{fontSize: 14, color: '#718096', textAlign: 'center', marginTop: 5}}>
+                  Try different keywords or check your spelling.
+                </Text>
+              </View>
+            );
+          }
+        }
+      })
+      .catch(err => {
+        console.error("Error fetching buses for search:", err);
+        setError(
+          <View style={{alignItems: 'center', padding: 10}}>
+            <MaterialIcons name="error-outline" size={40} color="#FC8181" style={{marginBottom: 10}} />
+            <Text style={{fontSize: 16, color: '#E53E3E', textAlign: 'center'}}>
+              Error searching for buses
+            </Text>
+            <Text style={{fontSize: 14, color: '#718096', textAlign: 'center', marginTop: 5}}>
+              Please check your connection and try again.
+            </Text>
+          </View>
+        );
+      });
+  }, [searchQuery, fetchAllBuses]);
 
   // Effect hooks for data fetching
   useEffect(() => {
@@ -345,14 +454,70 @@ const BusSelection = ({ navigation, route }) => {
     }
   }, [selectedCity, fetchStagesByCity]);
 
+  // Function to fetch intermediate stages
+  const fetchIntermediateStages = useCallback(async (city, from, to) => {
+    if (!city || !from || !to) return;
+
+    try {
+      // First, get all stages for the city
+      const response = await axios.post(
+        `${API_BASE_URL}/api/busroutes/getstages`,
+        { selectedCity: city, state: selectedState }
+      );
+
+      if (response.data.success && Array.isArray(response.data.stages)) {
+        const allStages = response.data.stages;
+
+        // Find the indices of the from and to stages
+        const fromIndex = allStages.indexOf(from);
+        const toIndex = allStages.indexOf(to);
+
+        // If both stages are found and they're in the correct order
+        if (fromIndex !== -1 && toIndex !== -1) {
+          // If from comes before to, get all stages in between
+          if (fromIndex < toIndex) {
+            setIntermediateStages(allStages.slice(fromIndex + 1, toIndex));
+          }
+          // If to comes before from (reverse route), get all stages in between in reverse order
+          else if (toIndex < fromIndex) {
+            setIntermediateStages(allStages.slice(toIndex + 1, fromIndex).reverse());
+          }
+          // If they're the same, there are no intermediate stages
+          else {
+            setIntermediateStages([]);
+          }
+        } else {
+          // If we can't find the stages in order, try to get stages from the bus data
+          const busWithRoute = busData.find(bus =>
+            bus.fromStage === from && bus.toStage === to && bus.city === city
+          );
+
+          if (busWithRoute && busWithRoute.timings) {
+            // Get all stages from the timings map and filter out from and to
+            const stagesFromTimings = Object.keys(busWithRoute.timings)
+              .filter(stage => stage !== from && stage !== to);
+            setIntermediateStages(stagesFromTimings);
+          } else {
+            setIntermediateStages([]);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching intermediate stages:', error);
+      setIntermediateStages([]);
+    }
+  }, [selectedState, busData]);
+
   useEffect(() => {
     if (selectedFrom && selectedTo) {
       fetchBusNumbers(selectedFrom, selectedTo);
+      fetchIntermediateStages(selectedCity, selectedFrom, selectedTo);
       setShowMapPreview(true);
     } else {
       setShowMapPreview(false);
+      setIntermediateStages([]);
     }
-  }, [selectedFrom, selectedTo, fetchBusNumbers]);
+  }, [selectedFrom, selectedTo, selectedCity, fetchBusNumbers, fetchIntermediateStages]);
 
   // Update bus plate number
   useEffect(() => {
@@ -386,7 +551,7 @@ const BusSelection = ({ navigation, route }) => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
     >
-      <StatusBar barStyle="light-content" backgroundColor="#3182CE" />
+      <StatusBar barStyle="light-content" backgroundColor="#007AFF" />
 
       <View style={styles.container}>
         <View style={styles.headerBackground} />
@@ -453,15 +618,33 @@ const BusSelection = ({ navigation, route }) => {
           {/* Error Display */}
           {error && (
             <View style={styles.errorContainer}>
-              <MaterialIcons name="error-outline" size={20} color="#E53E3E" />
               {typeof error === 'string' ? (
-                <Text style={styles.errorText}>{error}</Text>
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  <MaterialIcons name="error-outline" size={20} color="#E53E3E" />
+                  <Text style={styles.errorText}>{error}</Text>
+                  <TouchableOpacity
+                    onPress={() => setError(null)}
+                    style={{padding: 5}}
+                  >
+                    <MaterialIcons name="close" size={20} color="#A0AEC0" />
+                  </TouchableOpacity>
+                </View>
               ) : (
-                <View style={styles.errorContent}>{error}</View>
+                <View style={styles.errorContent}>
+                  {error}
+                  <TouchableOpacity
+                    onPress={() => setError(null)}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      right: 0,
+                      padding: 5,
+                    }}
+                  >
+                    <MaterialIcons name="close" size={20} color="#A0AEC0" />
+                  </TouchableOpacity>
+                </View>
               )}
-              <TouchableOpacity onPress={() => setError(null)}>
-                <MaterialIcons name="close" size={20} color="#E53E3E" />
-              </TouchableOpacity>
             </View>
           )}
 
@@ -528,7 +711,7 @@ const BusSelection = ({ navigation, route }) => {
                 <MaterialIcons
                   name="location-on"
                   size={16}
-                  color="#4A5568"
+                  color="#007AFF"
                   style={styles.labelIcon}
                 />
                 State
@@ -564,7 +747,7 @@ const BusSelection = ({ navigation, route }) => {
                 <MaterialIcons
                   name="location-city"
                   size={16}
-                  color="#4A5568"
+                  color="#007AFF"
                   style={styles.labelIcon}
                 />
                 City
@@ -611,7 +794,7 @@ const BusSelection = ({ navigation, route }) => {
                 <MaterialIcons
                   name="trip-origin"
                   size={16}
-                  color="#4A5568"
+                  color="#007AFF"
                   style={styles.labelIcon}
                 />
                 From
@@ -655,7 +838,7 @@ const BusSelection = ({ navigation, route }) => {
                 <MaterialIcons
                   name="location-pin"
                   size={16}
-                  color="#4A5568"
+                  color="#007AFF"
                   style={styles.labelIcon}
                 />
                 To
@@ -692,13 +875,48 @@ const BusSelection = ({ navigation, route }) => {
             {showMapPreview && selectedFrom && selectedTo && (
               <View style={styles.mapPreviewContainer}>
                 <View style={styles.mapPlaceholder}>
-                  <MaterialIcons name="map" size={30} color="#718096" />
-                  <Text style={styles.mapPlaceholderText}>Route: {selectedFrom} to {selectedTo}</Text>
+                  <MaterialIcons name="map" size={30} color="#007AFF" />
+                  <Text style={styles.mapPlaceholderText}>Route Map</Text>
                 </View>
+
+                <View style={styles.routeContainer}>
+                  {/* Starting Station */}
+                  <View style={styles.routeStationContainer}>
+                    <View style={[styles.routeStationDot, styles.routeStationDotStart]} />
+                    <View style={styles.routeLine} />
+                    <View style={styles.routeStationContent}>
+                      <Text style={styles.routeStationName}>{selectedFrom}</Text>
+                      <Text style={styles.routeStationInfo}>Starting Point</Text>
+                    </View>
+                  </View>
+
+                  {/* Intermediate Stations */}
+                  {intermediateStages.map((stage, index) => (
+                    <View key={index} style={styles.routeStationContainer}>
+                      <View style={styles.routeStationDotIntermediate} />
+                      <View style={styles.routeLine} />
+                      <View style={styles.routeStationContent}>
+                        <Text style={styles.routeStationNameIntermediate}>{stage}</Text>
+                      </View>
+                    </View>
+                  ))}
+
+                  {/* Ending Station */}
+                  <View style={styles.routeStationContainer}>
+                    <View style={[styles.routeStationDot, styles.routeStationDotEnd]} />
+                    <View style={styles.routeStationContent}>
+                      <Text style={styles.routeStationName}>{selectedTo}</Text>
+                      <Text style={styles.routeStationInfo}>Destination</Text>
+                    </View>
+                  </View>
+                </View>
+
                 <TouchableOpacity
                   style={styles.mapActionButton}
                   onPress={() => setShowMapPreview(false)}
+                  activeOpacity={0.7}
                 >
+                  <MaterialIcons name="visibility-off" size={14} color="#007AFF" />
                   <Text style={styles.mapActionButtonText}>Hide Map</Text>
                 </TouchableOpacity>
               </View>
@@ -708,9 +926,12 @@ const BusSelection = ({ navigation, route }) => {
               <TouchableOpacity
                 style={styles.showMapButton}
                 onPress={() => setShowMapPreview(true)}
+                activeOpacity={0.7}
               >
                 <MaterialIcons name="map" size={18} color="#3182CE" />
-                <Text style={styles.showMapButtonText}>Show Route Map</Text>
+                <Text style={styles.showMapButtonText}>
+                  Show Route Map {intermediateStages.length > 0 ? `(${intermediateStages.length} stops)` : ''}
+                </Text>
               </TouchableOpacity>
             )}
 
@@ -720,7 +941,7 @@ const BusSelection = ({ navigation, route }) => {
                 <MaterialIcons
                   name="confirmation-number"
                   size={16}
-                  color="#4A5568"
+                  color="#007AFF"
                   style={styles.labelIcon}
                 />
                 Bus Number
@@ -759,7 +980,7 @@ const BusSelection = ({ navigation, route }) => {
                 <MaterialIcons
                   name="directions-bus"
                   size={24}
-                  color="#2B6CB0"
+                  color="#007AFF"
                 />
                 <Text style={styles.plateLabel}>Bus Plate:</Text>
                 <Text style={styles.plateNumber}>{busplateNo}</Text>

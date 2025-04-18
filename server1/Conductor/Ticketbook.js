@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Ticket = require("../Module/EtmSchema");
 const Bus = require("../Module/BusSchema");
+const Conductor = require("../Module/Conductor_sc");
 
 router.post("/add_ticket", async (req, res) => {
   try {
@@ -227,6 +228,104 @@ router.get("/genrevenue/all/:adminId", async (req, res) => {
   } catch (error) {
     console.error("Error fetching tickets:", error);
     res.status(500).json({ message: "Server error fetching tickets" });
+  }
+});
+
+// Get tickets for a specific bus by route number and date
+router.get("/bus-tickets/:busRouteNo", async (req, res) => {
+  const { busRouteNo } = req.params;
+  const { date } = req.query;
+  console.log("hhhhh")
+  try {
+    // Create date range for the given date (start of day to end of day)
+    const startDate = new Date(date);
+    startDate.setHours(0, 0, 0, 0);
+
+    const endDate = new Date(date);
+    endDate.setHours(23, 59, 59, 999);
+
+    const tickets = await Ticket.find({
+      busRouteNo: busRouteNo,
+      issuedAt: { $gte: startDate, $lte: endDate }
+    }).sort({ issuedAt: -1 }); 
+
+    res.status(200).json({
+      success: true,
+      tickets: tickets
+    });
+  } catch (error) {
+    console.error(`Error fetching tickets for bus ${busRouteNo}:`, error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch tickets",
+      error: error.message
+    });
+  }
+});
+
+// Get statistics for a conductor based on their assigned bus
+router.get("/conductor-stats/:conductorId", async (req, res) => {
+  const { conductorId } = req.params;
+  try {
+    const conductor = await Conductor.findById(conductorId);
+
+    if (!conductor) {
+      return res.status(404).json({
+        success: false,
+        message: "Conductor not found",
+      });
+    }
+
+    if (!conductor.assignedBusId) {
+      return res.status(200).json({
+        success: true,
+        message: "Conductor is not assigned to any bus",
+        data: {
+          totalTrips: 0,
+          totalTickets: 0,
+          totalRevenue: 0,
+        },
+      });
+    }
+
+    // Find tickets for the assigned bus
+    const tickets = await Ticket.find({ busId: conductor.assignedBusId });
+
+    // Calculate statistics
+    const totalTickets = tickets.reduce(
+      (sum, ticket) => sum + (ticket.ticketCount || 0),
+      0
+    );
+    const totalRevenue = tickets.reduce(
+      (sum, ticket) => sum + (ticket.ticketPrice || 0),
+      0
+    );
+
+    const uniqueTrips = new Set();
+
+    tickets.forEach((item) => {
+      const tripDate = new Date(item.issuedAt).toISOString().split("T")[0];
+      uniqueTrips.add(tripDate);
+
+    });
+
+    const totalTrips = uniqueTrips.size;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalTrips,
+        totalTickets,
+        totalRevenue,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching conductor statistics:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error fetching statistics",
+      error: error.message,
+    });
   }
 });
 

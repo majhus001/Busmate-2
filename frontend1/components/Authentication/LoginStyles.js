@@ -18,8 +18,17 @@ export default StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  welcome: {
+    fontSize: 32,
+    fontWeight: "700",
+    color: "#fff",
+    textAlign: "center",
+    letterSpacing: 1,
+    marginTop: 10,
+  },
+  
   card: {
-    width: "100%",
+    width: "101%",
     padding:25,
     borderRadius: 16,
     backgroundColor: "#fff",
@@ -30,6 +39,7 @@ export default StyleSheet.create({
     shadowRadius: 4,
     elevation: 10,
     overflow: "hidden",
+    marginTop:"70%",
   },
   logoContainer: {
     alignItems: "center",

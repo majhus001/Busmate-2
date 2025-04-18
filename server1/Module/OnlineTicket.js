@@ -4,6 +4,7 @@ const OnlineTicketSchema = new mongoose.Schema(
   {
     orderId: { type: String, required: true },
     amount: { type: Number, required: true },
+    ticketcount: { type: String, required: true },
     currency: { type: String, required: true },
     receipt: { type: String, required: true },
     status: {
@@ -13,6 +14,8 @@ const OnlineTicketSchema = new mongoose.Schema(
     },
     busno: { type: String, required: true },
     userId: { type: String, required: true },
+    fromLocation: { type: String, required: true },
+    toLocation: { type: String, required: true },
     checkIn: {
       type: Boolean,
       default: false,
