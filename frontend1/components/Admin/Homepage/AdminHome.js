@@ -17,6 +17,8 @@ import { Card, ActivityIndicator } from "react-native-paper";
 import { API_BASE_URL } from "../../../apiurl";
 import styles from "./AdminHomeStyles";
 import * as SecureStore from "expo-secure-store";
+import AdminUserComplaint from "../Admincompliant/Usercompliant";
+import UserComplaint from "../../Conductor/Complaintform/UserCompliants";
 
 const AdminHome = ({ navigation, route }) => {
   const [buses, setBuses] = useState([]);
@@ -634,6 +636,8 @@ const AdminHome = ({ navigation, route }) => {
           )}
         </View>
       )}
+  
+
     </ScrollView>
   );
 };

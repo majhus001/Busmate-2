@@ -5,6 +5,8 @@ import axios from "axios";
 import { API_BASE_URL } from "../../../apiurl";
 import * as SecureStore from "expo-secure-store";
 import styles from "./ConHomeStyles";
+import UserComplaint from "../Complaintform/UserCompliants";
+import NotificationAlert from "./NotificationAlert";
 
 // Simple helper function to format time elapsed
 const getTimeElapsed = (date) => {
@@ -438,6 +440,8 @@ const ConHome = ({ navigation, route }) => {
         </View>
       )}
     </ScrollView>
+    <UserComplaint/>
+    <NotificationAlert/>
     </>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'; // Ensure useState is imported
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, Switch, StyleSheet, Animated, TouchableOpacity,
   Alert, Share, Linking, ScrollView
@@ -19,6 +19,8 @@ const translations = {
     contactUs: 'Contact Us',
     language: 'Language',
     logout: 'Logout',
+    addComplaint: 'Add Complaint', // New translation
+    viewComplaints: 'View Complaints', // New translation
     privacyText: 'We value your privacy. We do not sell, share, or misuse your data. Your personal information is securely stored.',
     termsText: 'By using this app, you agree to abide by our policies and regulations. Misuse of the app may lead to account suspension.',
     callSupport: 'Call Support',
@@ -38,6 +40,8 @@ const translations = {
     contactUs: 'எங்களை தொடர்புகொள்ள',
     language: 'மொழி',
     logout: 'வெளியேறு',
+    addComplaint: 'புகார் சேர்க்கவும்', // New translation
+    viewComplaints: 'புகார்களைப் பார்க்கவும்', // New translation
     privacyText: 'நாங்கள் உங்கள் தனிப்பட்ட தகவல்களை பாதுகாப்பாக வைத்திருக்கிறோம். எங்களால் உங்கள் தகவல்கள் பகிரப்படாது.',
     termsText: 'இந்த பயன்பாட்டைப் பயன்படுத்துவதன் மூலம், எங்கள் விதிமுறைகளை நீங்கள் ஒப்புக்கொள்கிறீர்கள்.',
     callSupport: 'ஆதரவை அழைக்கவும்',
@@ -57,6 +61,8 @@ const translations = {
     contactUs: 'संपर्क करें',
     language: 'भाषा',
     logout: 'लॉगआउट',
+    addComplaint: 'शिकायत जोड़ें', // New translation
+    viewComplaints: 'शिकायतें देखें', // New translation
     privacyText: 'हम आपकी गोपनीयता का सम्मान करते हैं। हम आपके डेटा को साझा या दुरुपयोग नहीं करते।',
     termsText: 'ऐप का उपयोग करके, आप हमारे नियमों और शर्तों को स्वीकार करते हैं। दुरुपयोग पर खाता निलंबित हो सकता है।',
     callSupport: 'सहायता कॉल करें',
@@ -68,35 +74,32 @@ const translations = {
   }
 };
 
-const Settings = ({navigation}) => {
-  // const navigation = useNavigation();
-  const { language, setLanguage, darkMode, setDarkMode } = useLanguage(); // Use context
-  const [expandedSection, setExpandedSection] = useState(null); // Local state for expanded section
+const Settings = ({ navigation }) => {
+  const { language, setLanguage, darkMode, setDarkMode } = useLanguage();
+  const [expandedSection, setExpandedSection] = useState(null);
 
   const translateY = useRef(new Animated.Value(-10)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
-  const t = translations[language]; // Translation helper
+  const t = translations[language];
 
   useEffect(() => {
-    // Animation for entry
     Animated.timing(translateY, { toValue: 0, duration: 300, useNativeDriver: true }).start();
     Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }).start();
 
-    // Load saved settings
     const loadSettings = async () => {
       try {
         const savedLang = await AsyncStorage.getItem('app_language');
         const savedDarkMode = await AsyncStorage.getItem('app_darkMode');
         if (savedLang) setLanguage(savedLang);
-        if (savedDarkMode !== null) setDarkMode(JSON.parse(savedDarkMode)); // Parse string to boolean
+        if (savedDarkMode !== null) setDarkMode(JSON.parse(savedDarkMode));
       } catch (error) {
         console.error("Failed to load settings:", error);
       }
     };
 
     loadSettings();
-  }, [setLanguage, setDarkMode]); // Dependencies
+  }, [setLanguage, setDarkMode]);
 
   const toggleDarkMode = async () => {
     const newDarkMode = !darkMode;
@@ -139,8 +142,13 @@ const Settings = ({navigation}) => {
     }
   };
 
+  const addComplaint = () => navigation.navigate('AddComplaint'); // Navigate to Add Complaint screen
+  const viewComplaints = () => navigation.navigate('ViewComplaints'); // Navigate to View Complaints screen
+
   const settingsOptions = [
     { title: t.darkMode, icon: 'moon-outline', isSwitch: true },
+    { title: t.addComplaint, icon: 'add-circle-outline', action: addComplaint }, // New option
+    { title: t.viewComplaints, icon: 'list-outline', action: viewComplaints }, // New option
     { title: t.rateApp, icon: 'star-outline', action: rateApp },
     { title: t.shareApp, icon: 'share-social-outline', action: shareApp },
     { title: t.privacyPolicy, icon: 'lock-closed-outline', section: 'privacy' },
@@ -152,95 +160,93 @@ const Settings = ({navigation}) => {
 
   return (
     <>
-    
-    <View style={[styles.container, darkMode && styles.darkContainer]}>
-      
-      <Text style={[styles.header, darkMode && styles.darkHeader]}>{t.settings}</Text>
+      <View style={[styles.container, darkMode && styles.darkContainer]}>
+        <Text style={[styles.header, darkMode && styles.darkHeader]}>{t.settings}</Text>
 
-      <ScrollView>
-        {settingsOptions.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            onPress={() => (item.section ? toggleSection(item.section) : item.action?.())}
-          >
-            <Animated.View style={[
-              styles.option,
-              {
-                transform: [{ translateY }],
-                opacity,
-                backgroundColor: darkMode ? '#333' : '#f9f9f9'
-              }
-            ]}>
-              <Ionicons name={item.icon} size={24} color={darkMode ? "#fff" : "#333"} />
-              <Text style={[styles.optionText, darkMode && styles.darkText]}>{item.title}</Text>
-              {item.isSwitch ? (
-                <Switch value={darkMode} onValueChange={toggleDarkMode} />
-              ) : (
-                item.section && (
-                  <Feather
-                    name={expandedSection === item.section ? "chevron-up" : "chevron-down"}
-                    size={22}
-                    color={darkMode ? "#fff" : "#777"}
-                  />
-                )
-              )}
-            </Animated.View>
-          </TouchableOpacity>
-        ))}
-
-        {expandedSection === 'privacy' && (
-          <View style={[styles.expandedSection, darkMode && styles.darkSection]}>
-            <Text style={[styles.sectionTitle, darkMode && styles.darkSectionTitle]}>{t.privacyPolicy}</Text>
-            <Text style={[styles.sectionText, darkMode && styles.darkSectionText]}>{t.privacyText}</Text>
-          </View>
-        )}
-
-        {expandedSection === 'terms' && (
-          <View style={[styles.expandedSection, darkMode && styles.darkSection]}>
-            <Text style={[styles.sectionTitle, darkMode && styles.darkSectionTitle]}>{t.terms}</Text>
-            <Text style={[styles.sectionText, darkMode && styles.darkSectionText]}>{t.termsText}</Text>
-          </View>
-        )}
-
-        {expandedSection === 'contact' && (
-          <View style={[styles.expandedSection, darkMode && styles.darkSection]}>
-            <Text style={[styles.sectionTitle, darkMode && styles.darkSectionTitle]}>{t.contactUs}</Text>
-            <TouchableOpacity style={styles.contactOption} onPress={callSupport}>
-              <Ionicons name="call-outline" size={20} color="#007AFF" />
-              <Text style={styles.contactText}>{t.callSupport}</Text>
+        <ScrollView>
+          {settingsOptions.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              onPress={() => (item.section ? toggleSection(item.section) : item.action?.())}
+            >
+              <Animated.View style={[
+                styles.option,
+                {
+                  transform: [{ translateY }],
+                  opacity,
+                  backgroundColor: darkMode ? '#333' : '#f9f9f9'
+                }
+              ]}>
+                <Ionicons name={item.icon} size={24} color={darkMode ? "#fff" : "#333"} />
+                <Text style={[styles.optionText, darkMode && styles.darkText]}>{item.title}</Text>
+                {item.isSwitch ? (
+                  <Switch value={darkMode} onValueChange={toggleDarkMode} />
+                ) : (
+                  item.section && (
+                    <Feather
+                      name={expandedSection === item.section ? "chevron-up" : "chevron-down"}
+                      size={22}
+                      color={darkMode ? "#fff" : "#777"}
+                    />
+                  )
+                )}
+              </Animated.View>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.contactOption} onPress={emailSupport}>
-              <Ionicons name="mail-outline" size={20} color="#007AFF" />
-              <Text style={styles.contactText}>{t.emailSupport}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.contactOption} onPress={visitWebsite}>
-              <Ionicons name="globe-outline" size={20} color="#007AFF" />
-              <Text style={styles.contactText}>{t.visitWebsite}</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+          ))}
 
-        {expandedSection === 'language' && (
-          <View style={[styles.expandedSection, darkMode && styles.darkSection]}>
-            <Text style={[styles.sectionTitle, darkMode && styles.darkSectionTitle]}>{t.selectLang}</Text>
-            {['English', 'Tamil', 'Hindi'].map((lang) => (
-              <TouchableOpacity key={lang} style={styles.contactOption} onPress={() => changeLanguage(lang)}>
-                <Ionicons
-                  name={language === lang ? "radio-button-on" : "radio-button-off"}
-                  size={20}
-                  color="#007AFF"
-                />
-                <Text style={styles.contactText}>{lang}</Text>
+          {expandedSection === 'privacy' && (
+            <View style={[styles.expandedSection, darkMode && styles.darkSection]}>
+              <Text style={[styles.sectionTitle, darkMode && styles.darkSectionTitle]}>{t.privacyPolicy}</Text>
+              <Text style={[styles.sectionText, darkMode && styles.darkSectionText]}>{t.privacyText}</Text>
+            </View>
+          )}
+
+          {expandedSection === 'terms' && (
+            <View style={[styles.expandedSection, darkMode && styles.darkSection]}>
+              <Text style={[styles.sectionTitle, darkMode && styles.darkSectionTitle]}>{t.terms}</Text>
+              <Text style={[styles.sectionText, darkMode && styles.darkSectionText]}>{t.termsText}</Text>
+            </View>
+          )}
+
+          {expandedSection === 'contact' && (
+            <View style={[styles.expandedSection, darkMode && styles.darkSection]}>
+              <Text style={[styles.sectionTitle, darkMode && styles.darkSectionTitle]}>{t.contactUs}</Text>
+              <TouchableOpacity style={styles.contactOption} onPress={callSupport}>
+                <Ionicons name="call-outline" size={20} color="#007AFF" />
+                <Text style={styles.contactText}>{t.callSupport}</Text>
               </TouchableOpacity>
-            ))}
-            <Text style={[styles.selectedLangText, darkMode && styles.darkSelectedLangText]}>
-              {t.selectedLang}: {language}
-            </Text>
-          </View>
-        )}
-      </ScrollView>
-    </View>
-    <Footer navigation={navigation} />
+              <TouchableOpacity style={styles.contactOption} onPress={emailSupport}>
+                <Ionicons name="mail-outline" size={20} color="#007AFF" />
+                <Text style={styles.contactText}>{t.emailSupport}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.contactOption} onPress={visitWebsite}>
+                <Ionicons name="globe-outline" size={20} color="#007AFF" />
+                <Text style={styles.contactText}>{t.visitWebsite}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {expandedSection === 'language' && (
+            <View style={[styles.expandedSection, darkMode && styles.darkSection]}>
+              <Text style={[styles.sectionTitle, darkMode && styles.darkSectionTitle]}>{t.selectLang}</Text>
+              {['English', 'Tamil', 'Hindi'].map((lang) => (
+                <TouchableOpacity key={lang} style={styles.contactOption} onPress={() => changeLanguage(lang)}>
+                  <Ionicons
+                    name={language === lang ? "radio-button-on" : "radio-button-off"}
+                    size={20}
+                    color="#007AFF"
+                  />
+                  <Text style={styles.contactText}>{lang}</Text>
+                </TouchableOpacity>
+              ))}
+              <Text style={[styles.selectedLangText, darkMode && styles.darkSelectedLangText]}>
+                {t.selectedLang}: {language}
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+      </View>
+      <Footer navigation={navigation} />
     </>
   );
 };
@@ -272,13 +278,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     color: '#007AFF',
   },
-  darkSectionTitle: { color: '#4DA8FF' }, // Lighter blue for dark mode
+  darkSectionTitle: { color: '#4DA8FF' },
   sectionText: {
     fontSize: 14,
     color: '#444',
     lineHeight: 20,
   },
-  darkSectionText: { color: '#ccc' }, // Light gray for dark mode
+  darkSectionText: { color: '#ccc' },
   contactOption: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -293,7 +299,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     color: '#666',
   },
-  darkSelectedLangText: { color: '#aaa' }, // Light gray for dark mode
+  darkSelectedLangText: { color: '#aaa' },
 });
 
 export default Settings;

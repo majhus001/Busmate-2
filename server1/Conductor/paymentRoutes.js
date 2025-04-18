@@ -10,12 +10,13 @@ router.post("/orders", async (req, res) => {
   try {
     const { amount, busno, userId } = req.body;
 
+   
     if (!userId) {
       return res.status(400).json({ message: "User ID is required!" });
     }
 
     const options = {
-      amount: amount * 100, // Convert to paise
+      amount: amount ,
       currency: "INR",
       receipt: crypto.randomBytes(10).toString("hex"),
     };
@@ -34,6 +35,8 @@ router.post("/orders", async (req, res) => {
         status: "created",
         busno: busno,
         userId: userId,
+        checkIn: false,
+        checkout: false,
       });
 
       await newOrder.save();

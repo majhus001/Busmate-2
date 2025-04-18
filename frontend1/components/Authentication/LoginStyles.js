@@ -1,4 +1,6 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Dimensions, Platform } from "react-native";
+
+const { width, height } = Dimensions.get("window");
 
 export default StyleSheet.create({
   container: {
@@ -6,29 +8,89 @@ export default StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
-    backgroundColor: "#007BFF", // ✅ Blue background
+    backgroundColor: "#007BFF",
+  
+  },
+
+  keyboardContainer: {
+    flex: 1,
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  card: {
+    width: "100%",
+    padding:25,
+    borderRadius: 16,
+    backgroundColor: "#fff",
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 10,
+    overflow: "hidden",
+  },
+  logoContainer: {
+    alignItems: "center",
+    marginBottom: 30,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff", // ✅ White text for contrast
+    fontSize: 32,
+    fontWeight: "700",
+    color: "#333",
+    marginTop: 10,
+    textAlign: "center",
+    letterSpacing: 1,
+  },
+  inputContainer: {
+    width: "100%",
     marginBottom: 20,
   },
-  input: {
-    width: "100%",
-    height: 50,
+  inputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    marginBottom: 15,
-    backgroundColor: "#fff", // ✅ White input box
+    borderColor: "#e0e0e0",
+    borderRadius: 12,
+    backgroundColor: "#f7f9fc",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  inputErrorWrapper: {
+    borderColor: "#ff4d4f",
+    borderWidth: 1,
+  },
+  inputIcon: {
+    padding: 12,
+  },
+  input: {
+    flex: 1,
+    height: 50,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: "#333",
+  },
+  inputError: {
+    color: "#ff4d4f",
+  },
+  toggleButton: {
+    padding: 12,
+  },
+  errorText: {
+    color: "#ff4d4f",
+    fontSize: 12,
+    marginTop: 5,
+    marginLeft: 5,
   },
   roleText: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#fff", // ✅ White text
-    marginVertical: 10,
+    fontWeight: "600",
+    color: "#333",
+    marginVertical: 15,
   },
   radioContainer: {
     flexDirection: "row",
@@ -39,36 +101,91 @@ export default StyleSheet.create({
   radioButton: {
     flexDirection: "row",
     alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    backgroundColor: "#f7f9fc",
+    position: "relative",
   },
-  circle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: "#fff", // ✅ White border for contrast
+  radioButtonSelected: {
+    backgroundColor: "#e6f2ff",
+    borderColor: "#007BFF",
+  },
+  radioIndicator: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#007BFF",
     marginRight: 8,
-  },
-  selected: {
-    backgroundColor: "#fff", // ✅ White inner fill for selected radio
   },
   radioText: {
     fontSize: 16,
-    color: "#fff", // ✅ White text
+    color: "#555",
   },
-  button: {
+  radioTextSelected: {
+    color: "#007BFF",
+    fontWeight: "600",
+  },
+  forgotPassword: {
+    alignSelf: "flex-end",
+    marginBottom: 20,
+  },
+  forgotPasswordText: {
+    color: "#007BFF",
+    fontSize: 14,
+  },
+  loginButton: {
     width: "100%",
-    backgroundColor: "#fff", // ✅ White button
-    padding: 12,
-    borderRadius: 8,
+    height: 54,
+    borderRadius: 12,
+    justifyContent: "center",
     alignItems: "center",
+    shadowColor: "#007BFF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   buttonText: {
-    color: "#007BFF", // ✅ Blue text on button
     fontSize: 18,
-    fontWeight: "bold",
+    color: "#fff",
+    fontWeight: "600",
+    letterSpacing: 1,
   },
-  linkText: {
-    color: "#fff", // ✅ White text
-    marginTop: 10,
+  loadingContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  divider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 25,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#e0e0e0",
+  },
+  dividerText: {
+    paddingHorizontal: 15,
+    color: "#777",
+    fontSize: 14,
+  },
+  signupButton: {
+    width: "100%",
+    height: 50,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#007BFF",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "transparent",
+  },
+  signupText: {
+    color: "#007BFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
