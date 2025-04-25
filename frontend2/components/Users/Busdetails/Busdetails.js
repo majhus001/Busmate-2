@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   Alert,
   ActivityIndicator,
   RefreshControl,
+  Animated,
+  Easing,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "./BusdetailsStyles";
@@ -30,7 +32,7 @@ const translations = {
     active: " Active",
     inactive: "🔴 Inactive",
     liveTrack: "Live Track Bus",
-    payNow: "💳 Pay Now",
+    payNow: "Pay Now",
     goBack: "Go Back",
     errorTitle: "Error",
     errorMessage: "Bus details not found.",
@@ -39,6 +41,12 @@ const translations = {
     boardingInfo: "Boarding Information",
     arrivalInfo: "Arrival Information",
     seatInfo: "Seat Availability",
+    noSeatsAvailable: "No seats available on this bus",
+    alternativeBuses: "Alternative Buses",
+    seatsAvailable: "seats available",
+    viewBus: "View",
+    departureTime: "Departure:",
+    noAlternatives: "No alternative buses found",
   },
   Tamil: {
     title: (busRouteNo) => `🚌 ${busRouteNo} பேருந்து விவரங்கள்`,
@@ -64,6 +72,12 @@ const translations = {
     boardingInfo: "பயணத் தொடக்கம் தகவல்",
     arrivalInfo: "வந்து சேரும் தகவல்",
     seatInfo: "இருக்கை கிடைப்பு",
+    noSeatsAvailable: "இந்த பேருந்தில் இருக்கைகள் இல்லை",
+    alternativeBuses: "மாற்று பேருந்துகள்",
+    seatsAvailable: "இருக்கைகள் உள்ளன",
+    viewBus: "பார்க்க",
+    departureTime: "புறப்படும் நேரம்:",
+    noAlternatives: "மாற்று பேருந்துகள் இல்லை",
   },
   Hindi: {
     title: (busRouteNo) => `🚌 ${busRouteNo} बस विवरण`,
@@ -89,21 +103,165 @@ const translations = {
     boardingInfo: "बोर्डिंग जानकारी",
     arrivalInfo: "आगमन जानकारी",
     seatInfo: "सीट उपलब्धता",
+    noSeatsAvailable: "इस बस में कोई सीट उपलब्ध नहीं है",
+    alternativeBuses: "वैकल्पिक बसें",
+    seatsAvailable: "सीटें उपलब्ध हैं",
+    viewBus: "देखें",
+    departureTime: "प्रस्थान:",
+    noAlternatives: "कोई वैकल्पिक बस नहीं मिली",
   },
+};
+
+// Animated Arrow Component
+const AnimatedArrow = ({ onPress, darkMode, t, language }) => {
+  const translateY = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    // Create a loop animation for the arrow
+    const startAnimation = () => {
+      Animated.loop(
+        Animated.sequence([
+          // Move down
+          Animated.timing(translateY, {
+            toValue: 10,
+            duration: 800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          // Move up
+          Animated.timing(translateY, {
+            toValue: 0,
+            duration: 800,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+
+      // Pulse opacity
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(opacity, {
+            toValue: 0.7,
+            duration: 1000,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+          Animated.timing(opacity, {
+            toValue: 1,
+            duration: 1000,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    };
+
+    startAnimation();
+  }, []);
+
+  return (
+    <TouchableOpacity style={styles.arrowContainer} onPress={onPress}>
+      <Animated.View
+        style={{
+          transform: [{ translateY }],
+          opacity,
+        }}
+      >
+        <Ionicons name="chevron-down" size={24} color="black" />
+      </Animated.View>
+      <Text style={styles.arrowText}>
+        {language === 'English' ? 'Suggestions' : language === 'Tamil' ? 'விருப்பங்கள்' : 'विकल्प'}
+      </Text>
+    </TouchableOpacity>
+  );
 };
 
 const Busdetails = ({ route, navigation }) => {
   const { language, darkMode } = useLanguage();
   const t = translations[language] || translations.English;
+  const scrollViewRef = useRef(null);
 
-  const { bus: initialBus, fromLocation, toLocation } = route.params || {};
+  const { bus: initialBus, fromLocation, toLocation, buses: initialBuses } = route.params || {};
   const [bus, setBus] = useState(initialBus || {});
+  const [allBuses, setAllBuses] = useState(initialBuses || []);
   const [availableSeats, setAvailableSeats] = useState(0);
   const [bookedSeats, setBookedSeats] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true);
+  const [showArrow, setShowArrow] = useState(false);
 
   const totalSeats = bus?.totalSeats || 0;
+
+  // Function to find alternative buses with available seats
+  const findAlternativeBuses = () => {
+    if (!allBuses || allBuses.length === 0 || !fromLocation || !toLocation) {
+      return [];
+    }
+
+    return allBuses
+      .filter(alternateBus => {
+        // Skip the current bus
+        if (alternateBus._id === bus._id) return false;
+
+        // Check if the bus is active
+        if (!alternateBus.LoggedIn) return false;
+
+        // Check if the bus has the same route
+        const stages = Object.keys(alternateBus.timings || {});
+        const fromIndex = stages.indexOf(fromLocation);
+        const toIndex = stages.indexOf(toLocation);
+
+        // Check if this bus covers the required route
+        const hasRoute = fromIndex !== -1 && toIndex !== -1 && fromIndex < toIndex;
+
+        // Check if the bus has available seats
+        const hasSeats = alternateBus.availableSeats > 0;
+
+        return hasRoute && hasSeats;
+      })
+      .sort((a, b) => {
+        // Sort by departure time
+        const aTime = a.timings?.[fromLocation] || '';
+        const bTime = b.timings?.[fromLocation] || '';
+
+        // Convert time strings to comparable values (assuming format like "10:30 AM")
+        const getTimeValue = (timeStr) => {
+          if (!timeStr) return 0;
+
+          // Extract hours and minutes
+          const timeParts = timeStr.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+          if (!timeParts) return 0;
+
+          let hours = parseInt(timeParts[1], 10);
+          const minutes = parseInt(timeParts[2], 10);
+          const period = timeParts[3] ? timeParts[3].toUpperCase() : null;
+
+          // Convert to 24-hour format if AM/PM is specified
+          if (period === 'PM' && hours < 12) hours += 12;
+          if (period === 'AM' && hours === 12) hours = 0;
+
+          // Return time as minutes since midnight for easy comparison
+          return hours * 60 + minutes;
+        };
+
+        const aTimeValue = getTimeValue(aTime);
+        const bTimeValue = getTimeValue(bTime);
+
+        // If time values are the same, fall back to string comparison
+        if (aTimeValue === bTimeValue) {
+          return aTime.localeCompare(bTime);
+        }
+
+        return aTimeValue - bTimeValue;
+      })
+      .slice(0, 3); // Limit to 3 alternatives
+  };
+
+  // Get alternative buses
+  const alternativeBuses = findAlternativeBuses();
 
   useEffect(() => {
     if (!initialBus) {
@@ -172,6 +330,16 @@ const Busdetails = ({ route, navigation }) => {
     return () => clearInterval(intervalId);
   }, [fromLocation, totalSeats, bus?._id, availableSeats]);
 
+  // Set showArrow when availableSeats changes
+  useEffect(() => {
+    // Show arrow if there are no available seats and there are alternative buses
+    if (availableSeats === 0 && alternativeBuses.length > 0) {
+      setShowArrow(true);
+    } else {
+      setShowArrow(false);
+    }
+  }, [availableSeats, alternativeBuses]);
+
   useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
       fetchBusDetails();
@@ -193,9 +361,17 @@ const Busdetails = ({ route, navigation }) => {
     return null;
   }
 
+  // Function to scroll to the bottom of the ScrollView
+  const scrollToBottom = () => {
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollToEnd({ animated: true });
+    }
+  };
+
   return (
     <View style={[styles.container, darkMode && styles.darkContainer]}>
       <ScrollView
+        ref={scrollViewRef}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -314,21 +490,35 @@ const Busdetails = ({ route, navigation }) => {
             />
           </View>
         </View>
+
+        {/* Alternative Buses Suggestions */}
+        {availableSeats === 0 && showSuggestions && (
+          <BusSuggestions
+            buses={alternativeBuses}
+            fromLocation={fromLocation}
+            toLocation={toLocation}
+            darkMode={darkMode}
+            t={t}
+            language={language}
+            onClose={() => setShowSuggestions(false)}
+            navigation={navigation}
+          />
+        )}
       </ScrollView>
 
       {/* Fixed Footer Buttons */}
       <View style={styles.footer}>
-      <ActionButton
-  icon="navigate"
-  label={t.liveTrack}
-  color={bus?.LoggedIn ? "#007AFF" : "#A9A9A9"}
-  onPress={
-    bus?.LoggedIn && bus?.busRouteNo
-      ? () => navigation.navigate("usmap", { busRouteNo: bus?.busRouteNo })
-      : () => Alert.alert(t.errorTitle, bus?.LoggedIn ? "Invalid bus number." : t.inactiveMessage)
-  }
-  disabled={!bus?.LoggedIn || !bus?.busRouteNo}
-/>
+        <ActionButton
+          icon="navigate"
+          label={t.liveTrack}
+          color={bus?.LoggedIn ? "#007AFF" : "#A9A9A9"}
+          onPress={
+            bus?.LoggedIn && bus?.busRouteNo
+              ? () => navigation.navigate("usmap", { busRouteNo: bus?.busRouteNo })
+              : () => Alert.alert(t.errorTitle, bus?.LoggedIn ? "Invalid bus number." : t.inactiveMessage)
+          }
+          disabled={!bus?.LoggedIn || !bus?.busRouteNo}
+        />
         <ActionButton
           icon="card"
           label={t.payNow}
@@ -342,6 +532,109 @@ const Busdetails = ({ route, navigation }) => {
             })
           }
         />
+      </View>
+
+      {/* Animated Arrow */}
+      {showArrow && (
+        <AnimatedArrow
+          onPress={scrollToBottom}
+          darkMode={darkMode}
+          t={t}
+          language={language}
+        />
+      )}
+    </View>
+  );
+};
+
+// Suggestion Component
+const BusSuggestions = ({ buses, fromLocation, toLocation, darkMode, t, onClose, navigation, language }) => {
+  if (!buses || buses.length === 0) {
+    return null;
+  }
+
+  return (
+    <View style={[styles.suggestionContainer, darkMode && styles.darkSuggestionContainer]}>
+      <View style={styles.suggestionHeader}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Ionicons name="information-circle" size={20} color="#FF9500" />
+          <Text style={[styles.suggestionTitle, darkMode && styles.darkText]}>
+            {t.alternativeBuses}
+          </Text>
+        </View>
+        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+          <Ionicons name="close" size={20} color={darkMode ? "#8E8E93" : "#48484A"} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Subtitle indicating sorting by time */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+        <Ionicons name="time-outline" size={16} color={darkMode ? "#8E8E93" : "#6B7280"} style={{ marginRight: 4 }} />
+        <Text style={{
+          fontSize: 12,
+          color: darkMode ? "#8E8E93" : "#6B7280",
+          fontStyle: 'italic'
+        }}>
+          {language === 'English'
+            ? 'Sorted by departure time'
+            : language === 'Tamil'
+              ? 'புறப்படும் நேரத்தின்படி வரிசைப்படுத்தப்பட்டுள்ளது'
+              : 'प्रस्थान समय के अनुसार क्रमबद्ध'}
+        </Text>
+      </View>
+
+      <View style={styles.suggestionList}>
+        {buses.length > 0 ? (
+          buses.map((bus, index) => {
+            const departureTime = bus.timings?.[fromLocation] || "N/A";
+            const routeKey = `${fromLocation}-${toLocation}`;
+            const fare = bus.prices?.[routeKey] || "N/A";
+
+            return (
+              <View
+                key={bus._id || index}
+                style={[
+                  styles.suggestionItem,
+                  darkMode && styles.darkSuggestionItem,
+                  index === buses.length - 1 && { borderBottomWidth: 0 }
+                ]}
+              >
+                <View style={styles.busInfo}>
+                  <Text style={[styles.busRouteText, darkMode && styles.darkText]}>
+                    {bus.busRouteNo}
+                  </Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Ionicons name="time-outline" size={14} color={darkMode ? "#8E8E93" : "#6B7280"} style={{ marginRight: 4 }} />
+                    <Text style={[styles.busTimeText, darkMode && styles.darkText, { fontWeight: '600', color: '#007AFF' }]}>
+                      {departureTime}
+                    </Text>
+                    <Text style={[styles.busTimeText, darkMode && styles.darkText]}>
+                      {" • ₹"}{fare}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.seatsAvailable}>
+                  {bus.availableSeats} {t.seatsAvailable}
+                </Text>
+                <TouchableOpacity
+                  style={styles.viewButton}
+                  onPress={() => navigation.replace("Busdetails", {
+                    bus,
+                    fromLocation,
+                    toLocation,
+                    buses
+                  })}
+                >
+                  <Text style={styles.viewButtonText}>{t.viewBus}</Text>
+                </TouchableOpacity>
+              </View>
+            );
+          })
+        ) : (
+          <Text style={[styles.busTimeText, darkMode && styles.darkText]}>
+            {t.noAlternatives}
+          </Text>
+        )}
       </View>
     </View>
   );

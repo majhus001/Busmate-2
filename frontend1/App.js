@@ -31,6 +31,7 @@ import Conductormap from "./components/Conductor/Homepage/Conductormap";
 import UserComplaints from "./components/Conductor/Complaintform/UserCompliants";
 import AdminUserComplaint from "./components/Admin/Admincompliant/Usercompliant";
 import NotificationAlert from "./components/Conductor/Homepage/NotificationAlert";
+import EcoImpactTree from "./components/Animation/Animation2";
 
 const Stack = createNativeStackNavigator();
 
@@ -74,6 +75,7 @@ export default function App() {
         
         <Stack.Screen name="NotificationAlert" component={NotificationAlert} />
         <Stack.Screen name="ViewTickets" component={ViewTickets} />
+        <Stack.Screen name="ani" component={EcoImpactTree} />
       </Stack.Navigator>
     </NavigationContainer>
   );

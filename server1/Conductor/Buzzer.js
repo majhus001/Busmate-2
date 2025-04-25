@@ -2,7 +2,7 @@ const express = require("express");
 const axios = require("axios");
 
 const router = express.Router();
-const ESP_IP = process.env.ESP_IP || "http://192.168.232.158";
+const ESP_IP = process.env.ESP_IP || "http://192.168.85.158";
 
 router.post("/trigger", async (req, res) => {
   try {

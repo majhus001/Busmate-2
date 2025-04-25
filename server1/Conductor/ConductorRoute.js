@@ -6,6 +6,8 @@ const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const Complaint = require("../Module/Complaint");
 const Conductor = require("../Module/Conductor_sc");
 const Bus = require("../Module/BusSchema");
+
+const Ticket = require('../Module/EtmSchema');
 require("dotenv").config();
 
 // Configure Cloudinary
@@ -216,5 +218,53 @@ router.get("/assigned-bus/:conductorId", async (req, res) => {
     });
   }
 });
+
+
+
+// // Get total online tickets for conductor's assigned bus
+// router.get('/online-tickets/:conductorId', async (req, res) => {
+//   try {
+//     const { conductorId } = req.params;
+//     const { withDocs } = req.query; // Optional flag to include full documents
+
+//     // 1. Find the conductor and get their assigned bus ID
+//     const conductor = await Conductor.findById(conductorId);
+//     if (!conductor) {
+//       return res.status(404).json({ message: 'Conductor not found' });
+//     }
+
+//     const assignedBusId = conductor.assignedBusId;
+//     if (!assignedBusId) {
+//       return res.status(400).json({ message: 'Conductor has no assigned bus' });
+//     }
+
+//     // 2. Count online tickets for the assigned bus
+//     const onlineTicketCount = await Ticket.countDocuments({
+//       busId: assignedBusId,
+//       paymentMethod: 'online'
+//     });
+
+//     // 3. Optionally get the full documents
+//     let onlineTickets = [];
+//     if (withDocs === 'true') {
+//       onlineTickets = await Ticket.find({
+//         busId: assignedBusId,
+//         paymentMethod: 'online'
+//       }).sort({ issuedAt: -1 }); // Sort by most recent
+//     }
+
+//     res.json({
+//       success: true,
+//       busId: assignedBusId,
+//       onlineTicketCount,
+//       onlineTickets: withDocs === 'true' ? onlineTickets : undefined
+//     });
+
+//   } catch (error) {
+//     console.error('Error fetching online tickets:', error);
+//     res.status(500).json({ message: 'Server error', error: error.message });
+//   }
+// });
+
 
 module.exports = router;

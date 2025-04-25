@@ -19,6 +19,28 @@ import styles from "./UserFindBusStyles"; // Ensure this file exists
 import { API_BASE_URL } from "../../../apiurl"; // Ensure this file exists
 import { useLanguage } from "../../../LanguageContext"; // Ensure this path is correct
 
+// Helper function to format time in hours and minutes
+const formatTimeDisplay = (minutes, language) => {
+  if (minutes <= 60) {
+    return `${minutes} ${translations[language]?.minutes || "mins"}`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  // Format based on language
+  if (language === "English") {
+    return `${hours} hr ${remainingMinutes} mins`;
+  } else if (language === "Tamil") {
+    return `${hours} மணி ${remainingMinutes} நிமிடங்கள்`;
+  } else if (language === "Hindi") {
+    return `${hours} घंटे ${remainingMinutes} मिनट`;
+  }
+
+  // Default fallback
+  return `${hours} hr ${remainingMinutes} mins`;
+};
+
 // Define translations
 const translations = {
   English: {
@@ -277,7 +299,7 @@ const UserFindBus = ({ navigation }) => {
       Alert.alert("Error", t.errorLocations);
       return;
     }
-    navigation.navigate("Busdetails", { bus, fromLocation, toLocation });
+    navigation.navigate("Busdetails", { bus, fromLocation, toLocation, buses });
   };
 
   return (
@@ -606,8 +628,7 @@ const UserFindBus = ({ navigation }) => {
                                           styles.darkDepartureSoonText,
                                       ]}
                                     >
-                                      • {t.departsIn} {minutesUntilDeparture}{" "}
-                                      {t.minutes}
+                                      • {t.departsIn} {formatTimeDisplay(minutesUntilDeparture, language)}
                                     </Text>
                                   )
                                 )}

@@ -47,6 +47,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // API Routes
+
 app.use("/api/Admin/buses", buses);
 app.use("/api/Admin/conductor", Adconductor);
 app.use("/api/tickets", Etm);
