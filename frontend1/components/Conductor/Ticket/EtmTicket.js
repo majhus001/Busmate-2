@@ -15,12 +15,15 @@ import {
   RefreshControl,
   BackHandler,
 } from "react-native";
+import NetInfo from "@react-native-community/netinfo";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { Picker } from "@react-native-picker/picker";
 import styles from "./EtmTicketStyles";
 import { API_BASE_URL } from "../../../apiurl";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
+import { startLocationSharing } from "../Homepage/locationService";
 
 const EtmTicket = ({ route, navigation }) => {
   const {
@@ -63,6 +66,26 @@ const EtmTicket = ({ route, navigation }) => {
   const fadeAnim2 = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
 
+  const cleanupRef = useRef(null);
+
+  useEffect(() => {
+    console.log(
+      "🚍 Starting Socket.IO location sharing for bus:",
+      selectedBusNo
+    );
+
+    // start location sharing once & store the cleanup fn
+    cleanupRef.current = startLocationSharing(selectedBusNo, (location) => {
+      console.log("📍 Location update:", location);
+    });
+
+    // Cleanup on unmount or when selectedBusNo changes
+    return () => {
+      if (cleanupRef.current) cleanupRef.current(); // stop sharing
+      console.log("🛑 Location sharing stopped on unmount");
+    };
+  }, [selectedBusNo]);
+
   const handleLocationSelect = async (item) => {
     setBoarding(item);
     setSelectedLocations((prev) => [...prev, item]);
@@ -94,11 +117,6 @@ const EtmTicket = ({ route, navigation }) => {
         setAvailableSeats(availableSeats);
       }
 
-      console.log(
-        "--------------av seats man",
-        response.data.updatedAvailableSeats
-      );
-
       const onlineresponse = await axios.put(
         `${API_BASE_URL}/api/payment/update/seats`,
         {
@@ -108,26 +126,19 @@ const EtmTicket = ({ route, navigation }) => {
           selectedState,
         }
       );
-      console.log(
-        "----------------av seats in omline ",
-        onlineresponse.data.updatedAvailableSeats
-      );
-      console.log(
-        "----------------av seats in before ",
-        availableSeats
-      );
+
       if (!onlineresponse.data.success && !response.data.success) {
-        console.log("av seats ifnot", availableSeats )
+        console.log("av seats ifnot", availableSeats);
         setAvailableSeats(availableSeats);
       }
       if (response.data.success) {
-        console.log("av seats man res", availableSeats )
-        
+        console.log("av seats man res", availableSeats);
+
         setAvailableSeats(response.data.updatedAvailableSeats);
       }
       if (onlineresponse.data.success) {
-        console.log("av seats online res", availableSeats )
-        
+        console.log("av seats online res", availableSeats);
+
         setAvailableSeats(onlineresponse.data.updatedAvailableSeats);
       }
     } catch {
@@ -238,6 +249,11 @@ const EtmTicket = ({ route, navigation }) => {
               style: "destructive",
               onPress: async () => {
                 try {
+                  if (cleanupRef.current) {
+                    cleanupRef.current();
+                    console.log("🛑 Location sharing stopped on back press");
+                  }
+                  // console.log("object")
                   if (BusData && BusData._id) {
                     await axios.put(
                       `${API_BASE_URL}/api/Admin/buses/logout/${BusData._id}`
@@ -529,9 +545,7 @@ const EtmTicket = ({ route, navigation }) => {
 
   const handleSubmit = async () => {
     if (availableSeats <= 1) {
-      axios.post(`${API_BASE_URL}/api/buzzer/trigger`, {
-        selectedBusNo: selectedBusNo,
-      });
+      axios.post(`${API_BASE_URL}/api/buzzer/trigger`, { selectedBusNo });
     }
 
     if (!boarding || !destination) {
@@ -555,33 +569,6 @@ const EtmTicket = ({ route, navigation }) => {
       return;
     }
 
-    if (paymentMethod === "Online" && ticketCount >= 1) {
-      const amount = ticketPrice * ticketCount;
-      const upiId = "thamilprakasam2005@okhdfcbank";
-
-      // Create ticket data
-      const ticketData = {
-        routeName: RouteName,
-        busRouteNo: selectedBusNo,
-        busplateNo,
-        boarding,
-        destination,
-        ticketCount,
-        ticketPrice: ticketPrice * ticketCount,
-        paymentMethod,
-        selectedCity,
-        selectedState,
-        busId: BusData?._id,
-      };
-
-      global.pendingTicketData = ticketData;
-
-      // Navigate to Upiqr with amount and upiId
-      navigation.navigate("Upiqr", { upiId, amount });
-      return;
-    }
-
-    // Create ticket data
     const ticketData = {
       routeName: RouteName,
       busRouteNo: selectedBusNo,
@@ -594,23 +581,82 @@ const EtmTicket = ({ route, navigation }) => {
       selectedCity,
       selectedState,
       busId: BusData?._id,
+      timestamp: new Date().toISOString(), // optional for ordering
     };
 
-    try {
-      // Start loading animation
-      Animated.sequence([
-        Animated.timing(fadeAnim1, {
-          toValue: 0.5,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(fadeAnim1, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
+    Animated.sequence([
+      Animated.timing(fadeAnim1, {
+        toValue: 0.5,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim1, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
 
+    // Check online status
+    const state = await NetInfo.fetch();
+    const isOnline = state.isConnected && state.isInternetReachable; // true if internet is available
+
+    console.log(isOnline ? "online" : "offline");
+
+    if (!isOnline) {
+      // Store ticket offline
+      try {
+        const pendingTicketsRaw = await AsyncStorage.getItem("pendingTickets");
+        const pendingTickets = pendingTicketsRaw
+          ? JSON.parse(pendingTicketsRaw)
+          : [];
+        pendingTickets.push(ticketData);
+        await AsyncStorage.setItem(
+          "pendingTickets",
+          JSON.stringify(pendingTickets)
+        );
+
+        console.log(pendingTickets.length);
+
+        // Simulate ticket success
+        setAvailableSeats(availableSeats - ticketData.ticketCount);
+        setTicketCount(1);
+        setShowSummary(false);
+
+        Alert.alert(
+          "Offline",
+          "Ticket saved locally. It will sync when internet is available."
+        );
+        return;
+      } catch (error) {
+        Alert.alert("Error", "Failed to save ticket locally.");
+        return;
+      }
+    }
+
+    try {
+      // ✅ First, sync any pending tickets from local storage
+      const pendingTicketsRaw = await AsyncStorage.getItem("pendingTickets");
+      const pendingTickets = pendingTicketsRaw
+        ? JSON.parse(pendingTicketsRaw)
+        : [];
+
+      for (let pendingTicket of pendingTickets) {
+        await axios.post(
+          `${API_BASE_URL}/api/tickets/add_ticket`,
+          pendingTicket
+        );
+      }
+
+      if (pendingTickets.length > 0) {
+        await AsyncStorage.removeItem("pendingTickets");
+        console.log(
+          "✅ Pending tickets synced successfully,",
+          pendingTickets.length
+        );
+      }
+
+      // Now send the current ticket
       const response = await axios.post(
         `${API_BASE_URL}/api/tickets/add_ticket`,
         ticketData
@@ -635,16 +681,26 @@ const EtmTicket = ({ route, navigation }) => {
             useNativeDriver: true,
           }),
         ]).start(() => {
-          // Navigate to success screen
           navigation.navigate("ticsuccess", { method: paymentMethod });
         });
       } else {
         Alert.alert("Failed", "Could not issue ticket. Try again.");
       }
     } catch (error) {
+      // If network error happens after online check, save ticket offline
+      const pendingTicketsRaw = await AsyncStorage.getItem("pendingTickets");
+      const pendingTickets = pendingTicketsRaw
+        ? JSON.parse(pendingTicketsRaw)
+        : [];
+      pendingTickets.push(ticketData);
+      await AsyncStorage.setItem(
+        "pendingTickets",
+        JSON.stringify(pendingTickets)
+      );
+
       Alert.alert(
-        "Error",
-        "Failed to issue ticket. Check your network connection."
+        "Network Error",
+        "Ticket saved locally due to network issues. It will sync when internet is back."
       );
     }
   };

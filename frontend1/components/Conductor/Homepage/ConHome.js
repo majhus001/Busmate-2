@@ -1,12 +1,10 @@
-import React, { useLayoutEffect, useState, useEffect } from "react";
+import { useLayoutEffect, useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, Image, ScrollView, ActivityIndicator, RefreshControl, StatusBar, Alert } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import axios from "axios";
 import { API_BASE_URL } from "../../../apiurl";
 import * as SecureStore from "expo-secure-store";
 import styles from "./ConHomeStyles";
-import UserComplaint from "../Complaintform/UserCompliants";
-import NotificationAlert from "./NotificationAlert";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 // Simple helper function to format time elapsed
@@ -40,7 +38,6 @@ const ConHome = ({ navigation, route }) => {
     totalTickets: 0,
     totalRevenue: 0
   });
-  const [notifications, setNotifications] = useState([]);
   const [showStatusCard, setShowStatusCard] = useState(true);
 
   useLayoutEffect(() => {
@@ -187,17 +184,7 @@ const ConHome = ({ navigation, route }) => {
     }
   };
 
-  // Fetch notifications
-  const fetchNotifications = async () => {
-    try {
-      setNotifications([
-        { id: 1, title: 'Schedule Change', message: 'Your shift has been updated for tomorrow.', time: new Date(Date.now() - 3600000) },
-        { id: 2, title: 'Maintenance Alert', message: 'Bus maintenance scheduled for next week.', time: new Date(Date.now() - 86400000) }
-      ]);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    }
-  };
+  
 
   // Fetch all data
   const fetchAllData = () => {
@@ -205,7 +192,6 @@ const ConHome = ({ navigation, route }) => {
     fetchLoginTime();
     fetchConductorStats();
     fetchWeatherData();
-    fetchNotifications();
   };
 
   // Fetch data on component mount

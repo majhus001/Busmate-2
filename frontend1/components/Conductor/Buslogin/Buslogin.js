@@ -17,7 +17,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
 import styles from "./BusloginStyles";
 import { API_BASE_URL } from "../../../apiurl";
-import { startLocationSharing } from "../Homepage/locationService";
 
 const Buslogin = ({ route, navigation }) => {
   const {
@@ -80,23 +79,7 @@ const Buslogin = ({ route, navigation }) => {
       );
 
       if (response.data.success) {
-        Alert.alert("Success", "Login Successful");
-
-        // Start location sharing
-        console.log("Starting location sharing for bus:", selectedBusNo);
-        const cleanup = startLocationSharing(selectedBusNo, (location) => {
-          console.log("📍 Location shared internally:", location);
-        });
-
-        if (!cleanup) {
-          console.error(
-            "❌ Failed to start location sharing for bus:",
-            selectedBusNo
-          );
-          Alert.alert("Error", "Failed to start location sharing.");
-          setIsLoading(false);
-          return;
-        }
+        Alert.alert("Success", "Login Successful"); 
 
         const BusData = response.data.busDetails;
 

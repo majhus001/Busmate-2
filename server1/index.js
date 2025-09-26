@@ -4,6 +4,7 @@ const { Server } = require("socket.io");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const socketIo = require('socket.io');
+const mqtt = require("mqtt");
 const cors = require("cors");
 require("dotenv").config();
 
@@ -161,6 +162,41 @@ io.on("connection", (socket) => {
   });
 });
 
+
+const mqttClient = mqtt.connect("ws://broker.hivemq.com:8000/mqtt"); // Replace with your broker
+
+mqttClient.on("connect", () => {
+  console.log("✅ MQTT connected");
+
+  // Subscribe to all bus locations using wildcard
+  mqttClient.subscribe("bus/location/+", (err) => {
+    if (!err) console.log("Subscribed to all bus location topics");
+  });
+});
+
+mqttClient.on("message", (topic, payload) => {
+  try {
+    const data = JSON.parse(payload.toString());
+    const busRouteNo = data.busRouteNo;
+    const location = data.location;
+
+    console.log(`📍 Bus ${busRouteNo} location:`, location);
+
+    // Optional: emit to frontend passengers/admins via Socket.IO
+    io.emit(`bus/${busRouteNo}`, location);
+  } catch (error) {
+    console.error("❌ Failed to parse MQTT message:", error);
+  }
+});
+
+
+mqttClient.on("error", (err) => {
+  console.error("❌ MQTT error:", err);
+});
+
+mqttClient.on("close", () => {
+  console.log("⚠️ MQTT connection closed");
+});
 // Start Server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {

@@ -41,7 +41,7 @@ const AssignConductors = ({ route ,navigation }) => {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(2);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [paginatedConductors, setPaginatedConductors] = useState([]);
 
   // Fetch admin data
@@ -61,6 +61,7 @@ const AssignConductors = ({ route ,navigation }) => {
 
   // Fetch conductors
   const fetchConductors = async () => {
+
     try {
       setLoading(true);
       const admin = adminData || (await fetchAdminData());
